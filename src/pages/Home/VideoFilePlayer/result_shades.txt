@@ -1,0 +1,7 @@
+Top 5 Object Detection Predictions
+wig (24.55%)
+mask (18.08%)
+sunscreen (10.44%)
+lipstick (6.05%)
+Band_Aid (3.86%)
+No sunglasses detected.
