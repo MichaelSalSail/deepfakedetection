@@ -1,11 +1,11 @@
-Name,Length,Race,Gender,Distribution,# of Frames Wrong,Incorrect Side
-blink01.mp4,7111856,White,M,"Its 86.00% open, 14.00% closed. Total of 150 frames.",11.0,06 - Closed
-blink02.mp4,3205862,White,M,"Its 20.67% open, 79.33% closed. Total of 150 frames.",78.0,78 - Closed
-blink03.mp4,2749710,White,F,"Its 83.33% open, 16.67% closed. Total of 150 frames.",15.0,12 - Closed
-blink04.mp4,1755649,Non-White,M,"Its 92.67% open, 7.33% closed. Total of 150 frames.",13.0,10 - Closed
-blink05.mp4,12861533,White,M,"Its 84.67% open, 15.33% closed. Total of 150 frames.",21.0,13 - Closed
-blink06.mp4,7787281,Non-White,M,"Its 27.33% open, 72.67% closed. Total of 150 frames.",87.0,81 - Closed
-blink07.mp4,3965070,Non-White,F,"Its 68.00% open, 32.00% closed. Total of 150 frames.",10.0,7 - Closed
-blink08.mp4,1732330,White,F,"Its 99.33% open, 00.67% closed. Total of 150 frames.",0.0,Equal
-blink09.mp4,3012820,White,M,"Its 92.00% open, 08.00% closed. Total of 150 frames.",14.0,14 - Open
-blink10.mp4,1966659,Non-White,F,"Its 83.33% open, 16.67% closed. Total of 150 frames.",15.0,15 - Closed
+Name,Size (MB),Race,Gender,Open (%),Closed (%),Total Frames,Wrong Open Frames,Wrong Closed Frames
+blink01.mp4,7.11,White,M,86,14,150,5,6
+blink02.mp4,3.21,White,M,20.67,79.33,150,0,78
+blink03.mp4,2.75,White,F,83.33,16.67,150,3,12
+blink04.mp4,1.76,Non-White,M,92.67,7.33,150,3,10
+blink05.mp4,12.86,White,M,84.67,15.33,150,8,13
+blink06.mp4,7.79,Non-White,M,27.33,72.67,150,6,81
+blink07.mp4,3.97,Non-White,F,68,32,150,3,7
+blink08.mp4,1.73,White,F,99.33,0.67,150,0,0
+blink09.mp4,3.01,White,M,92,8,150,14,0
+blink10.mp4,1.97,Non-White,F,83.33,16.67,150,0,15
