@@ -14,15 +14,15 @@ import ReactPlayer from "react-player";
 // components
 import Page from "../components/Page";
 import {
+  MissingPercent,
+  UnknownPercent,
+  OpenPercent,
+  ClosedPercent,
+  Eyeblinks,
+  DFDchart,
   AppTasks,
-  AppNewUsers,
-  AppBugReports,
-  AppItemOrders,
   AppNewsUpdate,
-  AppWeeklySales,
-  AppOrderTimeline,
   AppCurrentVisits,
-  AppWebsiteVisits,
   AppTrafficBySite,
   AppCurrentSubject,
   AppConversionRates,
@@ -202,36 +202,36 @@ export default function DashboardApp() {
           </Grid>
 
           {/* <Grid item xs={12} md={6} lg={4}>
-            <AppOrderTimeline />
+            <Eyeblinks />
           </Grid> */}
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppItemOrders
+            <MissingPercent
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <AppNewUsers
+            <UnknownPercent
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWeeklySales
+            <OpenPercent
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <AppBugReports
+            <ClosedPercent
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
             />
           </Grid>
 
           <Grid item xs={12} md={6} lg={8}>
-            <AppWebsiteVisits {...{ deepfakeResults }} />
+            <DFDchart {...{ deepfakeResults }} />
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>
-            <AppOrderTimeline
+            <Eyeblinks
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
             />
           </Grid>
@@ -241,7 +241,7 @@ export default function DashboardApp() {
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>
-            <AppWebsiteVisits />
+            <DFDchart />
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>

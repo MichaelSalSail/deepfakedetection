@@ -1,3 +1,0 @@
-   Age: 32
-Gender: Man
-There appears to be an adult male. Beards are hard to deepfake.
