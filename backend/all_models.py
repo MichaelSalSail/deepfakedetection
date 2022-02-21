@@ -18,7 +18,7 @@ from helper_functions import isotropically_resize_image, make_square_image, more
 
 # CODE WE COULD CHANGE:
 # predict_on_video and blink_on_video could be combined into
-# one function. It would reduce latency. 
+# one function. It may reduce latency.
 
 def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     '''
@@ -81,8 +81,11 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     del checkpoint
 
     # put it all in a list then append to the .txt file
-    full_name=output_dir+"/"+"result_DFD.txt"
-    #file_write = open(full_name,"w")
+    if(output_dir!=""):
+        full_name=output_dir+"/"+"result_DFD.txt"
+    else:
+        full_name="result_DFD.txt"
+    file_write = open(full_name,"w")
     result=list()
 
     try:        
@@ -110,28 +113,26 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
                     y_pred = model(x)
                     y_pred = torch.sigmoid(y_pred.squeeze())
                     data_res=y_pred[:n].mean().item()
-                    #result.append(str(data_res))
-                    #file_write.writelines(result)
-                    #file_write.close()
+                    result.append(str(round(data_res,2)))
+                    file_write.writelines(result)
+                    file_write.close()
 
                     # Print contents
-                    #file_read = open(full_name,"r")
-                    #print(file_read.read())
-                    #print("data_result:" + str(data_res))
-                    return data_res
+                    file_read = open(full_name,"r")
+                    print(file_read.read())
+                    return 0
 
     except Exception as e:
         temp="Prediction error on video "+str(video_path)+": "+str(e)+"\n"
         result.append(temp)
 
-    #result.append(str(0.5))
-    #file_write.writelines(result)
-    #file_write.close()
+    result.append(str(0.5))
+    file_write.writelines(result)
+    file_write.close()
 
     # Print contents
-    #file_read = open(full_name,"r")
-    #print(file_read.read())
-
+    file_read = open(full_name,"r")
+    print(file_read.read())
     return 0.5
 
 def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
@@ -164,6 +165,13 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     from helpers.read_video_1 import VideoReader
     from helpers.face_extract_1 import FaceExtractor
 
+    # delete all frames from a previous run
+    temp_dir= "example_videos/temp/"
+    all_temp_files=[temp_dir+"o.png",temp_dir+"p.png",temp_dir+"beard.png"]
+    for i in range(0,len(all_temp_files)):
+        if os.path.exists(all_temp_files[i]):
+            os.remove(all_temp_files[i])
+
     # Retrieve video time span
     total_seconds=VideoFileClip(video_path).duration
     total_frames=math.floor(fps*total_seconds)
@@ -181,7 +189,10 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     face_extractor.keep_only_best_face(faces)
 
     # Put it all in a list then append to the .txt file
-    full_name=output_dir+"/"+"result_blink.txt"
+    if(output_dir!=""):
+        full_name=output_dir+"/"+"result_blink.txt"
+    else:
+        full_name="result_blink.txt"
     file_write = open(full_name,"w")
     result=list()
 
@@ -218,19 +229,19 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                     else:
                         all_closed+=1
                         print("all_closed:",all_closed)
-                #plt.show()
+                plt.show()
                 plt.clf()
     # CODE TO ADD:
     # Timestamp of each video frame and classfication in an excel sheet
     if (all_open+all_closed+all_unknown)<(total_frames):
         all_missing=total_frames-(all_open+all_closed+all_unknown)
-    temp="Amount of missing frames: "+str((all_missing/(all_open+all_closed+all_unknown+all_missing))*100)+"%\n"
+    temp="Amount of missing frames: "+str(round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100,3))+"%\n"
     result.append(temp)
-    temp="Amount of unknown frames: "+ str((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100) +"%\n"
+    temp="Amount of unknown frames: "+ str(round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100,3)) +"%\n"
     result.append(temp)
-    temp="Amount of open eyes frames: "+str((all_open/(all_open+all_closed+all_unknown+all_missing))*100)+"%\n"
+    temp="Amount of open eyes frames: "+str(round((all_open/(all_open+all_closed+all_unknown+all_missing))*100,3))+"%\n"
     result.append(temp)
-    temp="Amount of closed eyes frames: "+str((all_closed/(all_open+all_closed+all_unknown+all_missing))*100)+"%"
+    temp="Amount of closed eyes frames: "+str(round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100,3))+"%"
     result.append(temp)
     file_write.writelines(result)
     file_write.close()
@@ -240,10 +251,10 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     print(file_read.read())
 
     # Print and return perctile distributions list
-    final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 2),
-                    round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100, 2),
-                    round((all_open/(all_open+all_closed+all_unknown+all_missing))*100, 2),
-                    round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100, 2)]
+    final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 3),
+                    round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100, 3),
+                    round((all_open/(all_open+all_closed+all_unknown+all_missing))*100, 3),
+                    round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100, 3)]
     print(final_percents)
     return final_percents
 
@@ -261,50 +272,61 @@ def detect_beard(image_dir, output_dir=""):
 
     print('\ndetect_beard()')
 
-    # Read image
-    img2 = cv2.imread(image_dir)
-
-    # DeepFace expects a 152 by 152 sized image as input
-    dimensions=(152,152)
-    resized=cv2.resize(img2, dimensions)
-
-    # Save this image to a temporary directory for later input to DeepFace
-    cwd = os.getcwd()
-    img2_path = cwd + "/example_videos/temp/beard.png"
-
-    # Save image
-    cv2.imwrite(img2_path, resized)
-
-    # Run analysis
-    full_name=output_dir+"/"+"result_beard.txt"
+    # store all relevant information in a .txt file
+    if(output_dir!=""):
+        full_name=output_dir+"/"+"result_beard.txt"
+    else:
+        full_name="result_beard.txt"
     file_write = open(full_name,"w")
-    # Put it all in a list then append to the .txt file
-    result=list()
-    obj = DeepFace.analyze(img_path = img2_path, 
-                           actions = ['age', 'gender'],
-                           enforce_detection=False)
-    temp="   Age: "+str(obj["age"])+'\n'
-    result.append(temp)
-    temp="Gender: "+str(obj["gender"])+'\n'
-    result.append(temp)
-    if (obj["age"]>=20 and obj["gender"]=='Man'):
-        result.append("There appears to be an adult male. Beards are hard to deepfake.")
-    file_write.writelines(result)
-    file_write.close()
+
+    # perform analysis if the image exists
+    if(os.path.exists(image_dir)):
+        # Read image
+        img2 = cv2.imread(image_dir)
+
+        # DeepFace expects a 152 by 152 sized image as input
+        dimensions=(152,152)
+        resized=cv2.resize(img2, dimensions)
+
+        # Save this image to a temporary directory for later input to DeepFace
+        cwd = os.getcwd()
+        img2_path = cwd + "/example_videos/temp/beard.png"
+
+        # Save image
+        cv2.imwrite(img2_path, resized)
+
+        # Put it all in a list then append to the .txt file
+        result=list()
+        obj = DeepFace.analyze(img_path = img2_path, 
+                            actions = ['age', 'gender'],
+                            enforce_detection=False)
+        temp="   Age: "+str(obj["age"])+'\n'
+        result.append(temp)
+        temp="Gender: "+str(obj["gender"])+'\n'
+        result.append(temp)
+        # if (obj["age"]>=20 and obj["gender"]=='Man'):
+        #     result.append("There appears to be an adult male. Beards are hard to deepfake.")
+        file_write.writelines(result)
+        file_write.close()
+    # otherwise
+    else:
+        file_write.writelines(["file DNE"])
+        file_write.close()
 
     # Print contents
     file_read = open(full_name,"r")
     print(file_read.read())
 
-def detect_shades(image_dir, output_dir=""):
+def detect_shades(image_dir1, output_dir="", image_dir2=""):
     '''
     Uses the default VGG16 model for image classification.
     VGG16 is able to detect 1000 object types in photos.
-    We are focused on sunglasses classification.
+    We are focusing on sunglasses classification.
     
     Args:
-        image_dir: directory of input image.
+        image_dir1: directory of first input image.
         output_dir: location for the .txt file, optional parameter.
+        image_dir2: directory of cropped version of first input image, optional parameter.
     
     Returns:
         None
@@ -312,47 +334,71 @@ def detect_shades(image_dir, output_dir=""):
 
     print('\ndetect_shades()')
 
-    # resizes an image to required VGG16 dimensions.
-    image = load_img(image_dir, target_size=(224, 224))
-
-    # convert the image pixels to a numpy array
-    image = img_to_array(image)
-
-    # reshape data for the model
-    image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
-
-    # prepare the image for the VGG model
-    image = preprocess_input(image)
-
-    # load the model
-    model = VGG16()
-
-    # predict the probability across all output classes
-    yhat = model.predict(image)
-
-    # convert the probabilities to class labels
-    label = decode_predictions(yhat)
-
     # store all relevant information in a .txt file
-    full_name=output_dir+"/"+"result_shades.txt"
+    if(output_dir!=""):
+        full_name=output_dir+"/"+"result_shades.txt"
+    else:
+        full_name="result_shades.txt"
     file_write = open(full_name,"w")
 
     # put it all in a list then append to the .txt file
     result=list()
-    result.append('Top 5 Object Detection Predictions\n')
-    top_5_shades=False
-    for i in range(0,5):
-        result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
-        # label 'n04356056' is 'sunglasses, dark glasses, shades'
-        if (label[0][i][0]=='n04356056'):
-            top_5_shades=True
-    if (top_5_shades==True):
-        result.append("There appears to be sunglasses. Larger glasses are hard to deepfake.")
-    else:
-        result.append("No sunglasses detected.")
-    file_write.writelines(result)
-    file_write.close()
 
-    # Print contents
+    # perform analysis if the image exists. otherwise, file DNE.
+    if(os.path.exists(image_dir1)):
+
+        # resizes an image to required VGG16 dimensions.
+        image = load_img(image_dir1, target_size=(224, 224))
+        # convert the image pixels to a numpy array
+        image = img_to_array(image)
+        # reshape data for the model
+        image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+        # prepare the image for the VGG model
+        image = preprocess_input(image)
+        # load the model
+        model = VGG16()
+        # predict the probability across all output classes
+        yhat = model.predict(image)
+        # convert the probabilities to class labels
+        label = decode_predictions(yhat)
+
+        result.append('ORIGINAL\nTop 5 Object Detection Predictions\n')
+        # top_5_shades=False
+        for i in range(0,5):
+            result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
+            # label 'n04356056' is 'sunglasses, dark glasses, shades'
+            # if (label[0][i][0]=='n04356056'):
+            #     top_5_shades=True
+        # if (top_5_shades==True):
+        #     result.append("There appears to be sunglasses. Larger glasses are hard to deepfake.")
+        # else:
+        #     result.append("No sunglasses detected.")
+    else:
+        result.append("file DNE")
+
+    # perform analysis if the user gave an argument. otherwise, file argument missing.
+    if(image_dir2!=""):
+        # perform analysis if the image exists. otherwise, file DNE.
+        if(os.path.exists(image_dir2)):
+            image = load_img(image_dir2, target_size=(224, 224))
+            image = img_to_array(image)
+            image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+            image = preprocess_input(image)
+            model = VGG16()
+            yhat = model.predict(image)
+            label = decode_predictions(yhat)
+            result.append('\nCROPPED\nTop 5 Object Detection Predictions\n')
+            for i in range(0,5):
+                result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
+        else:
+            result.append("\nCROPPED\nfile DNE")
+    else:
+        result.append("\nsecond file argument missing")
+
+    # write result to file
+    file_write.writelines(result)
+    # close file
+    file_write.close()
+    # print contents
     file_read = open(full_name,"r")
     print(file_read.read())
