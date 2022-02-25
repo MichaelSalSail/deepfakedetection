@@ -9,10 +9,10 @@ import {
   Card,
   CardHeader,
 } from "@mui/material";
-import LoadingButton from "@mui/lab/LoadingButton";
+import LoadingButton from "@mui/lab/node/LoadingButton/index.js";
 import ReactPlayer from "react-player";
 // components
-import Page from "../components/Page";
+import Page from "../components/Page.js";
 import {
   MissingPercent,
   UnknownPercent,
@@ -20,13 +20,7 @@ import {
   ClosedPercent,
   Eyeblinks,
   DFDchart,
-  AppTasks,
-  AppNewsUpdate,
-  AppCurrentVisits,
-  AppTrafficBySite,
-  AppCurrentSubject,
-  AppConversionRates,
-} from "../components/_dashboard/app";
+} from "../components/_dashboard/app/index.js";
 
 import axios from "axios";
 
@@ -147,10 +141,10 @@ export default function DashboardApp() {
   };
 
   return (
-    <Page title="Deep Fake Detection">
+    <Page title="Dashboard">
       <Container maxWidth="xl">
         <Box sx={{ pb: 5 }}>
-          <Typography variant="h4">Is the video a deep fake?</Typography>
+          <Typography variant="h4">Is this a deepfake?</Typography>
           <Box flexDirection="row">
             <input
               id="file-upload"
@@ -201,10 +195,6 @@ export default function DashboardApp() {
             </Card>
           </Grid>
 
-          {/* <Grid item xs={12} md={6} lg={4}>
-            <Eyeblinks />
-          </Grid> */}
-
           <Grid item xs={12} sm={6} md={3}>
             <MissingPercent
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
@@ -226,22 +216,18 @@ export default function DashboardApp() {
             />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={8}>
-            <DFDchart {...{ deepfakeResults }} />
-          </Grid>
-
           <Grid item xs={12} md={6} lg={4}>
             <Eyeblinks
               {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
             />
           </Grid>
 
-          {/* <Grid item xs={12} md={6} lg={8}>
-            <AppNewsUpdate />
+          <Grid item xs={12} md={6} lg={8}>
+            <DFDchart {...{ deepfakeResults }} />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={4}>
-            <DFDchart />
+          {/* <Grid item xs={12} md={6} lg={8}>
+            <AppNewsUpdate />
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>

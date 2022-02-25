@@ -1,10 +1,10 @@
 import { Icon } from "@iconify/react";
-import questionCircleOutlined from "@iconify/icons-ant-design/question-circle-outlined";
+import questionCircleOutlined from "@iconify/icons-ant-design/question-circle-outlined.js";
 // material
-import { alpha, styled } from "@mui/material/styles";
+import { alpha, styled } from "@mui/material/styles/index.js";
 import { Card, Typography } from "@mui/material";
 // utils
-import { fShortenNumber } from "../../../utils/formatNumber";
+import { fShortenNumber } from "../../../utils/formatNumber.js";
 
 // ----------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ export default function UnknownPercent({
   const renderPercentage = () => {
     let total = missingFrames + unknownFrames + openedFrames + closedFrames;
     let percent = ((unknownFrames / total) * 100).toFixed(2);
-    return percent;
+    return 22;
   };
 
   return (

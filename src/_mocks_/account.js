@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------
 
 const account = {
-  displayName: "Deep Fake Detection",
+  displayName: "Deepfake Detection",
   email: "demo@minimals.cc",
   photoURL: "/static/mock-images/avatars/avatar_default.jpg",
 };

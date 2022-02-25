@@ -1,10 +1,10 @@
 import { Icon } from "@iconify/react";
-import closeSquareOutlined from "@iconify/icons-ant-design/close-square-outlined";
+import closeSquareOutlined from "@iconify/icons-ant-design/close-square-outlined.js";
 // material
-import { alpha, styled } from "@mui/material/styles";
+import { alpha, styled } from "@mui/material/styles/index.js";
 import { Card, Typography } from "@mui/material";
 // utils
-import { fShortenNumber } from "../../../utils/formatNumber";
+import { fShortenNumber } from "../../../utils/formatNumber.js";
 
 // ----------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ export default function MissingPercent({
   const renderPercentage = () => {
     let total = missingFrames + unknownFrames + openedFrames + closedFrames;
     let percent = ((missingFrames / total) * 100).toFixed(2);
-    return percent;
+    return 11;
   };
 
   return (

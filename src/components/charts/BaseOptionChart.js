@@ -1,5 +1,5 @@
 // material
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles/index.js';
 import { GlobalStyles } from '@mui/material';
 
 // ----------------------------------------------------------------------

@@ -113,7 +113,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
                     y_pred = model(x)
                     y_pred = torch.sigmoid(y_pred.squeeze())
                     data_res=y_pred[:n].mean().item()
-                    result.append(str(round(data_res,2)))
+                    result.append(str(round(data_res*100,2))+"%")
                     file_write.writelines(result)
                     file_write.close()
 
@@ -304,13 +304,13 @@ def detect_beard(image_dir, output_dir=""):
         result.append(temp)
         temp="Gender: "+str(obj["gender"])+'\n'
         result.append(temp)
-        # if (obj["age"]>=20 and obj["gender"]=='Man'):
-        #     result.append("There appears to be an adult male. Beards are hard to deepfake.")
+
+        # write to file
         file_write.writelines(result)
         file_write.close()
     # otherwise
     else:
-        file_write.writelines(["file DNE"])
+        file_write.writelines(["   Age: ??\nGender: ??"])
         file_write.close()
 
     # Print contents
@@ -341,11 +341,15 @@ def detect_shades(image_dir1, output_dir="", image_dir2=""):
         full_name="result_shades.txt"
     file_write = open(full_name,"w")
 
+    # format of Top 5 Object Detection Predictions
+    predict_template="????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
+
     # put it all in a list then append to the .txt file
     result=list()
 
     # perform analysis if the image exists. otherwise, file DNE.
     if(os.path.exists(image_dir1)):
+        result.append('ORIGINAL\nTop 5 Object Detection Predictions\n')
 
         # resizes an image to required VGG16 dimensions.
         image = load_img(image_dir1, target_size=(224, 224))
@@ -362,19 +366,12 @@ def detect_shades(image_dir1, output_dir="", image_dir2=""):
         # convert the probabilities to class labels
         label = decode_predictions(yhat)
 
-        result.append('ORIGINAL\nTop 5 Object Detection Predictions\n')
-        # top_5_shades=False
+        # label 'n04356056' is 'sunglasses, dark glasses, shades'
         for i in range(0,5):
             result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
-            # label 'n04356056' is 'sunglasses, dark glasses, shades'
-            # if (label[0][i][0]=='n04356056'):
-            #     top_5_shades=True
-        # if (top_5_shades==True):
-        #     result.append("There appears to be sunglasses. Larger glasses are hard to deepfake.")
-        # else:
-        #     result.append("No sunglasses detected.")
     else:
-        result.append("file DNE")
+        result.append('ORIGINAL (file DNE)\nTop 5 Object Detection Predictions\n')
+        result.append(predict_template+'\n')
 
     # perform analysis if the user gave an argument. otherwise, file argument missing.
     if(image_dir2!=""):
@@ -391,9 +388,11 @@ def detect_shades(image_dir1, output_dir="", image_dir2=""):
             for i in range(0,5):
                 result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
         else:
-            result.append("\nCROPPED\nfile DNE")
+            result.append("\nCROPPED (file DNE)\nTop 5 Object Detection Predictions\n")
+            result.append(predict_template)
     else:
-        result.append("\nsecond file argument missing")
+        result.append("\nCROPPED (file argument missing)\nTop 5 Object Detection Predictions\n")
+        result.append(predict_template)
 
     # write result to file
     file_write.writelines(result)
