@@ -14,27 +14,12 @@ import {
 } from "@mui/lab";
 // utils
 import { fDateTime } from "../../../utils/formatTime.js";
+let result_beard = require('../../../pages/AllResultsJSON/result_beard.json');
+let result_shades = require('../../../pages/AllResultsJSON/result_shades.json');
 
 // ----------------------------------------------------------------------
-
-const TIMELINES = [
-  {
-    title: "No beards or facial hair was detected",
-    time: faker.date.past(),
-    type: "Facial Hair",
-  },
-  {
-    title:
-      "Glasses return a string: There appears to be glasses. Large glasses are hard to deep fake",
-    time: faker.date.past(),
-    type: "Eyewear",
-  },
-  {
-    title: "50% of frames are eyes open. 50% of frames are eyes closed",
-    time: faker.date.past(),
-    type: "Eye blink",
-  },
-];
+const from_beard=result_beard["beard"]
+const from_shades=result_shades["shades"]
 
 // ----------------------------------------------------------------------
 
@@ -44,16 +29,15 @@ OrderItem.propTypes = {
 };
 
 function OrderItem({ item, isLast }) {
-  const { type, title, time } = item;
+  const {type, title} = item;
   return (
     <TimelineItem>
       <TimelineSeparator>
         <TimelineDot
           sx={{
             bgcolor:
-              (type === "Facial Hair" && "primary.main") ||
-              (type === "Eyewear" && "success.main") ||
-              (type === "Eye blink" && "info.main") ||
+              (type === "Beard" && from_beard===true && "success.main") ||
+              (type === "Shades" && from_shades===true && "success.main") ||
               "error.main",
           }}
         />
@@ -69,27 +53,32 @@ function OrderItem({ item, isLast }) {
   );
 }
 
-export default function Eyeblinks({
-  missingFrames,
-  unknownFrames,
-  openedFrames,
-  closedFrames,
-}) {
+export default function Eyeblinks() {
   const [timeline, setTimeline] = useState([]);
 
+  var beard_content="The subject is young and/or female."
+  if(from_beard===true)
+    beard_content="There appears to be an adult male."
+ 
+  var shades_content="It's unlikely the subject has eyewear"
+  if(from_shades===true)
+    shades_content="It's likely the subject has eyewear." 
+
   useEffect(() => {
-    let total = missingFrames + unknownFrames + openedFrames + closedFrames;
-    let openPercent = ((openedFrames / total) * 100).toFixed(2);
-    let closePercent = ((closedFrames / total) * 100).toFixed(2);
 
     setTimeline([
       {
-        title: `${openPercent}% of frames are eyes open. ${closePercent}% of frames are eyes closed`,
+        title: `${beard_content}`,
         time: faker.date.past(),
-        type: "Eye blink",
+        type: "Beard",
       },
+      {
+        title: `${shades_content}`,
+        time: faker.date.past(),
+        type: "Shades",
+      }
     ]);
-  }, [missingFrames, unknownFrames, openedFrames, closedFrames]);
+  }, [beard_content, shades_content]);
 
   return (
     <Card
@@ -103,11 +92,11 @@ export default function Eyeblinks({
       <CardContent>
         <Box>
           <Timeline>
-            {timeline.map((item, index) => (
+            {timeline.map((item) => (
               <OrderItem
                 key={item.title}
                 item={item}
-                isLast={index === TIMELINES.length - 1}
+                isLast={true}
               />
             ))}
           </Timeline>

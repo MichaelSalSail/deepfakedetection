@@ -5,6 +5,7 @@ import { alpha, styled } from "@mui/material/styles/index.js";
 import { Card, Typography } from "@mui/material";
 // utils
 import { fShortenNumber } from "../../../utils/formatNumber.js";
+import { extract_percents } from "../../../utils/AllResults.js";
 
 // ----------------------------------------------------------------------
 
@@ -34,18 +35,10 @@ const IconWrapperStyle = styled("div")(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-const TOTAL = 1352831;
-
-export default function UnknownPercent({
-  missingFrames,
-  unknownFrames,
-  openedFrames,
-  closedFrames,
-}) {
+export default function UnknownPercent() {
   const renderPercentage = () => {
-    let total = missingFrames + unknownFrames + openedFrames + closedFrames;
-    let percent = ((unknownFrames / total) * 100).toFixed(2);
-    return 22;
+    let eyes_result = require('../../../pages/AllResultsJSON/result_blink.json');
+    return eyes_result["unknown"];
   };
 
   return (
@@ -55,7 +48,7 @@ export default function UnknownPercent({
       </IconWrapperStyle>
       <Typography variant="h3">{renderPercentage()} %</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-        Unknown Frames
+        of frames are unknown
       </Typography>
     </RootStyle>
   );

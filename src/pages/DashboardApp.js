@@ -196,30 +196,20 @@ export default function DashboardApp() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <MissingPercent
-              {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
-            />
+            <MissingPercent/>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <UnknownPercent
-              {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
-            />
+            <UnknownPercent/>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <OpenPercent
-              {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
-            />
+            <OpenPercent/>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <ClosedPercent
-              {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
-            />
+            <ClosedPercent/>
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>
-            <Eyeblinks
-              {...{ missingFrames, unknownFrames, openedFrames, closedFrames }}
-            />
+            <Eyeblinks/>
           </Grid>
 
           <Grid item xs={12} md={6} lg={8}>

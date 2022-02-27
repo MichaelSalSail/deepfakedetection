@@ -5,6 +5,7 @@ import { alpha, styled } from "@mui/material/styles/index.js";
 import { Card, Typography } from "@mui/material";
 // utils
 import { fShortenNumber } from "../../../utils/formatNumber.js";
+import { extract_percents } from "../../../utils/AllResults.js";
 
 // ----------------------------------------------------------------------
 
@@ -34,18 +35,10 @@ const IconWrapperStyle = styled("div")(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-const TOTAL = 1723315;
-
-export default function MissingPercent({
-  missingFrames,
-  unknownFrames,
-  openedFrames,
-  closedFrames,
-}) {
+export default function MissingPercent() {
   const renderPercentage = () => {
-    let total = missingFrames + unknownFrames + openedFrames + closedFrames;
-    let percent = ((missingFrames / total) * 100).toFixed(2);
-    return 11;
+    let eyes_result = require('../../../pages/AllResultsJSON/result_blink.json');
+    return eyes_result["missing"];
   };
 
   return (
@@ -55,7 +48,7 @@ export default function MissingPercent({
       </IconWrapperStyle>
       <Typography variant="h3">{renderPercentage()} %</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-        Missing Frames
+        of frames are missing
       </Typography>
     </RootStyle>
   );
