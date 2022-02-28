@@ -1,5 +1,5 @@
 {
   "shades_default": false,
-  "shades": false,
-  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nweb_site (87.92%)\nrule (2.34%)\nenvelope (1.63%)\nmonitor (0.91%)\nnotebook (0.45%)\n\nCROPPED\nTop 5 Object Detection Predictions\nwig (32.66%)\nmask (32.21%)\nsunscreen (6.21%)\nlipstick (2.89%)\nseat_belt (2.19%)\n"
+  "shades": true,
+  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nweb_site (76.98%)\nrule (4.96%)\nenvelope (4.50%)\nsunglasses (1.23%)\nbook_jacket (0.68%)\n\nCROPPED\nTop 5 Object Detection Predictions\nwig (24.55%)\nmask (18.08%)\nsunscreen (10.44%)\nlipstick (6.05%)\nBand_Aid (3.86%)\n"
 }

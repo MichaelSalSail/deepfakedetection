@@ -14,11 +14,8 @@ import ReactPlayer from "react-player";
 // components
 import Page from "../components/Page.js";
 import {
-  MissingPercent,
-  UnknownPercent,
-  OpenPercent,
-  ClosedPercent,
   Eyeblinks,
+  OtherOutputs,
   DFDchart,
 } from "../components/_dashboard/app/index.js";
 
@@ -196,22 +193,21 @@ export default function DashboardApp() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <MissingPercent/>
+            <Eyeblinks {... new Array("missing")} />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <UnknownPercent/>
+            <Eyeblinks {... new Array("unknown")} />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <OpenPercent/>
+            <Eyeblinks {... new Array("open")} />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <ClosedPercent/>
+            <Eyeblinks {... new Array("closed")} />
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>
-            <Eyeblinks/>
+            <OtherOutputs/>
           </Grid>
-
           <Grid item xs={12} md={6} lg={8}>
             <DFDchart {...{ deepfakeResults }} />
           </Grid>

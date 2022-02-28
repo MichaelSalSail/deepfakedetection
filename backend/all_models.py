@@ -235,13 +235,13 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     # Timestamp of each video frame and classfication in an excel sheet
     if (all_open+all_closed+all_unknown)<(total_frames):
         all_missing=total_frames-(all_open+all_closed+all_unknown)
-    temp="Amount of missing frames: "+str(round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100,3))+"%\n"
+    temp="Amount of missing frames: "+str(round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%\n"
     result.append(temp)
-    temp="Amount of unknown frames: "+ str(round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100,3)) +"%\n"
+    temp="Amount of unknown frames: "+ str(round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100,2)) +"%\n"
     result.append(temp)
-    temp="Amount of open eyes frames: "+str(round((all_open/(all_open+all_closed+all_unknown+all_missing))*100,3))+"%\n"
+    temp="Amount of open eyes frames: "+str(round((all_open/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%\n"
     result.append(temp)
-    temp="Amount of closed eyes frames: "+str(round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100,3))+"%"
+    temp="Amount of closed eyes frames: "+str(round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%"
     result.append(temp)
     file_write.writelines(result)
     file_write.close()
@@ -251,10 +251,10 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     print(file_read.read())
 
     # Print and return perctile distributions list
-    final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 3),
-                    round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100, 3),
-                    round((all_open/(all_open+all_closed+all_unknown+all_missing))*100, 3),
-                    round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100, 3)]
+    final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 2),
+                    round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100, 2),
+                    round((all_open/(all_open+all_closed+all_unknown+all_missing))*100, 2),
+                    round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100, 2)]
     print(final_percents)
     return final_percents
 
