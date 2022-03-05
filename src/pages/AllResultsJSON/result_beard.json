@@ -1,9 +1,0 @@
-{
-  "age_default": 0,
-  "gender_default": "??",
-  "beard_default": false,
-  "age": 32,
-  "gender": "Man",
-  "beard": true,
-  "raw_output": "   Age: 32\nGender: Man\n"
-}

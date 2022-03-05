@@ -1,0 +1,21 @@
+[
+    {
+      "DFD": 0
+    }, 
+    {
+      "closed": 0, 
+      "missing": 0, 
+      "open": 0, 
+      "unknown": 0
+    }, 
+    {
+      "age": 0, 
+      "beard": false, 
+      "gender": "??", 
+      "raw_output": "   Age: ??\nGender: ??\n"
+    }, 
+    {
+      "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n\nCROPPED\nTop 5 Object Detection Predictions\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)", 
+      "shades": false
+    }
+]

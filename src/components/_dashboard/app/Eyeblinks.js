@@ -8,7 +8,6 @@ import { alpha, styled } from "@mui/material/styles/index.js";
 import { Card, Typography } from "@mui/material";
 // utils
 import { fShortenNumber } from "../../../utils/formatNumber.js";
-import { extract_percents } from "../../../utils/AllResults.js";
 
 // ----------------------------------------------------------------------
 

@@ -8,7 +8,7 @@ from helper_functions import get_model
 
 cwd = os.getcwd()
 pre2 = "/example_videos"
-video_path = cwd+pre2+"/blink07.mp4"
+video_path = cwd+pre2+"/target.mp4"
 
 # This is the directory of the 4 model outputs = 4 txt files.
 output_dir = "../src/pages/AllResults"

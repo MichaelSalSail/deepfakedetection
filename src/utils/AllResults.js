@@ -199,7 +199,7 @@ const jsonify_shades = () => {
     fs.writeFileSync("../pages/AllResultsJSON/result_shades.json", data);
 };
 
-// jsonify_DFD();
-// jsonify_blink();
-// jsonify_beard();
-// jsonify_shades();
+jsonify_DFD();
+jsonify_blink();
+jsonify_beard();
+jsonify_shades();
