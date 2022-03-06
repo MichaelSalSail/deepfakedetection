@@ -1,21 +1,16 @@
-[
-    {
-      "DFD": 41.01
-    }, 
-    {
-      "closed": 28.66, 
-      "missing": 0, 
-      "open": 70.73, 
-      "unknown": 0.61
-    }, 
-    {
-      "age": 32, 
-      "beard": true, 
-      "gender": "Man", 
-      "raw_output": "   Age: 32\nGender: Man\n"
-    }, 
-    {
-      "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nweb_site (76.98%)\nrule (4.96%)\nenvelope (4.50%)\nsunglasses (1.23%)\nbook_jacket (0.68%)\n\nCROPPED\nTop 5 Object Detection Predictions\nwig (24.55%)\nmask (18.08%)\nsunscreen (10.44%)\nlipstick (6.05%)\nBand_Aid (3.86%)\n", 
-      "shades": true
-    }
-]
+[{
+  "DFD": 41.01
+},{
+  "closed": 28.66,
+  "missing": 0,
+  "open": 70.73,
+  "unknown": 0.61
+},{
+  "age": 32,
+  "beard": true,
+  "gender": "Man",
+  "raw_output": "   Age: 32\nGender: Man\n"
+},{
+  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nweb_site (76.98%)\nrule (4.96%)\nenvelope (4.50%)\nsunglasses (1.23%)\nbook_jacket (0.68%)\n\nCROPPED\nTop 5 Object Detection Predictions\nwig (24.55%)\nmask (18.08%)\nsunscreen (10.44%)\nlipstick (6.05%)\nBand_Aid (3.86%)\n",
+  "shades": true
+}]

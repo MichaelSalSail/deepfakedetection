@@ -69,64 +69,53 @@ const extract_text = (fileName) => {
 };
 
 /**
- * convert the data from result_DFD.txt to json format and save
+ * convert the data from result_DFD.txt to json format
  * @param
- * @return
+ * @return {json} extracted score
  */
-const jsonify_DFD = () => {
-    
-    const fs = require('fs');
+const update_DFD = () => {
 
     let DFD_score=extract_percents("/../pages/AllResults/result_DFD.txt");
     console.log(DFD_score)
 
     // organize data in json format and write to file
     let DFD_json = { 
-        DFD_default: 0.0, 
-        DFD: DFD_score[0] 
+        "DFD": DFD_score[0] 
     };
     let data = JSON.stringify(DFD_json, null, 2);
-    fs.writeFileSync("../pages/AllResultsJSON/result_DFD.json", data);
+    return data;
 };
 
 
 /**
- * convert the data from result_blink.txt to json format and save
+ * convert the data from result_blink.txt to json format
  * @param
- * @return
+ * @return {json} extract eye blink scores
  */
-const jsonify_blink = () => {
-    
-    const fs = require('fs');
+const update_blink = () => {
 
     let all_blinks=extract_percents("/../pages/AllResults/result_blink.txt");
     console.log(all_blinks)
 
-    // organize data in json format and write to file
+    // organize data in json format
     let blinks_json = { 
-        missing_default: 0.0, 
-        unknown_default: 0.0, 
-        open_default: 0.0, 
-        closed_default: 0.0, 
-        missing: all_blinks[0], 
-        unknown: all_blinks[1], 
-        open: all_blinks[2], 
-        closed: all_blinks[3] 
+        "closed": all_blinks[3],
+        "missing": all_blinks[0],
+        "open": all_blinks[2],
+        "unknown": all_blinks[1] 
     };
     let data = JSON.stringify(blinks_json, null, 2);
-    fs.writeFileSync("../pages/AllResultsJSON/result_blink.json", data);
+    return data;
 };
 
 
 /**
  * look at the data from result_beard.txt and assess whether a beard is present, 
- * then, convert data to json format and save
+ * then, convert data to json format
  * @param
- * @return
+ * @return {json} beard detection elements + raw output
  */
-const jsonify_beard = () => {
-    
-    const fs = require('fs');
+const update_beard = () => {
 
     let beard_text=extract_text("/../pages/AllResults/result_beard.txt");
 
@@ -156,29 +145,24 @@ const jsonify_beard = () => {
 
     console.log(all_beard)
 
-    // organize data in json format and write to file
+    // organize data in json format
     let beard_json = { 
-        age_default: 0, 
-        gender_default: "??", 
-        beard_default: false, 
-        age: all_beard[0], 
-        gender: all_beard[1], 
-        beard: all_beard[2],
-        raw_output: beard_text 
+        "age": all_beard[0], 
+        "beard": all_beard[2],
+        "gender": all_beard[1], 
+        "raw_output": beard_text 
     };
     let data = JSON.stringify(beard_json, null, 2);
-    fs.writeFileSync("../pages/AllResultsJSON/result_beard.json", data);
+    return data;
 };
 
 /**
  * look at the data from result_shades.txt and assess whether shades are present, 
- * then, convert data to json format and save
+ * then, convert data to json format
  * @param
- * @return
+ * @return {json} shades detection element + raw output
  */
-const jsonify_shades = () => {
-    
-    const fs = require('fs');
+const update_shades = () => {
 
     let shades_text=extract_text("/../pages/AllResults/result_shades.txt");
 
@@ -189,17 +173,18 @@ const jsonify_shades = () => {
 
     console.log(all_shades)
 
-    // organize data in json format and write it to file
+    // organize data in json format
     let shades_json = { 
-        "shades_default": false, 
-        "shades": all_shades, 
-        "raw_output": shades_text 
+        "raw_output": shades_text,
+        "shades": all_shades 
     };
     let data = JSON.stringify(shades_json, null, 2);
-    fs.writeFileSync("../pages/AllResultsJSON/result_shades.json", data);
+    return data;
 };
 
-jsonify_DFD();
-jsonify_blink();
-jsonify_beard();
-jsonify_shades();
+// update all
+const fs = require('fs');
+
+list_of_updates= [update_DFD(), update_blink(), update_beard(), update_shades()];
+
+fs.writeFileSync("../pages/AllResultsJSON/result_update.json", '['+list_of_updates+']');

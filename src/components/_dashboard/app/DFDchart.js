@@ -5,7 +5,7 @@ import ReactApexChart from "react-apexcharts";
 import { Card, CardHeader, Box } from "@mui/material";
 //
 import { BaseOptionChart } from "../../charts/index.js";
-let DFD_result = require('../../../pages/AllResultsJSON/result_DFD.json');
+let DFD_result = require('../../../pages/AllResultsJSON/result_update.json')[0];
 
 // ----------------------------------------------------------------------
 

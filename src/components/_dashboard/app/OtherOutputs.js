@@ -14,12 +14,15 @@ import {
 } from "@mui/lab";
 // utils
 import { fDateTime } from "../../../utils/formatTime.js";
-let result_beard = require('../../../pages/AllResultsJSON/result_beard.json');
-let result_shades = require('../../../pages/AllResultsJSON/result_shades.json');
+let result_beard = require('../../../pages/AllResultsJSON/result_update.json')[2];
+let result_shades = require('../../../pages/AllResultsJSON/result_update.json')[3];
 
 // ----------------------------------------------------------------------
 const from_beard=result_beard["beard"]
 const from_shades=result_shades["shades"]
+// const output_beard=result_beard["raw_output"]
+// const output_shades=result_shades["raw_output"]
+
 
 // ----------------------------------------------------------------------
 

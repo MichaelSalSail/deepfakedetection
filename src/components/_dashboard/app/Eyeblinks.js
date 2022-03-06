@@ -111,7 +111,7 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
 
 export default function Eyeblinks(color_card) {
   const renderPercentage = () => {
-    let eyes_result = require('../../../pages/AllResultsJSON/result_blink.json');
+    let eyes_result = require('../../../pages/AllResultsJSON/result_update.json')[1];
     return eyes_result;
   };
 
