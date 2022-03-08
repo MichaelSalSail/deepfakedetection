@@ -12,7 +12,7 @@ export default function Logo({ sx }) {
   return (
     <Box
       component="img"
-      src="/static/avatars/avatar_default.jpg"
+      src="/static/mock-images/avatars/avatar_default.jpg"
       sx={{ width: 40, height: 40, ...sx }}
     />
   );
