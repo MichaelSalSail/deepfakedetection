@@ -17,19 +17,13 @@ import {
   Eyeblinks,
   OtherOutputs,
   DFDchart,
+  PopUp_Help
 } from "../components/_dashboard/app/index.js";
 
 import axios from "axios";
 
 const API_URL = "http://0593-67-84-165-192.ngrok.io";
-const EYE_BLINK_PREDICTIONS = {
-  0: [0.0, 3.33, 86.67, 10.0],
-  1: [0.0, 0.0, 86.67, 13.33],
-  2: [0.0, 0.0, 100.0, 0.0],
-  3: [0.0, 0.0, 83.33, 16.67],
-  4: [0.0, 0.0, 46.67, 53.33],
-  5: [0.0, 0.0, 20.0, 80.0],
-};
+
 //  index 0: amount of missing frames
 //  index 1: amount of unknown frames
 //  index 2: amount of opened frames
@@ -166,6 +160,7 @@ export default function DashboardApp() {
                 Generate Results
               </Button>
             )}
+            <PopUp_Help/>
           </Box>
         </Box>
 
@@ -212,17 +207,6 @@ export default function DashboardApp() {
             <DFDchart {...{ deepfakeResults }} />
           </Grid>
 
-          {/* <Grid item xs={12} md={6} lg={8}>
-            <AppNewsUpdate />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppTrafficBySite />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppTasks />
-          </Grid> */}
         </Grid>
       </Container>
     </Page>
