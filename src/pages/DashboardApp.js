@@ -120,6 +120,7 @@ export default function DashboardApp() {
     return switch_data;
   };
 
+  // <Grid container columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
   return (
     <Page title="Application">
       <Container maxWidth="xl">
@@ -153,7 +154,7 @@ export default function DashboardApp() {
           </Box>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           <Grid item xs={12} md={6} lg={12}>
             <Card>
               <CardHeader
@@ -176,27 +177,28 @@ export default function DashboardApp() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks color_card={blink_classes[0]} switch_data={switch_data} />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks color_card={blink_classes[1]} switch_data={switch_data} />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks color_card={blink_classes[2]} switch_data={switch_data} />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks color_card={blink_classes[3]} switch_data={switch_data} />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <OtherOutputs switch_data={switch_data}/>
-          </Grid>
-          <Grid item xs={12} md={6} lg={8}>
+          <Grid item xs={12}>
             <DFDchart deepfakeResults={deepfakeResults} switch_data={switch_data} />
           </Grid>
-
+          
+          <Grid item xs={3}>
+            <Eyeblinks color_card={blink_classes[0]} switch_data={switch_data} />
+          </Grid>
+          <Grid item xs={3}>
+            <Eyeblinks color_card={blink_classes[1]} switch_data={switch_data} />
+          </Grid>
+          <Grid item xs={3}>
+            <Eyeblinks color_card={blink_classes[2]} switch_data={switch_data} />
+          </Grid>
+          <Grid item xs={3}>
+            <Eyeblinks color_card={blink_classes[3]} switch_data={switch_data} />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <OtherOutputs switch_data={switch_data}/>
+          </Grid>
         </Grid>
+        
       </Container>
     </Page>
   );
