@@ -14,15 +14,6 @@ import {
 } from "@mui/lab";
 // utils
 import { fDateTime } from "../../../utils/formatTime.js";
-let result_beard = require('../../../pages/AllResultsJSON/result_update.json')[2];
-let result_shades = require('../../../pages/AllResultsJSON/result_update.json')[3];
-
-// ----------------------------------------------------------------------
-const from_beard=result_beard["beard"]
-const from_shades=result_shades["shades"]
-// const output_beard=result_beard["raw_output"]
-// const output_shades=result_shades["raw_output"]
-
 
 // ----------------------------------------------------------------------
 
@@ -31,8 +22,19 @@ OrderItem.propTypes = {
   isLast: PropTypes.bool,
 };
 
-function OrderItem({ item, isLast }) {
+function OrderItem({ item, isLast, switch_data }) {
   const {type, title} = item;
+  let result_beard = require('../../../pages/AllResultsJSON/result_default.json')[2];
+  let result_shades = require('../../../pages/AllResultsJSON/result_default.json')[3];
+  // switch_data equates to number of 'Generate Results' button clicks
+  if((switch_data%2)===1)
+  {
+    result_beard = require('../../../pages/AllResultsJSON/result_update.json')[2];
+    result_shades = require('../../../pages/AllResultsJSON/result_update.json')[3];
+  }
+  let from_beard=result_beard["beard"]
+  let from_shades=result_shades["shades"]
+
   return (
     <TimelineItem>
       <TimelineSeparator>
@@ -56,8 +58,20 @@ function OrderItem({ item, isLast }) {
   );
 }
 
-export default function OtherOutputs() {
+export default function OtherOutputs(input) {
   const [timeline, setTimeline] = useState([]);
+  let result_beard = require('../../../pages/AllResultsJSON/result_default.json')[2];
+  let result_shades = require('../../../pages/AllResultsJSON/result_default.json')[3];
+  // switch_data equates to number of 'Generate Results' button clicks
+  if((input["switch_data"]%2)===1)
+  {
+    result_beard = require('../../../pages/AllResultsJSON/result_update.json')[2];
+    result_shades = require('../../../pages/AllResultsJSON/result_update.json')[3];
+  }
+  let from_beard=result_beard["beard"]
+  let from_shades=result_shades["shades"]
+  // const output_beard=result_beard["raw_output"]
+  // const output_shades=result_shades["raw_output"]
 
   var beard_content="The subject is young and/or female."
   if(from_beard===true)
@@ -100,6 +114,7 @@ export default function OtherOutputs() {
                 key={item.title}
                 item={item}
                 isLast={true}
+                switch_data={input["switch_data"]}
               />
             ))}
           </Timeline>

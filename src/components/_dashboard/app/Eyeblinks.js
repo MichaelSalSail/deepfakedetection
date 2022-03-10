@@ -109,64 +109,65 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-export default function Eyeblinks(color_card) {
+export default function Eyeblinks(input) {
   const renderPercentage = () => {
-    let eyes_result = require('../../../pages/AllResultsJSON/result_update.json')[1];
+    let eyes_result = require('../../../pages/AllResultsJSON/result_default.json')[1];
+    // switch_data equates to number of 'Generate Results' button clicks
+    if((input["switch_data"]%2)===1)
+      eyes_result = require('../../../pages/AllResultsJSON/result_update.json')[1];
     return eyes_result;
   };
 
-  console.log(color_card[0]);
-
-  if(color_card[0]==="missing")
+  if(input["color_card"]==="missing")
   {
     return (
       <RootStyle1>
         <IconWrapperStyle1>
           <Icon icon={closeSquareOutlined} width={24} height={24} />
         </IconWrapperStyle1>
-        <Typography variant="h3">{renderPercentage()[color_card[0]]} %</Typography>
+        <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
           of frames are missing
         </Typography>
       </RootStyle1>
     );
   }
-  else if(color_card[0]==="unknown")
+  else if(input["color_card"]==="unknown")
   {
     return (
       <RootStyle2>
       <IconWrapperStyle2>
         <Icon icon={questionCircleOutlined} width={24} height={24} />
       </IconWrapperStyle2>
-      <Typography variant="h3">{renderPercentage()[color_card[0]]} %</Typography>
+      <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
         of frames are unknown
       </Typography>
     </RootStyle2>
     );
   }
-  else if(color_card[0]==="open")
+  else if(input["color_card"]==="open")
   {
     return (
       <RootStyle3>
         <IconWrapperStyle3>
           <Icon icon={eyeFilled} width={24} height={24} />
         </IconWrapperStyle3>
-        <Typography variant="h3">{renderPercentage()[color_card[0]]} %</Typography>
+        <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
           of frames have open eyes
         </Typography>
       </RootStyle3>
     );
   }
-  else if(color_card[0]==="closed")
+  else if(input["color_card"]==="closed")
   {
     return (
       <RootStyle4>
         <IconWrapperStyle4>
           <Icon icon={eyeInvisibleFilled} width={24} height={24} />
         </IconWrapperStyle4>
-        <Typography variant="h3">{renderPercentage()[color_card[0]]} %</Typography>
+        <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
           of frames have closed eyes
         </Typography>

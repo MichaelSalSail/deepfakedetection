@@ -5,29 +5,32 @@ import ReactApexChart from "react-apexcharts";
 import { Card, CardHeader, Box } from "@mui/material";
 //
 import { BaseOptionChart } from "../../charts/index.js";
-let DFD_result = require('../../../pages/AllResultsJSON/result_update.json')[0];
 
 // ----------------------------------------------------------------------
 
-const CHART_DATA = [
-  {
-    name: "Demo-Chart",
-    data: [DFD_result["DFD"],DFD_result["DFD"],DFD_result["DFD"],
-           DFD_result["DFD"],DFD_result["DFD"]],
-  },
-];
-
-export default function DFDchart({ deepfakeResults }) {
+export default function DFDchart(input) {
   const [series, setSeries] = useState([]);
+  let DFD_result = require('../../../pages/AllResultsJSON/result_default.json')[0];
+  // switch_data equates to number of 'Generate Results' button clicks
+  if((input["switch_data"]%2)===1)
+    DFD_result = require('../../../pages/AllResultsJSON/result_update.json')[0];
+  
+  const CHART_DATA = [
+    {
+      name: "Demo-Chart",
+      data: [DFD_result["DFD"],DFD_result["DFD"],DFD_result["DFD"],
+              DFD_result["DFD"],DFD_result["DFD"]],
+    },
+  ];
 
   useEffect(() => {
-    let formattedSeries = deepfakeResults.map((p, i) => ({
+    let formattedSeries = input["deepfakeResults"].map((p, i) => ({
       x: (i + 1).toString(),
       y: parseInt(p * 100).toString(),
     }));
     const chartData = [{ name: "Deepfake Chart", data: formattedSeries }];
     setSeries(chartData);
-  }, [deepfakeResults]);
+  }, [input["deepfakeResults"]]);
 
   const chartOptions = {
     chart: { id: "demo-chart" },

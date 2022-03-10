@@ -23,6 +23,8 @@ import {
 import axios from "axios";
 
 const API_URL = "http://0593-67-84-165-192.ngrok.io";
+const blink_classes=["missing","unknown","open","closed"];// new Array("unknown")
+var switch_data = 0;
 
 //  index 0: amount of missing frames
 //  index 1: amount of unknown frames
@@ -45,21 +47,18 @@ export default function DashboardApp() {
 
   const [modelLoading, setModelLoading] = useState(false);
 
-  const formatEyeBlinkData = (predictions) => {
+  const formatEyeBlinkData = () => {
     let totalMissing = 0;
     let totalUnknown = 0;
     let totalOpened = 0;
     let totalClosed = 0;
-    Object.values(predictions).forEach((p) => {
-      totalMissing += p[0];
-      totalUnknown += p[1];
-      totalOpened += p[2];
-      totalClosed += p[3];
-    });
+    
     setMissingFrames(totalMissing);
     setUnknownFrames(totalUnknown);
     setOpenedFrames(totalOpened);
     setClosedFrames(totalClosed);
+
+    return Promise.resolve(totalMissing);
   };
 
   const convertBase64 = (file) => {
@@ -110,25 +109,15 @@ export default function DashboardApp() {
 
   const onGenerate = () => {
     setModelLoading(true);
-    getDeepFakePrediction()
-      .then((res) => {
-        console.log("DEEPFAKE rees-----", res.data.preditction);
-        setDeepfakeResults(Object.values(res.data.preditction));
-        getEyeBlinkPrediction()
-          .then((res) => {
-            console.log("EYEBLINK res-----", res.data.preditction);
-            formatEyeBlinkData(res.data.preditction);
-            setModelLoading(false);
-          })
-          .catch((err) => {
-            console.log("err", err);
-            setModelLoading(false);
-          });
-      })
-      .catch((err) => {
-        console.log("err", err);
-        setModelLoading(false);
-      });
+    switch_data+=1;
+    formatEyeBlinkData().then((res) => {
+      setModelLoading(false);
+    })
+    .catch((err) => {
+      console.log("err", err);
+      setModelLoading(false);
+    });
+    return switch_data;
   };
 
   return (
@@ -188,23 +177,23 @@ export default function DashboardApp() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks {... new Array("missing")} />
+            <Eyeblinks color_card={blink_classes[0]} switch_data={switch_data} />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks {... new Array("unknown")} />
+            <Eyeblinks color_card={blink_classes[1]} switch_data={switch_data} />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks {... new Array("open")} />
+            <Eyeblinks color_card={blink_classes[2]} switch_data={switch_data} />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Eyeblinks {... new Array("closed")} />
+            <Eyeblinks color_card={blink_classes[3]} switch_data={switch_data} />
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>
-            <OtherOutputs/>
+            <OtherOutputs switch_data={switch_data}/>
           </Grid>
           <Grid item xs={12} md={6} lg={8}>
-            <DFDchart {...{ deepfakeResults }} />
+            <DFDchart deepfakeResults={deepfakeResults} switch_data={switch_data} />
           </Grid>
 
         </Grid>
