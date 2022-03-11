@@ -17,7 +17,8 @@ import {
   Eyeblinks,
   OtherOutputs,
   DFDchart,
-  PopUp_Help
+  PopUp_Help,
+  Display_Wait
 } from "../components/_dashboard/app/index.js";
 
 import axios from "axios";
@@ -39,26 +40,19 @@ export default function DashboardApp() {
   // deepfake
   const [deepfakeResults, setDeepfakeResults] = useState([]);
 
-  // eyeblink
-  const [missingFrames, setMissingFrames] = useState(0);
-  const [unknownFrames, setUnknownFrames] = useState(0);
-  const [openedFrames, setOpenedFrames] = useState(0);
-  const [closedFrames, setClosedFrames] = useState(0);
-
+  // alternate between button and loading icon
   const [modelLoading, setModelLoading] = useState(false);
 
-  const formatEyeBlinkData = () => {
-    let totalMissing = 0;
-    let totalUnknown = 0;
-    let totalOpened = 0;
-    let totalClosed = 0;
-    
-    setMissingFrames(totalMissing);
-    setUnknownFrames(totalUnknown);
-    setOpenedFrames(totalOpened);
-    setClosedFrames(totalClosed);
+  const update_click = () => {
+    switch_data+=1;
+  };
 
-    return Promise.resolve(totalMissing);
+  const wait_for_models = () => {
+    let place_holder=0;
+    setTimeout(() => {
+      update_click();
+    }, 10000);
+    return Promise.resolve(place_holder);
   };
 
   const convertBase64 = (file) => {
@@ -109,18 +103,19 @@ export default function DashboardApp() {
 
   const onGenerate = () => {
     setModelLoading(true);
-    switch_data+=1;
-    formatEyeBlinkData().then((res) => {
-      setModelLoading(false);
+    wait_for_models().then((res) => {
+      setTimeout(() => {
+        setModelLoading(false);
+      }, 10000);
     })
     .catch((err) => {
       console.log("err", err);
-      setModelLoading(false);
+      setTimeout(() => {
+        setModelLoading(false);
+      }, 10000);
     });
-    return switch_data;
   };
 
-  // <Grid container columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
   return (
     <Page title="Application">
       <Container maxWidth="xl">
@@ -134,27 +129,34 @@ export default function DashboardApp() {
               onChange={onFileChange}
             />
             <label htmlFor="file-upload">
-              <Button component="span" variant="contained">
-                Upload Video
-              </Button>
+              {modelLoading ? (
+                <LoadingButton loading={modelLoading} />
+              ) : (
+                <Button 
+                  component="span" 
+                  variant="contained"
+                >
+                  Upload Video
+                </Button>
+              )}
             </label>
-            {modelLoading ? (
-              <LoadingButton loading={modelLoading} />
-            ) : (
-              <Button
-                style={{ marginLeft: 10 }}
-                component="span"
-                variant="contained"
-                onClick={onGenerate}
-              >
-                Generate Results
-              </Button>
-            )}
+              {modelLoading ? (
+                <LoadingButton loading={modelLoading} />
+              ) : (
+                <Button
+                  style={{ marginLeft: 10 }}
+                  component="span"
+                  variant="contained"
+                  onClick={onGenerate}
+                >
+                  Generate Results
+                </Button>
+              )}
             <PopUp_Help/>
           </Box>
         </Box>
 
-        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
           <Grid item xs={12} md={6} lg={12}>
             <Card>
               <CardHeader
@@ -175,6 +177,14 @@ export default function DashboardApp() {
                 />
               </Box>
             </Card>
+          </Grid>
+
+          <Grid item xs={8}>
+            {modelLoading ? (
+              <Display_Wait/>
+            ) : (
+              <Typography variant="h4" align="center">Results</Typography>
+            )}
           </Grid>
 
           <Grid item xs={12}>
@@ -198,7 +208,7 @@ export default function DashboardApp() {
             <OtherOutputs switch_data={switch_data}/>
           </Grid>
         </Grid>
-        
+
       </Container>
     </Page>
   );
