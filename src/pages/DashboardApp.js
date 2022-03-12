@@ -8,9 +8,13 @@ import {
   Button,
   Card,
   CardHeader,
+  Alert,
+  IconButton,
+  Collapse
 } from "@mui/material";
 import LoadingButton from "@mui/lab/node/LoadingButton/index.js";
 import ReactPlayer from "react-player";
+import CloseIcon from '@mui/icons-material/Close';
 // components
 import Page from "../components/Page.js";
 import {
@@ -24,7 +28,7 @@ import {
 import axios from "axios";
 
 const API_URL = "http://0593-67-84-165-192.ngrok.io";
-const blink_classes=["missing","unknown","open","closed"];// new Array("unknown")
+const blink_classes=["missing","unknown","open","closed"];
 var switch_data = 0;
 
 //  index 0: amount of missing frames
@@ -33,7 +37,7 @@ var switch_data = 0;
 //  index 3: amount of closed eyes frames
 
 export default function DashboardApp() {
-  const [file, setFile] = useState();
+  const [file, setFile] = useState('');
   const [base64File, setBase64File] = useState();
   const [base64Loading, setBase64Loading] = useState(false);
 
@@ -42,6 +46,9 @@ export default function DashboardApp() {
 
   // alternate between button and loading icon
   const [modelLoading, setModelLoading] = useState(false);
+
+  // alerts
+  const [open, setOpen] = useState(false);
 
   const update_click = () => {
     switch_data+=1;
@@ -53,6 +60,21 @@ export default function DashboardApp() {
       update_click();
     }, 10000);
     return Promise.resolve(place_holder);
+  };
+
+  const onGenerate = () => {
+    setModelLoading(true);
+    wait_for_models().then((res) => {
+      setTimeout(() => {
+        setModelLoading(false);
+      }, 10000);
+    })
+    .catch((err) => {
+      console.log("err", err);
+      setTimeout(() => {
+        setModelLoading(false);
+      }, 10000);
+    });
   };
 
   const convertBase64 = (file) => {
@@ -101,24 +123,28 @@ export default function DashboardApp() {
     );
   };
 
-  const onGenerate = () => {
-    setModelLoading(true);
-    wait_for_models().then((res) => {
-      setTimeout(() => {
-        setModelLoading(false);
-      }, 10000);
-    })
-    .catch((err) => {
-      console.log("err", err);
-      setTimeout(() => {
-        setModelLoading(false);
-      }, 10000);
-    });
-  };
-
   return (
     <Page title="Application">
       <Container maxWidth="xl">
+        <Collapse in={open}>
+          <Alert severity="error"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Unable to generate results. Missing video file.
+          </Alert>
+        </Collapse>
         <Box sx={{ pb: 5 }}>
           <Typography variant="h4">Is this a deepfake?</Typography>
           <Box flexDirection="row">
@@ -132,8 +158,8 @@ export default function DashboardApp() {
               {modelLoading ? (
                 <LoadingButton loading={modelLoading} />
               ) : (
-                <Button 
-                  component="span" 
+                <Button
+                  component="span"
                   variant="contained"
                 >
                   Upload Video
@@ -144,10 +170,21 @@ export default function DashboardApp() {
                 <LoadingButton loading={modelLoading} />
               ) : (
                 <Button
+                  disabled={open}
                   style={{ marginLeft: 10 }}
                   component="span"
                   variant="contained"
-                  onClick={onGenerate}
+                  onClick={() => {
+                    if(switch_data===0 && file==='')
+                    {
+                      setOpen(true);
+                    }
+                    // if((switch_data%2)===1)
+                    else
+                    {
+                      onGenerate();
+                    }
+                  }}
                 >
                   Generate Results
                 </Button>
