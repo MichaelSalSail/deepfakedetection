@@ -31,24 +31,25 @@ const API_URL = "http://0593-67-84-165-192.ngrok.io";
 const blink_classes=["missing","unknown","open","closed"];
 var switch_data = 0;
 
-//  index 0: amount of missing frames
-//  index 1: amount of unknown frames
-//  index 2: amount of opened frames
-//  index 3: amount of closed eyes frames
-
 export default function DashboardApp() {
+  // current uploaded file
   const [file, setFile] = useState('');
-  const [base64File, setBase64File] = useState();
-  const [base64Loading, setBase64Loading] = useState(false);
+  // current file name.
+  const [filename, setFilename] = useState('');
+  // file name used on last 'Generate Results' run
+  const [lastfilerun, setlastfilerun] = useState('');
 
-  // deepfake
-  const [deepfakeResults, setDeepfakeResults] = useState([]);
+  // alerts
+  const [error, setError] = useState(false);
+  const [info, setInfo] = useState(false);
 
   // alternate between button and loading icon
   const [modelLoading, setModelLoading] = useState(false);
 
-  // alerts
-  const [open, setOpen] = useState(false);
+  // other stuff
+  const [deepfakeResults, setDeepfakeResults] = useState([]);
+  const [base64File, setBase64File] = useState();
+  const [base64Loading, setBase64Loading] = useState(false);
 
   const update_click = () => {
     switch_data+=1;
@@ -97,7 +98,18 @@ export default function DashboardApp() {
       console.log("You may now begin!");
       setBase64Loading(false);
     });
+    console.log(data.target.files);
+    // obtain url to play the video
     setFile(URL.createObjectURL(data.target.files[0]));
+    // get filename for the info alert
+    setFilename(data.target.files[0]['name']);
+    // reset last file run to default vailue
+    setlastfilerun('');
+    // set the results to default upon file upload
+    if((switch_data%2)===1)
+    {
+      switch_data+=1;
+    }
   };
 
   const getDeepFakePrediction = async () => {
@@ -126,7 +138,7 @@ export default function DashboardApp() {
   return (
     <Page title="Application">
       <Container maxWidth="xl">
-        <Collapse in={open}>
+        <Collapse in={error}>
           <Alert severity="error"
             action={
               <IconButton
@@ -134,7 +146,7 @@ export default function DashboardApp() {
                 color="inherit"
                 size="small"
                 onClick={() => {
-                  setOpen(false);
+                  setError(false);
                 }}
               >
                 <CloseIcon fontSize="inherit" />
@@ -143,6 +155,25 @@ export default function DashboardApp() {
             sx={{ mb: 2 }}
           >
             Unable to generate results. Missing video file.
+          </Alert>
+        </Collapse>
+        <Collapse in={info}>
+          <Alert severity="info"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setInfo(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Results for {filename} are available below.
           </Alert>
         </Collapse>
         <Box sx={{ pb: 5 }}>
@@ -170,16 +201,24 @@ export default function DashboardApp() {
                 <LoadingButton loading={modelLoading} />
               ) : (
                 <Button
-                  disabled={open}
+                  disabled={error || info}
                   style={{ marginLeft: 10 }}
                   component="span"
                   variant="contained"
                   onClick={() => {
                     if(switch_data===0 && file==='')
                     {
-                      setOpen(true);
+                      setError(true);
                     }
-                    // if((switch_data%2)===1)
+                    else if(lastfilerun==='')
+                    {
+                      setlastfilerun(file);
+                      onGenerate();
+                    }
+                    else if(lastfilerun===file)
+                    {
+                      setInfo(true);
+                    }
                     else
                     {
                       onGenerate();
