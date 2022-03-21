@@ -8,6 +8,7 @@ import {
   Button,
   Card,
   CardHeader,
+  CardContent,
   Alert,
   IconButton,
   Collapse
@@ -177,7 +178,7 @@ export default function DashboardApp() {
           </Alert>
         </Collapse>
         <Box sx={{ pb: 5 }}>
-          <Typography variant="h4">Is this a deepfake?</Typography>
+          <Typography variant="h4">Deepfake Video Analysis</Typography>
           <Box flexDirection="row">
             <input
               id="file-upload"
@@ -232,41 +233,64 @@ export default function DashboardApp() {
           </Box>
         </Box>
 
-        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-          <Grid item xs={12} md={6} lg={12}>
-            <Card>
-              <CardHeader
-                title="Video File"
-                subheader="(REQUIRED: Human Face)"
-              />
-              <Box
-                sx={{ p: 3 }}
-                style={{ width: "100%", height: "100%" }}
-                dir="ltr"
-              >
-                <ReactPlayer
-                  style={{ flex: 1 }}
-                  url={file}
-                  controls
-                  width="100%"
-                  height="100%"
-                />
-              </Box>
-            </Card>
-          </Grid>
+        <Card>
+          <CardHeader
+            title={<Typography variant="overline" align="center">Video File</Typography>}
+          />
+          <Box
+            sx={{ p: 3 }}
+            style={{ width: "100%", height: "100%" }}
+            dir="ltr"
+          >
+            <ReactPlayer
+              style={{ flex: 1 }}
+              url={file}
+              controls
+              width="100%"
+              height="100%"
+            />
+          </Box>
+        </Card>
 
-          <Grid item xs={8}>
-            {modelLoading ? (
+        {modelLoading ? (
+          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
+            <Grid item xs={12}></Grid>
+            <Grid item xs={8}>
               <Display_Wait/>
-            ) : (
-              <Typography variant="h4" align="center">Results</Typography>
-            )}
+            </Grid>
+            <Grid item xs={12}></Grid>
           </Grid>
+        ) : (
+          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            <Grid item xs={12}></Grid>
+            <Grid item xs={12}></Grid>
+          </Grid>
+        )}
 
+        <Typography variant="h4" align="center">Results</Typography>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            <Grid item xs={12}></Grid>
+            <Grid item xs={12}></Grid>
+        </Grid>
+        <Typography variant="overline" align="center">Base Model</Typography>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid item xs={12}></Grid>
           <Grid item xs={12}>
             <DFDchart deepfakeResults={deepfakeResults} switch_data={switch_data} />
           </Grid>
+          <Grid item xs={12}></Grid>
+        </Grid>
+
+        <Typography variant="overline" align="center">Eye Blink Model</Typography>
+        <Button
+          disabled={switch_data%2==0}
+          style={{ marginLeft: 10 }}
+          component="span"
+          variant="text"
+        >Excel</Button>
           
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid item xs={12}></Grid>
           <Grid item xs={3}>
             <Eyeblinks color_card={blink_classes[0]} switch_data={switch_data} />
           </Grid>
@@ -279,12 +303,16 @@ export default function DashboardApp() {
           <Grid item xs={3}>
             <Eyeblinks color_card={blink_classes[3]} switch_data={switch_data} />
           </Grid>
-          
+          <Grid item xs={12}></Grid>
+        </Grid>
+
+        <Typography variant="overline" align="center">Other Models</Typography>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid item xs={12}></Grid>
           <Grid item xs={12}>
             <OtherOutputs switch_data={switch_data}/>
           </Grid>
         </Grid>
-
       </Container>
     </Page>
   );
