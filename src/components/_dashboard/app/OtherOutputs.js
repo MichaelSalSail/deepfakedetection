@@ -1,9 +1,11 @@
+import * as React from 'react';
+import { styled } from '@mui/material/styles';
 import { useEffect, useState } from "react";
 
 import faker from "faker";
 import PropTypes from "prop-types";
 // material
-import { Card, Typography, CardHeader, CardContent, Box } from "@mui/material";
+import { Card, Typography, CardContent, Box, Button } from "@mui/material";
 import {
   Timeline,
   TimelineItem,
@@ -12,6 +14,7 @@ import {
   TimelineSeparator,
   TimelineDot,
 } from "@mui/lab";
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 // utils
 import { fDateTime } from "../../../utils/formatTime.js";
 
@@ -58,6 +61,18 @@ function OrderItem({ item, isLast, switch_data }) {
   );
 }
 
+const HtmlTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: '#f5f5f9',
+    color: 'rgba(0, 0, 0, 0.87)',
+    maxWidth: 220,
+    fontSize: theme.typography.pxToRem(12),
+    border: '1px solid #dadde9',
+  },
+}));
+
 export default function OtherOutputs(input) {
   const [timeline, setTimeline] = useState([]);
   let result_beard = require('../../../pages/AllResultsJSON/result_default.json')[2];
@@ -70,8 +85,8 @@ export default function OtherOutputs(input) {
   }
   let from_beard=result_beard["beard"]
   let from_shades=result_shades["shades"]
-  // const output_beard=result_beard["raw_output"]
-  // const output_shades=result_shades["raw_output"]
+  let output_beard=result_beard["raw_output"]
+  let output_shades=result_shades["raw_output"]
 
   var beard_content="The subject is young and/or female."
   if(from_beard===true)
@@ -105,9 +120,26 @@ export default function OtherOutputs(input) {
         },
       }}
     >
-      <CardHeader title="Facial Description" />
       <CardContent>
         <Box>
+          <HtmlTooltip
+          title={
+                  <React.Fragment>
+                    {output_beard}
+                  </React.Fragment>
+                }
+              >
+              <Button color="secondary">Beard Raw Data</Button>
+          </HtmlTooltip>
+          <HtmlTooltip
+          title={
+                  <React.Fragment>
+                    {output_shades}
+                  </React.Fragment>
+                }
+              >
+              <Button color="secondary">Shades Raw Data</Button>
+          </HtmlTooltip>
           <Timeline>
             {timeline.map((item) => (
               <OrderItem

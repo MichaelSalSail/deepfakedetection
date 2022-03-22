@@ -17,10 +17,11 @@ help_text[2]="- The eye blink model returns 2 classifications. For greater inter
                 open eyes or closed eyes."
 help_text[3]="- From our testing, the base model is most likely to yield incorrect predicitions \
                 in the yellow range. Look at the user trust model outputs to draw any final \
-                conclusions."
+                conclusions. Otherwise, a green score indicates a genuine video and a red score \
+                indicates a deepfake."
 help_text[4]="- Look at the raw data! Unless there are a significant number of missing frames, \
-                the eye blink classification for each video frame can be downloaded as an excel \
-                sheet. The other models data can be found by hovering over text."
+                the eye blink classification for each video frame is recorded on an excel sheet\
+                for download. The other models data can be found by hovering over text."
 
 export default function PopUp_Help() {
   const [open, setOpen] = React.useState(false);

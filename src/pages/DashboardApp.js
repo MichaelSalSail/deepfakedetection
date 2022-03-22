@@ -21,7 +21,7 @@ import Page from "../components/Page.js";
 import {
   Eyeblinks,
   OtherOutputs,
-  DFDchart,
+  DFDscore,
   PopUp_Help,
   Display_Wait
 } from "../components/_dashboard/app/index.js";
@@ -276,7 +276,7 @@ export default function DashboardApp() {
         <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           <Grid item xs={12}></Grid>
           <Grid item xs={12}>
-            <DFDchart deepfakeResults={deepfakeResults} switch_data={switch_data} />
+            <DFDscore switch_data={switch_data} />
           </Grid>
           <Grid item xs={12}></Grid>
         </Grid>
@@ -287,6 +287,7 @@ export default function DashboardApp() {
           style={{ marginLeft: 10 }}
           component="span"
           variant="text"
+          color="secondary"
         >Excel</Button>
           
         <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
