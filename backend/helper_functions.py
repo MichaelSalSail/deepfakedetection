@@ -1,7 +1,5 @@
 import cv2
-import math
 import numpy as np
-import moviepy.editor as mp
 import face_recognition
 from PIL import Image
 from tensorflow.keras.preprocessing.image import load_img
@@ -174,40 +172,3 @@ def save_crop(input_image, file_name, destination):
         pil_image = Image.fromarray(face_image)
         pil_image.save(full_1)
     return True
-
-def splice_video(filename, clip_length):
-    '''
-    Save a video in smaller segments.
-    
-    Args:
-        filename: video file name.
-        clip_length: total seconds.
-        
-    Returns:
-        List of video file names
-    '''
-    output_data=[]
-    # get video from directory
-    video = mp.VideoFileClip(filename)
-    # get length of video
-    video_duration = video.duration
-    # get number of clips that need to be made
-    segments = math.ceil(video_duration/clip_length)
-    # temp variable to hold clips before writing
-    clips = []
-    # splice video
-    for i in range(segments):
-        if clip_length*(i+1) > video_duration:
-            clip = video.subclip(i*clip_length, video_duration)
-            clips.append(clip)
-        else:
-            clip = video.subclip(i*clip_length, clip_length*(i+1))
-            clips.append(clip)
-    # write clips
-    for i in range(len(clips)):
-        write_name = "clip" + str(i) +".mp4"
-        clips[i].write_videofile(write_name)
-        output_data.append(write_name)
-    # close video
-    video.close()
-    return output_data

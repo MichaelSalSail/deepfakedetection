@@ -1,8 +1,8 @@
 import cv2
 import os, sys
 import numpy as np
+import pandas as pd
 import math
-from moviepy.editor import VideoFileClip
 from deepface import DeepFace
 import torch
 import torch.nn as nn
@@ -15,10 +15,6 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop
-
-# CODE WE COULD CHANGE:
-# predict_on_video and blink_on_video could be combined into
-# one function. It may reduce latency.
 
 def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     '''
@@ -46,7 +42,8 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     from helpers.face_extract_1 import FaceExtractor
 
     # Retrieve video time span
-    total_seconds=VideoFileClip(video_path).duration
+    video_data=cv2.VideoCapture(video_path)
+    total_seconds=round((video_data.get(cv2.CAP_PROP_FRAME_COUNT))/(video_data.get(cv2.CAP_PROP_FPS)),2)
     total_frames=math.floor(fps*total_seconds)
 
     # Get the face from an image
@@ -125,7 +122,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     except Exception as e:
         print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
 
-    result.append(str(0.5))
+    result.append("50.0%")
     file_write.writelines(result)
     file_write.close()
 
@@ -173,7 +170,8 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
             os.remove(all_temp_files[i])
 
     # Retrieve video time span
-    total_seconds=VideoFileClip(video_path).duration
+    video_data=cv2.VideoCapture(video_path)
+    total_seconds=round((video_data.get(cv2.CAP_PROP_FRAME_COUNT))/(video_data.get(cv2.CAP_PROP_FPS)),2)
     total_frames=math.floor(fps*total_seconds)
 
     # Get the face from an image
@@ -214,6 +212,10 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     all_unknown=0
     all_missing=0
 
+    # Keep track of all classifications in a list.
+    # -1 if unknown frame, 1 if eyes open frame, and 0 if eyes closed frame.
+    classifications=list()
+
     if len(faces) > 0:
         for frame_data in faces:
             for face in frame_data["faces"]:
@@ -237,20 +239,35 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                 crop_result=save_crop('o.png', 'p.png','example_videos/temp/')
                 if(crop_result==False):
                     all_unknown+=1
+                    classifications.append(-1)
                     print("all_unknown:",all_unknown)
                 else:
                     current=more_tests(use_model, 'example_videos/temp')
                     if current==1:
                         all_open+=1
+                        classifications.append(1)
                         print("all_open:",all_open)
                     else:
                         all_closed+=1
+                        classifications.append(0)
                         print("all_closed:",all_closed)
                 plt.show()
                 plt.clf()
 
-    # CODE TO ADD:
-    # Timestamp of each video frame and classfication in an excel sheet
+    # Timestamp of each video frame and classification written to a dataframe.
+    blinks_df= pd.DataFrame(columns=['Timestamp (s)','Classification'])
+    for i in range(0,total_frames): 
+        blinks_df.loc[i, 'Timestamp (s)'] = round(i*(total_seconds/(total_frames-1)),2)
+        # if more than 5% of frames are missing or classifications[i] is out of bounds,
+        # don't put a valid classification in the row
+        if((len(classifications)<(0.95*total_frames)) | (i>=(len(classifications)))):
+            blinks_df.loc[i, 'Classification'] = math.nan
+        else:
+            blinks_df.loc[i, 'Classification'] = classifications[i]
+    # Save the dataframe as a .csv file
+    blinks_df.to_csv("../src/pages/AllResults/eyeblink_data.csv", index=False)
+
+    # Obtain the percentiles for each classification
     if (all_open+all_closed+all_unknown)<(total_frames):
         all_missing=total_frames-(all_open+all_closed+all_unknown)
     temp="Amount of missing frames: "+str(round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%\n"

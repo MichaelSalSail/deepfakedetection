@@ -36,7 +36,7 @@ _ = facedet.train(False)
 # VGG16() model w/ pre-trained weights
 model_for_tests=get_model()
 
-print("\nIgnore all warnings above. So far, so good.\n")
+print("\nIgnore any warnings above. So far, so good.")
 
 # Run all models
 predict_on_video(video_path, 15, device, facedet, output_dir)

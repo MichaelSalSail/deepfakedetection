@@ -1,16 +1,16 @@
 [{
-  "DFD": 0.5
+  "DFD": 41.01
 },{
-  "closed": 0,
+  "closed": 30.49,
   "missing": 0,
-  "open": 0,
+  "open": 69.51,
   "unknown": 0
 },{
-  "age": 0,
-  "beard": false,
-  "gender": "??",
-  "raw_output": "   Age: ??\nGender: ??"
+  "age": 29,
+  "beard": true,
+  "gender": "Man",
+  "raw_output": "   Age: 29\nGender: Man\n"
 },{
-  "raw_output": "ORIGINAL (file DNE)\nTop 5 Object Detection Predictions\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n\nCROPPED (file DNE)\nTop 5 Object Detection Predictions\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)",
+  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nwig (44.52%)\nbonnet (4.44%)\nfeather_boa (4.42%)\nwool (2.88%)\nstole (2.71%)\n\nCROPPED\nTop 5 Object Detection Predictions\nwig (32.66%)\nmask (32.21%)\nsunscreen (6.21%)\nlipstick (2.89%)\nseat_belt (2.19%)\n",
   "shades": false
 }]

@@ -21,7 +21,7 @@ help_text[3]="- From our testing, the base model is most likely to yield incorre
                 indicates a deepfake."
 help_text[4]="- Look at the raw data! Unless there are a significant number of missing frames, \
                 the eye blink classification for each video frame is recorded on an excel sheet\
-                for download. The other models data can be found by hovering over text."
+                for download. The other models data can be found by hovering over buttons."
 help_text[5]="Troubleshooting: If the output didn't change upon clicking \'Generate Results\', \
               it's possible the program exceeded system resources and ended abruptly. If the base \
               model returned a score of 0.5, the program possibly ran into exception \
