@@ -58,7 +58,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     # face_extractor extracts total_frames number of frames 
     # from the entire video runtime.
     faces = face_extractor.process_video(video_path)
-    # If there are multiple people in the frame, use one face
+    # If there are multiple people in the video, use one face
     face_extractor.keep_only_best_face(faces)
 
     input_size =224
@@ -82,7 +82,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
 
     # put it all in a list then append to the .txt file
     if(output_dir!=""):
-        full_name=output_dir+"/"+"result_DFD.txt"
+        full_name=os.path.join(output_dir,"result_DFD.txt")
     else:
         full_name="result_DFD.txt"
     file_write = open(full_name,"w")
@@ -123,8 +123,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
                     return 0
 
     except Exception as e:
-        temp="Prediction error on video "+str(video_path)+": "+str(e)+"\n"
-        result.append(temp)
+        print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
 
     result.append(str(0.5))
     file_write.writelines(result)
@@ -133,6 +132,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     # Print contents
     file_read = open(full_name,"r")
     print(file_read.read())
+    file_read.close()
     return 0.5
 
 def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
@@ -182,19 +182,29 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
     face_extractor = FaceExtractor(video_read_fn, facedet)
 
-    # face_extractor extracts total_frames number of frames 
-    # from the entire video runtime.
-    faces = face_extractor.process_video(video_path)
-    # If there are multiple people in the frame, use one face
-    face_extractor.keep_only_best_face(faces)
-
     # Put it all in a list then append to the .txt file
     if(output_dir!=""):
-        full_name=output_dir+"/"+"result_blink.txt"
+        full_name=os.path.join(output_dir,"result_blink.txt")
     else:
         full_name="result_blink.txt"
     file_write = open(full_name,"w")
     result=list()
+
+    # face_extractor extracts total_frames number of frames 
+    # from the entire video runtime.
+    try:
+        faces = face_extractor.process_video(video_path)
+        # If there are multiple people in the frame, use one face
+        face_extractor.keep_only_best_face(faces)
+    except Exception as e:
+        print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
+        result.append("Amount of missing frames: 0.0%\nAmount of unknown frames: 0.0%\nAmount of open eyes frames: 0.0%\nAmount of closed eyes frames: 0.0%")
+        file_write.writelines(result)
+        file_write.close()
+        file_read = open(full_name,"r")
+        print(file_read.read())
+        file_read.close()
+        return [0,0,0,0]
 
     input_size =224
 
@@ -203,20 +213,27 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     all_closed=0
     all_unknown=0
     all_missing=0
+
     if len(faces) > 0:
         for frame_data in faces:
             for face in frame_data["faces"]:
                 resized_face = isotropically_resize_image(face, input_size)
                 resized_face = make_square_image(resized_face)
                 plt.imshow(resized_face, interpolation='nearest')
-                file_name_save='example_videos/temp/o.png'
-                plt.savefig(file_name_save)
-                # ensure equivalent .png dimensions, regardless of .ipynb or .py
-                read_o=cv2.imread(file_name_save)
+                # o stands for original
+                file_name_save_o='example_videos/temp/o.png'
+                plt.savefig(file_name_save_o)
+                # save a zoomed in photo in preparation for beard detection
+                file_name_save_beard='example_videos/temp/beard.png'
+                plt.axis('off')
+                plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
+                # ensure equivalent o.png dimensions, regardless of .py or .ipynb
+                read_o=cv2.imread(file_name_save_o)
                 dimensions=(432,288)
                 resized=cv2.resize(read_o, dimensions)
-                cv2.imwrite(file_name_save, resized)
+                cv2.imwrite(file_name_save_o, resized)
                 # successfully resized w/ same name
+                # p stands for cropped
                 crop_result=save_crop('o.png', 'p.png','example_videos/temp/')
                 if(crop_result==False):
                     all_unknown+=1
@@ -231,6 +248,7 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                         print("all_closed:",all_closed)
                 plt.show()
                 plt.clf()
+
     # CODE TO ADD:
     # Timestamp of each video frame and classfication in an excel sheet
     if (all_open+all_closed+all_unknown)<(total_frames):
@@ -249,6 +267,7 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     # Print contents
     file_read = open(full_name,"r")
     print(file_read.read())
+    file_read.close()
 
     # Print and return perctile distributions list
     final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 2),
@@ -274,7 +293,7 @@ def detect_beard(image_dir, output_dir=""):
 
     # store all relevant information in a .txt file
     if(output_dir!=""):
-        full_name=output_dir+"/"+"result_beard.txt"
+        full_name=os.path.join(output_dir,"result_beard.txt")
     else:
         full_name="result_beard.txt"
     file_write = open(full_name,"w")
@@ -316,6 +335,7 @@ def detect_beard(image_dir, output_dir=""):
     # Print contents
     file_read = open(full_name,"r")
     print(file_read.read())
+    file_read.close()
 
 def detect_shades(image_dir1, output_dir="", image_dir2=""):
     '''
@@ -336,7 +356,7 @@ def detect_shades(image_dir1, output_dir="", image_dir2=""):
 
     # store all relevant information in a .txt file
     if(output_dir!=""):
-        full_name=output_dir+"/"+"result_shades.txt"
+        full_name=os.path.join(output_dir,"result_shades.txt")
     else:
         full_name="result_shades.txt"
     file_write = open(full_name,"w")
@@ -401,3 +421,4 @@ def detect_shades(image_dir1, output_dir="", image_dir2=""):
     # print contents
     file_read = open(full_name,"r")
     print(file_read.read())
+    file_read.close()

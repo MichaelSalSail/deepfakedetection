@@ -16,6 +16,7 @@ output_dir = "../src/pages/AllResults"
 # frame and cropped frame from blink_on_video()
 temp_img_original=cwd+"/example_videos/temp/"+'o.png'
 temp_img_cropped=cwd+"/example_videos/temp/"+'p.png'
+temp_img_beard=cwd+"/example_videos/temp/"+'beard.png'
 
 # Use GPU, if available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -35,8 +36,10 @@ _ = facedet.train(False)
 # VGG16() model w/ pre-trained weights
 model_for_tests=get_model()
 
+print("\nIgnore all warnings above. So far, so good.\n")
+
 # Run all models
 predict_on_video(video_path, 15, device, facedet, output_dir)
 blink_on_video(video_path, 15, facedet, model_for_tests, output_dir)
-detect_beard(temp_img_original, output_dir)
-detect_shades(temp_img_original, output_dir, temp_img_cropped)
+detect_beard(temp_img_beard, output_dir)
+detect_shades(temp_img_beard, output_dir, temp_img_cropped)

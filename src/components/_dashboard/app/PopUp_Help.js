@@ -9,7 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 let help_text=[]
 help_text[0]="- You may only upload .mp4 videos."
 help_text[1]="- The time it takes to generate results increases with video duration. \
-                If it's taking too long, upload a shorter video."
+                Please upload videos w/ durations of 20 seconds or less."
 help_text[2]="- The eye blink model returns 2 classifications. For greater interpretability, \
                 we display 2 more classifications. If a face isn't detected, the frame is \
                 called missing. If a persons face is detected but only partially, it's \
@@ -22,6 +22,13 @@ help_text[3]="- From our testing, the base model is most likely to yield incorre
 help_text[4]="- Look at the raw data! Unless there are a significant number of missing frames, \
                 the eye blink classification for each video frame is recorded on an excel sheet\
                 for download. The other models data can be found by hovering over text."
+help_text[5]="Troubleshooting: If the output didn't change upon clicking \'Generate Results\', \
+              it's possible the program exceeded system resources and ended abruptly. If the base \
+              model returned a score of 0.5, the program possibly ran into exception \
+              DefaultCPUAllocator, not enough available memory to run a prediction. \
+              Both issues can be resolved by uploading a video w/ smaller duration. \
+              Other obscure errors can be caused by not installing librarys from the \
+              dependency list listed in the README.md."
 
 export default function PopUp_Help() {
   const [open, setOpen] = React.useState(false);
@@ -67,7 +74,8 @@ export default function PopUp_Help() {
             {help_text[1]}<br/><br/>
             {help_text[2]}<br/><br/>
             {help_text[3]}<br/><br/>
-            {help_text[4]}
+            {help_text[4]}<br/><br/>
+            {help_text[5]}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
