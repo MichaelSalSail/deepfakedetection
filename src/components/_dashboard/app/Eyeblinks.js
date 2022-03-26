@@ -111,13 +111,13 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
 
 export default function Eyeblinks(input) {
   const renderPercentage = () => {
-    let eyes_result = require('../../../pages/AllResultsJSON/result_default.json')[1];
+    let eyes_result = require('../../../utils/AllResultsJSON/result_default.json')[1];
     // switch_data equates to number of 'Generate Results' button clicks
     if((input["switch_data"]%2)===1)
-      eyes_result = require('../../../pages/AllResultsJSON/result_update.json')[1];
+      eyes_result = require('../../../utils/AllResultsJSON/result_update.json')[1];
     return eyes_result;
   };
-
+  // 4 possible components to represent 4 different eye blink model classifications.
   if(input["color_card"]==="missing")
   {
     return (

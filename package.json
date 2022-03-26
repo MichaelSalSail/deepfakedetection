@@ -21,6 +21,7 @@
     "cra-template": "1.1.2",
     "date-fns": "^2.27.0",
     "faker": "^5.5.3",
+    "file-saver": "^2.0.5",
     "formik": "^2.2.9",
     "framer-motion": "4.1.17",
     "fs": "^0.0.1-security",

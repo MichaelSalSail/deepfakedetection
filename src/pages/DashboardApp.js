@@ -25,6 +25,7 @@ import {
   PopUp_Help,
   Display_Wait
 } from "../components/_dashboard/app/index.js";
+import FileSaver from 'file-saver';
 
 import axios from "axios";
 
@@ -139,6 +140,7 @@ export default function DashboardApp() {
   return (
     <Page title="Application">
       <Container maxWidth="xl">
+        {/* Two possible alerts, an error or information message. */}
         <Collapse in={error}>
           <Alert severity="error"
             action={
@@ -186,6 +188,8 @@ export default function DashboardApp() {
               type="file"
               onChange={onFileChange}
             />
+            {/* The 'Upload Video' button shouldn't be accessible while
+                the models are still generating outputs.*/}
             <label htmlFor="file-upload">
               {modelLoading ? (
                 <LoadingButton loading={modelLoading} />
@@ -197,6 +201,8 @@ export default function DashboardApp() {
                   Upload Video
                 </Button>
               )}
+            {/* Upon fulfilling certain conditions, clicking 'Generate Results'
+                may return an error or information message. */}
             </label>
               {modelLoading ? (
                 <LoadingButton loading={modelLoading} />
@@ -232,7 +238,7 @@ export default function DashboardApp() {
             <PopUp_Help/>
           </Box>
         </Box>
-
+        {/* Upon successful upload of a video, the user may watch the video. */}
         <Card>
           <CardHeader
             title={<Typography variant="overline" align="center">Video File</Typography>}
@@ -251,7 +257,7 @@ export default function DashboardApp() {
             />
           </Box>
         </Card>
-
+        {/* While waiting for model outputs, display a progress bar. */}
         {modelLoading ? (
           <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
             <Grid item xs={12}></Grid>
@@ -266,7 +272,7 @@ export default function DashboardApp() {
             <Grid item xs={12}></Grid>
           </Grid>
         )}
-
+        {/* Once the model(s) finish loading, display the outputs. */}
         <Typography variant="h4" align="center">Results</Typography>
         <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
             <Grid item xs={12}></Grid>
@@ -288,6 +294,11 @@ export default function DashboardApp() {
           component="span"
           variant="text"
           color="secondary"
+          onClick={() => {
+            FileSaver.saveAs(
+              process.env.PUBLIC_URL + "/static/raw-data/eyeblink_data.csv",
+              "eyeblink_data.csv");
+          }}
         >Excel</Button>
           
         <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>

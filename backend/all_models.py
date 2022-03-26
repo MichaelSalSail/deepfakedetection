@@ -265,7 +265,7 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
         else:
             blinks_df.loc[i, 'Classification'] = classifications[i]
     # Save the dataframe as a .csv file
-    blinks_df.to_csv("../src/pages/AllResults/eyeblink_data.csv", index=False)
+    blinks_df.to_csv("../public/static/raw-data/eyeblink_data.csv", index=False)
 
     # Obtain the percentiles for each classification
     if (all_open+all_closed+all_unknown)<(total_frames):
