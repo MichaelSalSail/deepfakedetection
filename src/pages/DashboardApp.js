@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import {useState} from "react";
 // material
 import {
   Box,
@@ -25,6 +25,7 @@ import {
   PopUp_Help,
   Display_Wait
 } from "../components/_dashboard/app/index.js";
+import estimate_runtime from "../utils/Wait.js";
 import FileSaver from 'file-saver';
 
 import axios from "axios";
@@ -32,6 +33,8 @@ import axios from "axios";
 const API_URL = "http://0593-67-84-165-192.ngrok.io";
 const blink_classes=["missing","unknown","open","closed"];
 var switch_data = 0;
+// current file duration (sec).
+var fileduration = 1;
 
 export default function DashboardApp() {
   // current uploaded file
@@ -59,9 +62,12 @@ export default function DashboardApp() {
 
   const wait_for_models = () => {
     let place_holder=0;
+    console.log("Video has a duration of", fileduration, "seconds.");
+    console.log("Will this have a first video runtime delay?", switch_data===0);
+    console.log("Each progress bar tick will take", estimate_runtime(fileduration, switch_data===0), "milliseconds");
     setTimeout(() => {
       update_click();
-    }, 10000);
+    }, estimate_runtime(fileduration, switch_data===0)*100);
     return Promise.resolve(place_holder);
   };
 
@@ -70,13 +76,13 @@ export default function DashboardApp() {
     wait_for_models().then((res) => {
       setTimeout(() => {
         setModelLoading(false);
-      }, 10000);
+      }, estimate_runtime(fileduration, switch_data===0)*100);
     })
     .catch((err) => {
       console.log("err", err);
       setTimeout(() => {
         setModelLoading(false);
-      }, 10000);
+      }, estimate_runtime(fileduration, switch_data===0)*100);
     });
   };
 
@@ -100,12 +106,23 @@ export default function DashboardApp() {
       console.log("You may now begin!");
       setBase64Loading(false);
     });
-    console.log(data.target.files);
+
+    // obtain the video duration
+    var reader = new FileReader();
+    reader.onload = function() {
+      var media = new Audio(reader.result);
+      media.onloadedmetadata = function(){
+           fileduration = Number((media.duration).toFixed(2));
+           return media.duration;
+      };    
+    };
+    reader.readAsDataURL(data.target.files[0]);
+
     // obtain url to play the video
     setFile(URL.createObjectURL(data.target.files[0]));
     // get filename for the info alert
     setFilename(data.target.files[0]['name']);
-    // reset last file run to default vailue
+    // reset last file run to default value
     setlastfilerun('');
     // set the results to default upon file upload
     if((switch_data%2)===1)
@@ -262,7 +279,7 @@ export default function DashboardApp() {
           <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
             <Grid item xs={12}></Grid>
             <Grid item xs={8}>
-              <Display_Wait/>
+              <Display_Wait per_increment={estimate_runtime(fileduration, switch_data===0)}/>
             </Grid>
             <Grid item xs={12}></Grid>
           </Grid>

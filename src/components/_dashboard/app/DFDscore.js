@@ -15,7 +15,8 @@ export default function DFDscore(input) {
   // The base model score falls under 3 ranges.
   // Each range corresponds to a different color.
   let score_color=""
-  if(DFD_result["DFD"]===0)
+  // a score of 50 occurs when predict_on_video() encountered an error
+  if(DFD_result["DFD"]===0 || DFD_result["DFD"]===50)
     score_color="grey"
   else if(DFD_result["DFD"]<48)
     score_color="green"
@@ -27,8 +28,8 @@ export default function DFDscore(input) {
   return (
     <Card>
       <CardContent>
-        <Typography variant="body2" fontWeight= 'medium' fontFamily= 'Monospace' fontSize= 'h6.fontSize' textAlign= 'center'>
-          SCORE: {<Typography color={score_color} fontWeight= 'bold'>{DFD_result["DFD"]}%</Typography>}
+        <Typography variant="body2" fontWeight= 'bold' color={score_color} fontFamily= 'Monospace' fontSize= 'h6.fontSize' textAlign= 'center'>
+          SCORE: {DFD_result["DFD"]}%
         </Typography>
       </CardContent>
     </Card>

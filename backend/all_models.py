@@ -216,6 +216,13 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     # -1 if unknown frame, 1 if eyes open frame, and 0 if eyes closed frame.
     classifications=list()
 
+    # Status on whether beard.png exists yet or not.
+    beard_png_obtained=False
+    # detect_beard() is able to predict gender w/ greater accuracy
+    # if the subjects eyes are open.
+    # Status on whether beard.png is an open eye frame.
+    beard_png_open=False
+
     if len(faces) > 0:
         for frame_data in faces:
             for face in frame_data["faces"]:
@@ -228,7 +235,10 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                 # save a zoomed in photo in preparation for beard detection
                 file_name_save_beard='example_videos/temp/beard.png'
                 plt.axis('off')
-                plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
+                # the first frame that has a persons face should be saved as beard.png
+                if(beard_png_obtained==False):
+                    plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
+                    beard_png_obtained=True
                 # ensure equivalent o.png dimensions, regardless of .py or .ipynb
                 read_o=cv2.imread(file_name_save_o)
                 dimensions=(432,288)
@@ -246,10 +256,17 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                     if current==1:
                         all_open+=1
                         classifications.append(1)
+                        # the most recent open eye frame should be saved as beard.png
+                        plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
+                        if(beard_png_open==False):
+                            beard_png_open=True
                         print("all_open:",all_open)
                     else:
                         all_closed+=1
                         classifications.append(0)
+                        # a closed eye frame may be saved as beard.png up until an open eye frame is found
+                        if(beard_png_open==False):
+                            plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
                         print("all_closed:",all_closed)
                 plt.show()
                 plt.clf()
@@ -286,7 +303,7 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     print(file_read.read())
     file_read.close()
 
-    # Print and return perctile distributions list
+    # Print and return percentile distributions list
     final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 2),
                     round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100, 2),
                     round((all_open/(all_open+all_closed+all_unknown+all_missing))*100, 2),

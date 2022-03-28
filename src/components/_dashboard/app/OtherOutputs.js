@@ -75,13 +75,13 @@ const HtmlTooltip = styled(({ className, ...props }) => (
 
 export default function OtherOutputs(input) {
   const [timeline, setTimeline] = useState([]);
-  let result_beard = require('../../../pages/AllResultsJSON/result_default.json')[2];
-  let result_shades = require('../../../pages/AllResultsJSON/result_default.json')[3];
+  let result_beard = require('../../../utils/AllResultsJSON/result_default.json')[2];
+  let result_shades = require('../../../utils/AllResultsJSON/result_default.json')[3];
   // switch_data equates to number of 'Generate Results' button clicks
   if((input["switch_data"]%2)===1)
   {
-    result_beard = require('../../../pages/AllResultsJSON/result_update.json')[2];
-    result_shades = require('../../../pages/AllResultsJSON/result_update.json')[3];
+    result_beard = require('../../../utils/AllResultsJSON/result_update.json')[2];
+    result_shades = require('../../../utils/AllResultsJSON/result_update.json')[3];
   }
   let from_beard=result_beard["beard"]
   let from_shades=result_shades["shades"]

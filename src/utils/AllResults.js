@@ -166,6 +166,10 @@ const update_shades = () => {
 
     let shades_text=extract_text("/../../backend/AllResults/result_shades.txt");
 
+    // although unlikely, it's possible for detect_shades() to have segmentation fault
+    if(shades_text==="")
+        shades_text="Segmentation fault"
+
     // were sunglasses detected?
     let all_shades=false
     if(shades_text.indexOf("sunglasses")!=-1)

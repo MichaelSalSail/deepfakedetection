@@ -27,21 +27,15 @@ LinearProgressWithLabel.propTypes = {
   value: PropTypes.number.isRequired,
 };
 
-export default function Display_Wait() {
-  const [progress, setProgress] = React.useState(1);
-  // true runtime per video second
-  const runtime_rate = 0
-  // total video duration
-  const video_secs = 10.99
-  // per_increment = (runtime_rate * video_secs * 1000 ms)/100
-  let per_increment = 100
+export default function Display_Wait(input) {
+  const [progress, setProgress] = React.useState(0);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
       // prevProgress + (some number): the rate at which the progress display increases
       setProgress((prevProgress) => (prevProgress === 100 ? 100 : prevProgress + 1));
       // extra value below: the amount of time in milliseconds for each increment
-    }, per_increment);
+    }, input["per_increment"]);
     return () => {
       clearInterval(timer);
     };
