@@ -107,6 +107,10 @@ export default function DashboardApp() {
       setBase64Loading(false);
     });
 
+    // close any open alerts
+    setError(false);
+    setInfo(false);
+
     // obtain the video duration
     var reader = new FileReader();
     reader.onload = function() {
