@@ -18,8 +18,8 @@ export default function Router() {
       path: '/home',
       element: <DashboardLayout />,
       children: [
-        { element: <Navigate to="/home/app" replace /> },
-        { path: 'app', element: <DashboardApp /> }
+        { element: <Navigate to="/home/upload" replace /> },
+        { path: 'upload', element: <DashboardApp /> }
       ]
     },
     {
