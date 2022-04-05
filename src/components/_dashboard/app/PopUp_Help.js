@@ -7,7 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 let help_text=[]
-help_text[0]="- You may only upload .mp4 videos."
+help_text[0]="- You may only upload .mp4 videos. Upon upload, click submit!"
 help_text[1]="- The time it takes to generate results increases with video duration. \
                 Please upload videos w/ durations of 20 seconds or less."
 help_text[2]="- The eye blink model returns 2 classifications. For greater interpretability, \
@@ -15,7 +15,7 @@ help_text[2]="- The eye blink model returns 2 classifications. For greater inter
                 called missing. If a persons face is detected but only partially, it's \
                 called unknown. All other frames are put into the model and classified as \
                 open eyes or closed eyes."
-help_text[3]="- From our testing, the base model is most likely to yield incorrect predicitions \
+help_text[3]="- From our testing, the base model is most likely to yield incorrect predictions \
                 in the yellow range. Look at the user trust model outputs to draw any final \
                 conclusions. Otherwise, a green score indicates a genuine video and a red score \
                 indicates a deepfake."
@@ -26,8 +26,8 @@ help_text[5]="Troubleshooting: If the output didn't change upon clicking \'Gener
               it's possible the program exceeded system resources and ended abruptly. If the base \
               model returned a score of 0.5, the program possibly ran into exception \
               DefaultCPUAllocator, not enough available memory to run a prediction. \
-              Both issues can be resolved by uploading a video w/ smaller duration. \
-              Other obscure errors can be caused by not installing librarys from the \
+              Both issues can be resolved by uploading a video w/ lower duration. \
+              Other obscure errors can be caused by not installing libraries from the \
               dependency list listed in the README.md."
 
 export default function PopUp_Help() {

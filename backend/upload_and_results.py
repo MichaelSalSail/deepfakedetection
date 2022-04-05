@@ -8,7 +8,6 @@ APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_PATH = os.path.join(APP_PATH, 'src/pages/')
 app = Flask(__name__, template_folder=TEMPLATE_PATH)
 cors = CORS(app)
-app.config['MAX_CONTENT_LENGTH']=50000000
 
 # This file aims to download the user uploaded video to the 
 # appropriate local directory and update the user on any 
