@@ -15,14 +15,18 @@ cors = CORS(app)
 
 @app.route('/home/results', methods = ['GET'])
 def success():
+    # Since we are looking for a file modification in the last 2 seconds,
+    # delaying for 2 seconds ensures that we won't return results from a
+    # previous 'Generate Results' run.
+    time.sleep(2)
     file_dir=os.path.join(APP_PATH,'src/utils/AllResultsJSON/result_update.json')
     curr_time=time.time()
     file_mod_time=os.path.getmtime(file_dir)
-    while((curr_time-file_mod_time)>60):
+    while(abs(curr_time-file_mod_time)>2):
         curr_time=time.time()
         file_mod_time=os.path.getmtime(file_dir)
-    # time.sleep(5)
     all_data=json.load(open(file_dir))
+    # true->True, false->False... uppercase keywords undefined in JS.
     all_data[2]["beard"]=int(all_data[2]["beard"])
     all_data[3]["shades"]=int(all_data[3]["shades"])
     return {"models" : all_data}

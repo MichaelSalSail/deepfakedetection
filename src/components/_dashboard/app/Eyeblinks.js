@@ -6,8 +6,6 @@ import eyeInvisibleFilled from "@iconify/icons-ant-design/eye-invisible-filled.j
 // material
 import { alpha, styled } from "@mui/material/styles/index.js";
 import { Card, Typography } from "@mui/material";
-// utils
-import { fShortenNumber } from "../../../utils/formatNumber.js";
 
 // ----------------------------------------------------------------------
 
@@ -110,13 +108,6 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
 // ----------------------------------------------------------------------
 
 export default function Eyeblinks(input) {
-  const renderPercentage = () => {
-    let eyes_result = require('../../../utils/AllResultsJSON/result_default.json')[1];
-    // switch_data equates to number of 'Generate Results' button clicks
-    if((input["switch_data"]%2)===1)
-      eyes_result = require('../../../utils/AllResultsJSON/result_update.json')[1];
-    return eyes_result;
-  };
   // 4 possible components to represent 4 different eye blink model classifications.
   if(input["color_card"]==="missing")
   {
@@ -125,7 +116,7 @@ export default function Eyeblinks(input) {
         <IconWrapperStyle1>
           <Icon icon={closeSquareOutlined} width={24} height={24} />
         </IconWrapperStyle1>
-        <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
+        <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
           of frames are missing
         </Typography>
@@ -139,7 +130,7 @@ export default function Eyeblinks(input) {
       <IconWrapperStyle2>
         <Icon icon={questionCircleOutlined} width={24} height={24} />
       </IconWrapperStyle2>
-      <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
+      <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
         of frames are unknown
       </Typography>
@@ -153,7 +144,7 @@ export default function Eyeblinks(input) {
         <IconWrapperStyle3>
           <Icon icon={eyeFilled} width={24} height={24} />
         </IconWrapperStyle3>
-        <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
+        <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
           of frames have open eyes
         </Typography>
@@ -167,7 +158,7 @@ export default function Eyeblinks(input) {
         <IconWrapperStyle4>
           <Icon icon={eyeInvisibleFilled} width={24} height={24} />
         </IconWrapperStyle4>
-        <Typography variant="h3">{renderPercentage()[input["color_card"]]} %</Typography>
+        <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
           of frames have closed eyes
         </Typography>

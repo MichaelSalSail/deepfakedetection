@@ -168,7 +168,7 @@ const update_shades = () => {
 
     // although unlikely, it's possible for detect_shades() to have segmentation fault
     if(shades_text==="")
-        shades_text="Segmentation fault"
+        shades_text="Segmentation fault OR ResourceExhaustedError"
 
     // were sunglasses detected?
     let all_shades=false

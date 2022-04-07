@@ -30,10 +30,14 @@ import FileSaver from 'file-saver';
 
 import axios from "axios";
 
+// all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
-var switch_data = 0;
+// default values for model outputs
+const default_values={"models": require('../utils/AllResultsJSON/result_default.json')}
+// cumulative total of file uploads and 'Generate Results' clicks
+let data_switched = 0;
 // current file duration (sec).
-var fileduration = 1;
+let fileduration = 1;
 
 export default function DashboardApp() {
   // current uploaded file
@@ -48,6 +52,8 @@ export default function DashboardApp() {
   const [goodsubmit, setGoodsubmit] = useState(false);
   // file name used on last 'Generate Results' run
   const [lastfilerun, setlastfilerun] = useState('');
+  // contain all outputs from GET requests
+  const [results, setResults] = useState(default_values);
 
   // alerts
   const [error, setError] = useState(false);
@@ -56,40 +62,34 @@ export default function DashboardApp() {
   // alternate between button and loading icon
   const [modelLoading, setModelLoading] = useState(false);
 
-  const update_click = () => {
-    switch_data+=1;
+  // increment data_switched each time the displayed results switch between default and update values
+  const switched = () => {
+    data_switched+=1;
   };
 
   const wait_for_models = () => {
-    let place_holder=0;
-    console.log("Video has a duration of", fileduration, "seconds.");
-    console.log("Will this have a first video runtime delay?", switch_data===0);
-    console.log("Each progress bar tick will take", estimate_runtime(fileduration, switch_data===0), "milliseconds");
-    setTimeout(() => {
-      update_click();
-    }, estimate_runtime(fileduration, switch_data===0)*100);
-    return Promise.resolve(place_holder);
-  };
-
-  const onGenerate = () => {
     setModelLoading(true);
-    wait_for_models().then((res) => {
-      setTimeout(() => {
-        setModelLoading(false);
-      }, estimate_runtime(fileduration, switch_data===0)*100);
-    })
-    .catch((err) => {
-      console.log("err", err);
-      setTimeout(() => {
-        setModelLoading(false);
-      }, estimate_runtime(fileduration, switch_data===0)*100);
-    });
+    console.log("Video has a duration of", fileduration, "seconds.");
+    console.log("Will this have a first video runtime delay?", data_switched===0);
+    console.log("Each progress bar tick will take", estimate_runtime(fileduration, data_switched===0), "milliseconds");
+    obtainResults();
+    // display the output changes after a fixed amount of time
+    setTimeout(() => {
+      switched();
+    }, estimate_runtime(fileduration, data_switched===0)*100);
+    // enable 'Upload Video' and 'Generate Results' after a fixed amount of time
+    setTimeout(() => {
+      setModelLoading(false);
+    }, estimate_runtime(fileduration, data_switched===0)*100);
   };
 
   const onFileChange = (data) => {
     // close any open alerts
     setError(false);
     setInfo(false);
+
+    // reset results to default
+    setResults(default_values)
 
     // obtain the video duration
     var reader = new FileReader();
@@ -119,8 +119,8 @@ export default function DashboardApp() {
       // get file data
       setSelectedFile(data.target.files[0])
       // set the results to default upon file upload
-      if((switch_data%2)===1)
-        switch_data+=1;
+      if((data_switched%2)===1)
+        switched();
     }
     catch(error)
     {
@@ -128,7 +128,7 @@ export default function DashboardApp() {
     }
   };
 
-  // save the current video in the backend as model input
+  // POST request: save the current video in the backend as model input
   const handleSubmit = (event) => {
     event.preventDefault()
     setSubmit(true)
@@ -148,6 +148,22 @@ export default function DashboardApp() {
       });
     }
   }
+
+  // GET request: receive model outputs
+  const obtainResults = () => {
+    axios.get('http://localhost:5000/home/results')
+    .then(response => {
+      // convert int values to boolean values
+      var temp=response["data"]
+      temp["models"][2]["beard"]=Boolean(temp["models"][2]["beard"])
+      temp["models"][3]["shades"]=Boolean(temp["models"][3]["shades"])
+      setResults(temp)
+      console.log("Successfully loaded model outputs!")
+    }).catch(error => {
+      console.log(error)
+    })
+  }
+  
 
   return (
     <form onSubmit={handleSubmit}>
@@ -234,7 +250,7 @@ export default function DashboardApp() {
                       else
                       {
                         setlastfilerun(file);
-                        onGenerate();
+                        wait_for_models();
                       }
                     }}
                   >
@@ -272,7 +288,7 @@ export default function DashboardApp() {
             <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
               <Grid item xs={12}></Grid>
               <Grid item xs={8}>
-                <Display_Wait per_increment={estimate_runtime(fileduration, switch_data===0)}/>
+                <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
               </Grid>
               <Grid item xs={12}></Grid>
             </Grid>
@@ -292,14 +308,14 @@ export default function DashboardApp() {
           <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
             <Grid item xs={12}></Grid>
             <Grid item xs={12}>
-              <DFDscore switch_data={switch_data} />
+              <DFDscore results={results}/>
             </Grid>
             <Grid item xs={12}></Grid>
           </Grid>
 
           <Typography variant="overline" align="center">Eye Blink Model</Typography>
           <Button
-            disabled={switch_data%2==0}
+            disabled={data_switched%2===0}
             style={{ marginLeft: 10 }}
             component="span"
             variant="text"
@@ -314,16 +330,16 @@ export default function DashboardApp() {
           <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
             <Grid item xs={12}></Grid>
             <Grid item xs={3}>
-              <Eyeblinks color_card={blink_classes[0]} switch_data={switch_data} />
+              <Eyeblinks results={results} color_card={blink_classes[0]} />
             </Grid>
             <Grid item xs={3}>
-              <Eyeblinks color_card={blink_classes[1]} switch_data={switch_data} />
+              <Eyeblinks results={results} color_card={blink_classes[1]} />
             </Grid>
             <Grid item xs={3}>
-              <Eyeblinks color_card={blink_classes[2]} switch_data={switch_data} />
+              <Eyeblinks results={results} color_card={blink_classes[2]} />
             </Grid>
             <Grid item xs={3}>
-              <Eyeblinks color_card={blink_classes[3]} switch_data={switch_data} />
+              <Eyeblinks results={results} color_card={blink_classes[3]} />
             </Grid>
             <Grid item xs={12}></Grid>
           </Grid>
@@ -332,7 +348,7 @@ export default function DashboardApp() {
           <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
             <Grid item xs={12}></Grid>
             <Grid item xs={12}>
-              <OtherOutputs switch_data={switch_data}/>
+              <OtherOutputs results={results}/>
             </Grid>
           </Grid>
         </Container>

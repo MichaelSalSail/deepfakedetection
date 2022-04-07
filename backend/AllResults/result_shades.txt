@@ -1,15 +1,15 @@
 ORIGINAL
 Top 5 Object Detection Predictions
-lipstick (17.57%)
-wig (15.31%)
-hair_spray (8.59%)
-bubble (4.00%)
-shower_cap (3.15%)
+seat_belt (10.02%)
+burrito (7.73%)
+sunglasses (6.02%)
+hotdog (2.80%)
+beer_glass (2.50%)
 
 CROPPED
 Top 5 Object Detection Predictions
-wig (24.38%)
-mask (11.92%)
-shower_cap (9.37%)
-sunscreen (9.10%)
-bonnet (7.80%)
+shower_cap (22.46%)
+sunglasses (9.81%)
+seat_belt (7.41%)
+Band_Aid (7.21%)
+bathing_cap (6.48%)

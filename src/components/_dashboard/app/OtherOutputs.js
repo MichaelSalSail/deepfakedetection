@@ -15,8 +15,6 @@ import {
   TimelineDot,
 } from "@mui/lab";
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
-// utils
-import { fDateTime } from "../../../utils/formatTime.js";
 
 // ----------------------------------------------------------------------
 
@@ -25,16 +23,9 @@ OrderItem.propTypes = {
   isLast: PropTypes.bool,
 };
 
-function OrderItem({ item, isLast, switch_data }) {
+function OrderItem({ item, isLast, result_beard, result_shades }) {
   const {type, title} = item;
-  let result_beard = require('../../../utils/AllResultsJSON/result_default.json')[2];
-  let result_shades = require('../../../utils/AllResultsJSON/result_default.json')[3];
-  // switch_data equates to number of 'Generate Results' button clicks
-  if((switch_data%2)===1)
-  {
-    result_beard = require('../../../utils/AllResultsJSON/result_update.json')[2];
-    result_shades = require('../../../utils/AllResultsJSON/result_update.json')[3];
-  }
+  // obtain the booleans
   let from_beard=result_beard["beard"]
   let from_shades=result_shades["shades"]
 
@@ -75,24 +66,19 @@ const HtmlTooltip = styled(({ className, ...props }) => (
 
 export default function OtherOutputs(input) {
   const [timeline, setTimeline] = useState([]);
-  let result_beard = require('../../../utils/AllResultsJSON/result_default.json')[2];
-  let result_shades = require('../../../utils/AllResultsJSON/result_default.json')[3];
-  // switch_data equates to number of 'Generate Results' button clicks
-  if((input["switch_data"]%2)===1)
-  {
-    result_beard = require('../../../utils/AllResultsJSON/result_update.json')[2];
-    result_shades = require('../../../utils/AllResultsJSON/result_update.json')[3];
-  }
+  let result_beard = input["results"]["models"][2];
+  let result_shades = input["results"]["models"][3];
+  // only need 4 values
   let from_beard=result_beard["beard"]
   let from_shades=result_shades["shades"]
   let output_beard=result_beard["raw_output"]
   let output_shades=result_shades["raw_output"]
 
-  var beard_content="The subject is young and/or female."
+  let beard_content="The subject is young and/or female."
   if(from_beard===true)
     beard_content="There appears to be an adult male."
  
-  var shades_content="It's unlikely the subject has eyewear"
+  let shades_content="It's unlikely the subject has eyewear"
   if(from_shades===true)
     shades_content="It's likely the subject has eyewear." 
 
@@ -146,7 +132,8 @@ export default function OtherOutputs(input) {
                 key={item.title}
                 item={item}
                 isLast={true}
-                switch_data={input["switch_data"]}
+                result_beard={result_beard}
+                result_shades={result_shades}
               />
             ))}
           </Timeline>
