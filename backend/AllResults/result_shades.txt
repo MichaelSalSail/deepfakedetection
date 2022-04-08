@@ -1,15 +1,15 @@
 ORIGINAL
 Top 5 Object Detection Predictions
-wig (48.22%)
-fur_coat (11.54%)
-feather_boa (3.61%)
-brassiere (2.54%)
-bonnet (2.41%)
+ice_lolly (22.76%)
+bow_tie (13.03%)
+suit (12.59%)
+spatula (6.93%)
+neck_brace (6.71%)
 
 CROPPED
 Top 5 Object Detection Predictions
-wig (27.75%)
-mask (13.02%)
-sunscreen (8.93%)
-shower_cap (8.15%)
-lipstick (7.78%)
+sunscreen (22.63%)
+wig (14.56%)
+Band_Aid (9.99%)
+mask (8.26%)
+bow_tie (8.26%)

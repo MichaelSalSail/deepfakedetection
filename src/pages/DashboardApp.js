@@ -81,7 +81,6 @@ export default function DashboardApp() {
     // once the time is up for progress bar w/ value, the progress bar is done
     progress_timeout=setTimeout(() => {
       setProgressBarDone(true);
-      console.log("progressBarDone set to true in wait_for_models()")
     }, estimate_runtime(fileduration, data_switched===0)*100);
   };
 
@@ -164,7 +163,6 @@ export default function DashboardApp() {
       switched();
       // the request is complete, remove all loading icons and progress bars
       setProgressBarDone(false);
-      console.log("progressBarDone set to false in obtainResults()")
       setModelLoading(false);
       // clear the lingering timeout() from wait_for_models()
       clearTimeout(progress_timeout);

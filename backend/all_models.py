@@ -1,7 +1,6 @@
 import cv2
 import os, sys
 import numpy as np
-import pandas as pd
 import math
 from deepface import DeepFace
 import torch
@@ -14,7 +13,8 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
-from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop
+from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
+                             eyeblink_csv
 
 def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     '''
@@ -260,19 +260,9 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                             print("all_closed:",all_closed)
                     plt.show()
                     plt.clf()
-
-        # Timestamp of each video frame and classification written to a dataframe.
-        blinks_df= pd.DataFrame(columns=['Timestamp (s)','Classification'])
-        for i in range(0,total_frames): 
-            blinks_df.loc[i, 'Timestamp (s)'] = round(i*(total_seconds/(total_frames-1)),2)
-            # if more than 5% of frames are missing or classifications[i] is out of bounds,
-            # don't put a valid classification in the row
-            if((len(classifications)<(0.95*total_frames)) | (i>=(len(classifications)))):
-                blinks_df.loc[i, 'Classification'] = math.nan
-            else:
-                blinks_df.loc[i, 'Classification'] = classifications[i]
-        # Save the dataframe as a .csv file
-        blinks_df.to_csv("../public/static/raw-data/eyeblink_data.csv", index=False)
+        # save the list of classifications to file
+        eyeblink_csv(total_frames, classifications, total_seconds, 
+                     "../public/static/raw-data/eyeblink_data.csv")
     except Exception as e:
         print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
         result.append("Amount of missing frames: 0.0%\nAmount of unknown frames: 0.0%\nAmount of open eyes frames: 0.0%\nAmount of closed eyes frames: 0.0%")
@@ -281,6 +271,8 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
         file_read = open(full_name,"r")
         print(file_read.read())
         file_read.close()
+        # save an empty list of classifications to file
+        eyeblink_csv(total_frames, list(), total_seconds, "../public/static/raw-data/eyeblink_data.csv")
         return [0,0,0,0]
     # Obtain the percentiles for each classification
     if (all_open+all_closed+all_unknown)<(total_frames):

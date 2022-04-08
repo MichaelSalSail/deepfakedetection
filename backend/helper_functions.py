@@ -1,5 +1,7 @@
 import cv2
+import math
 import numpy as np
+import pandas as pd
 import face_recognition
 from PIL import Image
 from tensorflow.keras.preprocessing.image import load_img
@@ -172,3 +174,29 @@ def save_crop(input_image, file_name, destination):
         pil_image = Image.fromarray(face_image)
         pil_image.save(full_1)
     return True
+
+def eyeblink_csv(frames, labels, mp4_duration, dir):
+    '''
+    Saves the labels from blink_on_video() in .csv format.
+    
+    Args:
+        frames: the total frames that should be extracted from video.
+        labels: the eyeblink classification of each video frame.
+        mp4_durations: total video duration in seconds.
+        dir: directory to save the .csv
+        
+    Returns:
+        Nothing
+    '''
+    # Timestamp of each video frame and classification written to a dataframe.
+    blinks_df= pd.DataFrame(columns=['Timestamp (s)','Classification'])
+    for i in range(0,frames): 
+        blinks_df.loc[i, 'Timestamp (s)'] = round(i*(mp4_duration/(frames-1)),2)
+        # if more than 5% of frames are missing or labels[i] is out of bounds,
+        # don't put a valid classification in the row
+        if((len(labels)<(0.95*frames)) | (i>=(len(labels)))):
+            blinks_df.loc[i, 'Classification'] = math.nan
+        else:
+            blinks_df.loc[i, 'Classification'] = labels[i]
+    # Save the dataframe as a .csv file
+    blinks_df.to_csv(dir, index=False)

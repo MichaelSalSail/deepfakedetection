@@ -1,4 +1,4 @@
 Amount of missing frames: 0.0%
 Amount of unknown frames: 0.0%
-Amount of open eyes frames: 83.23%
-Amount of closed eyes frames: 16.77%
+Amount of open eyes frames: 0.0%
+Amount of closed eyes frames: 0.0%
