@@ -16,6 +16,7 @@ import {
 import LoadingButton from "@mui/lab/node/LoadingButton/index.js";
 import ReactPlayer from "react-player";
 import CloseIcon from '@mui/icons-material/Close';
+import LinearProgress from '@mui/material/LinearProgress';
 // components
 import Page from "../components/Page.js";
 import {
@@ -38,6 +39,8 @@ const default_values={"models": require('../utils/AllResultsJSON/result_default.
 let data_switched = 0;
 // current file duration (sec).
 let fileduration = 1;
+// contain the settimeout() for progress bar
+var progress_timeout;
 
 export default function DashboardApp() {
   // current uploaded file
@@ -59,10 +62,12 @@ export default function DashboardApp() {
   const [error, setError] = useState(false);
   const [info, setInfo] = useState(false);
 
-  // alternate between button and loading icon
+  // the model starts loading when a user clicks 'Generate Results' and finishes once the GET request is received.
   const [modelLoading, setModelLoading] = useState(false);
+  // has the progress bar w/ value finished?
+  const [progressBarDone, setProgressBarDone] = useState(false);
 
-  // increment data_switched each time the displayed results switch between default and update values
+  // increment data_switched each time a new file is uploaded or 'Generate Results' completes a GET request
   const switched = () => {
     data_switched+=1;
   };
@@ -73,13 +78,10 @@ export default function DashboardApp() {
     console.log("Will this have a first video runtime delay?", data_switched===0);
     console.log("Each progress bar tick will take", estimate_runtime(fileduration, data_switched===0), "milliseconds");
     obtainResults();
-    // display the output changes after a fixed amount of time
-    setTimeout(() => {
-      switched();
-    }, estimate_runtime(fileduration, data_switched===0)*100);
-    // enable 'Upload Video' and 'Generate Results' after a fixed amount of time
-    setTimeout(() => {
-      setModelLoading(false);
+    // once the time is up for progress bar w/ value, the progress bar is done
+    progress_timeout=setTimeout(() => {
+      setProgressBarDone(true);
+      console.log("progressBarDone set to true in wait_for_models()")
     }, estimate_runtime(fileduration, data_switched===0)*100);
   };
 
@@ -158,8 +160,20 @@ export default function DashboardApp() {
       temp["models"][2]["beard"]=Boolean(temp["models"][2]["beard"])
       temp["models"][3]["shades"]=Boolean(temp["models"][3]["shades"])
       setResults(temp)
+      // the process attached w/ 'Generate Results' has ended, update the count
+      switched();
+      // the request is complete, remove all loading icons and progress bars
+      setProgressBarDone(false);
+      console.log("progressBarDone set to false in obtainResults()")
+      setModelLoading(false);
+      // clear the lingering timeout() from wait_for_models()
+      clearTimeout(progress_timeout);
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
+      switched();
+      setProgressBarDone(false);
+      setModelLoading(false);
+      clearTimeout(progress_timeout);
       console.log(error)
     })
   }
@@ -214,6 +228,7 @@ export default function DashboardApp() {
               <input
                 id="file-upload"
                 hidden
+                disabled={modelLoading}
                 type="file"
                 accept=".mp4"
                 onChange={onFileChange}
@@ -225,6 +240,7 @@ export default function DashboardApp() {
                   <LoadingButton loading={modelLoading} />
                 ) : (
                   <Button
+                    disabled={modelLoading}
                     component="span"
                     variant="contained"
                   >
@@ -238,7 +254,7 @@ export default function DashboardApp() {
                   <LoadingButton loading={modelLoading} />
                 ) : (
                   <Button
-                    disabled={error || info}
+                    disabled={error || info || modelLoading}
                     style={{ marginLeft: 10 }}
                     component="span"
                     variant="contained"
@@ -283,15 +299,29 @@ export default function DashboardApp() {
               />
             </Box>
           </Card>
-          {/* While waiting for model outputs, display a progress bar. */}
+          {/* While waiting for model outputs, display a progress bar.
+              If the progress bar w/ label finished but the GET request
+              hasn't finished, show an indeterminate progress bar. */}
           {modelLoading ? (
-            <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-              <Grid item xs={12}></Grid>
-              <Grid item xs={8}>
-                <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
+            (progressBarDone && results["models"][0]["DFD"]===0) ? (
+              <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
+                <Grid item xs={12}></Grid>
+                  <Grid item xs={8}>
+                    <Box sx={{ width: '100%' }}>
+                      <LinearProgress />
+                    </Box>
+                  </Grid>
+                <Grid item xs={12}></Grid>
               </Grid>
-              <Grid item xs={12}></Grid>
-            </Grid>
+              ) : (
+              <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
+                <Grid item xs={12}></Grid>
+                  <Grid item xs={8}>
+                    <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
+                  </Grid>
+                <Grid item xs={12}></Grid>
+              </Grid>
+              )
           ) : (
             <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               <Grid item xs={12}></Grid>

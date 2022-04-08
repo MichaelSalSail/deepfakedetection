@@ -1,16 +1,16 @@
 [{
-  "DFD": 0.39
+  "DFD": 8.71
 },{
-  "closed": 13.66,
+  "closed": 16.77,
   "missing": 0,
-  "open": 86.34,
+  "open": 83.23,
   "unknown": 0
 },{
-  "age": 29,
+  "age": 25,
   "beard": false,
   "gender": "Woman",
-  "raw_output": "   Age: 29\nGender: Woman\n"
+  "raw_output": "   Age: 25\nGender: Woman\n"
 },{
-  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nseat_belt (10.02%)\nburrito (7.73%)\nsunglasses (6.02%)\nhotdog (2.80%)\nbeer_glass (2.50%)\n\nCROPPED\nTop 5 Object Detection Predictions\nshower_cap (22.46%)\nsunglasses (9.81%)\nseat_belt (7.41%)\nBand_Aid (7.21%)\nbathing_cap (6.48%)\n",
-  "shades": true
+  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nwig (48.22%)\nfur_coat (11.54%)\nfeather_boa (3.61%)\nbrassiere (2.54%)\nbonnet (2.41%)\n\nCROPPED\nTop 5 Object Detection Predictions\nwig (27.75%)\nmask (13.02%)\nsunscreen (8.93%)\nshower_cap (8.15%)\nlipstick (7.78%)\n",
+  "shades": false
 }]
