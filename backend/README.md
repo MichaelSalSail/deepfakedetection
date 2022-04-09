@@ -1,6 +1,6 @@
 # Backend
 
-By following the commands below, the user will download all required dependencies and successfully launch the application. This project was tested using a UNIX-based OS and a Chromium browser environment. Running the application under different circumstances may result in unexpected errors.  
+By following the commands below, the user will download all required dependencies and successfully launch + run the application. This project was tested using a UNIX-based OS and a Chromium browser environment. Running the application under different circumstances may result in unexpected errors.  
 
 1. `./setup.sh`  
 something
