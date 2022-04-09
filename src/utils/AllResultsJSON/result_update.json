@@ -6,11 +6,11 @@
   "open": 0,
   "unknown": 0
 },{
-  "age": 29,
-  "beard": true,
-  "gender": "Man",
-  "raw_output": "   Age: 29\nGender: Man\n"
+  "age": 0,
+  "beard": false,
+  "gender": "??",
+  "raw_output": "   Age: ??\nGender: ??\n"
 },{
-  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nice_lolly (22.76%)\nbow_tie (13.03%)\nsuit (12.59%)\nspatula (6.93%)\nneck_brace (6.71%)\n\nCROPPED\nTop 5 Object Detection Predictions\nsunscreen (22.63%)\nwig (14.56%)\nBand_Aid (9.99%)\nmask (8.26%)\nbow_tie (8.26%)\n",
+  "raw_output": "ORIGINAL (file DNE)\nTop 5 Object Detection Predictions\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n\nCROPPED (file DNE)\nTop 5 Object Detection Predictions\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)",
   "shades": false
 }]

@@ -46,38 +46,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     total_seconds=round((video_data.get(cv2.CAP_PROP_FRAME_COUNT))/(video_data.get(cv2.CAP_PROP_FPS)),2)
     total_frames=math.floor(fps*total_seconds)
 
-    # Get the face from an image
-    video_reader = VideoReader()
-    frames_per_video = total_frames
-    video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
-    face_extractor = FaceExtractor(video_read_fn, facedet)
-
-    # face_extractor extracts total_frames number of frames 
-    # from the entire video runtime.
-    faces = face_extractor.process_video(video_path)
-    # If there are multiple people in the video, use one face
-    face_extractor.keep_only_best_face(faces)
-
-    input_size =224
-    mean = [0.43216, 0.394666, 0.37645]
-    std = [0.22803, 0.22145, 0.216989]
-    normalize_transform = Normalize(mean,std)
-
-    class MyResNeXt(models.resnet.ResNet):
-        def __init__(self, training=True):
-            super(MyResNeXt, self).__init__(block=models.resnet.Bottleneck,
-                                            layers=[3, 4, 6, 3], 
-                                            groups=32, 
-                                            width_per_group=4)
-            self.fc = nn.Linear(2048, 1)
-
-    checkpoint = torch.load(cwd + "/imports/inference/resnext.pth", map_location=device)
-    model = MyResNeXt().to(device)
-    model.load_state_dict(checkpoint)
-    _ = model.eval()
-    del checkpoint
-
-    # put it all in a list then append to the .txt file
+    # prepare a list which will be appended to the .txt file
     if(output_dir!=""):
         full_name=os.path.join(output_dir,"result_DFD.txt")
     else:
@@ -85,7 +54,38 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
     file_write = open(full_name,"w")
     result=list()
 
-    try:        
+    try:
+        # Get the face from an image
+        video_reader = VideoReader()
+        frames_per_video = total_frames
+        video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
+        face_extractor = FaceExtractor(video_read_fn, facedet)
+
+        # face_extractor extracts total_frames number of frames 
+        # from the entire video runtime.
+        faces = face_extractor.process_video(video_path)
+        # If there are multiple people in the video, use one face
+        face_extractor.keep_only_best_face(faces)
+
+        input_size =224
+        mean = [0.43216, 0.394666, 0.37645]
+        std = [0.22803, 0.22145, 0.216989]
+        normalize_transform = Normalize(mean,std)
+
+        class MyResNeXt(models.resnet.ResNet):
+            def __init__(self, training=True):
+                super(MyResNeXt, self).__init__(block=models.resnet.Bottleneck,
+                                                layers=[3, 4, 6, 3], 
+                                                groups=32, 
+                                                width_per_group=4)
+                self.fc = nn.Linear(2048, 1)
+
+        checkpoint = torch.load(cwd + "/imports/inference/resnext.pth", map_location=device)
+        model = MyResNeXt().to(device)
+        model.load_state_dict(checkpoint)
+        _ = model.eval()
+        del checkpoint
+ 
         if len(faces) > 0:
             x = np.zeros((total_frames, input_size, input_size, 3), dtype=np.uint8)
             n = 0
