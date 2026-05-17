@@ -5,6 +5,8 @@ import math
 from deepface import DeepFace
 import torch
 import torch.nn as nn
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import torchvision.models as models
 from torchvision.transforms import Normalize
@@ -258,7 +260,6 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                             if(beard_png_open==False):
                                 plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
                             print("all_closed:",all_closed)
-                    plt.show()
                     plt.clf()
         # save the list of classifications to file
         eyeblink_csv(total_frames, classifications, total_seconds, 
@@ -342,9 +343,10 @@ def detect_beard(image_dir, output_dir=""):
             cv2.imwrite(img2_path, resized)
 
             # Put it all in result then append to the .txt file
-            obj = DeepFace.analyze(img_path = img2_path, 
+            obj = DeepFace.analyze(img_path = img2_path,
                                 actions = ['age', 'gender'],
                                 enforce_detection=False)
+            obj = obj[0] if isinstance(obj, list) else obj
             temp="   Age: "+str(obj["age"])+'\n'
             result.append(temp)
             temp="Gender: "+str(obj["gender"])+'\n'
