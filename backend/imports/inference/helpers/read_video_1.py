@@ -37,7 +37,7 @@ class VideoReader:
         frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
         if frame_count <= 0: return None
 
-        frame_idxs = np.linspace(0, frame_count - 1, num_frames, endpoint=True, dtype=np.int)
+        frame_idxs = np.linspace(0, frame_count - 1, num_frames, endpoint=True, dtype=int)
         if jitter > 0:
             np.random.seed(seed)
             jitter_offsets = np.random.randint(-jitter, jitter, len(frame_idxs))

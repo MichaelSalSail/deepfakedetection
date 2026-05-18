@@ -153,7 +153,7 @@ class BlazeFace(nn.Module):
         return self.classifier_8.weight.device
     
     def load_weights(self, path):
-        self.load_state_dict(torch.load(path))
+        self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
         self.eval()        
     
     def load_anchors(self, path):

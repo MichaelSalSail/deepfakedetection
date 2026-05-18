@@ -311,7 +311,7 @@ class FaceExtractor:
         """
         faces = []
         for i in range(len(detections)):
-            ymin, xmin, ymax, xmax = detections[i, :4].cpu().numpy().astype(np.int)
+            ymin, xmin, ymax, xmax = detections[i, :4].cpu().numpy().astype(int)
             face = frame[ymin:ymax, xmin:xmax, :]
             faces.append(face)
         return faces

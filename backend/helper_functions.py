@@ -146,7 +146,7 @@ def get_model():
     output = Dense(1, activation='sigmoid')(class1)
     # define new model
     model = Model(inputs=model.inputs, outputs=output)
-    model.compile(loss='binary_crossentropy',optimizer=RMSprop(lr=0.0001),metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy',optimizer=RMSprop(learning_rate=0.0001),metrics=['accuracy'])
     model.load_weights("data/Weights/all_weights_eyeblink.ckpt")
     return model
 
