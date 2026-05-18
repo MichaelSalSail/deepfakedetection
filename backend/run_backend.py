@@ -43,3 +43,8 @@ predict_on_video(video_path, 15, device, facedet, output_dir)
 blink_on_video(video_path, 15, facedet, model_for_tests, output_dir)
 detect_beard(temp_img_beard, output_dir)
 detect_shades(temp_img_beard, output_dir, temp_img_cropped)
+
+# TensorFlow and PyTorch cleanup routines conflict on shutdown and cause a
+# segfault. All results are written to disk before this point, so bypassing
+# Python's teardown is safe.
+os._exit(0)
