@@ -1,5 +1,6 @@
 # Requires Python 3.8
-tensorflow-macos==2.13.0
+tensorflow-macos==2.13.0; sys_platform == 'darwin'
+tensorflow==2.13.0; sys_platform != 'darwin'
 torch==2.0.1
 torchvision==0.15.2
 deepface==0.0.93
