@@ -139,7 +139,7 @@ export default function DashboardApp() {
       console.log("Failed to save video. Over 50MB file size!");
     else
     {
-      axios.post('http://localhost:5000/home/upload', formData)
+      axios.post('http://localhost:5001/home/upload', formData)
       .then(function () {
         console.log("Successfully saved %s!",(formData.getAll("file"))[0]["name"]);
         setGoodsubmit(true)
@@ -152,7 +152,7 @@ export default function DashboardApp() {
 
   // GET request: receive model outputs
   const obtainResults = () => {
-    axios.get('http://localhost:5000/home/results')
+    axios.get('http://localhost:5001/home/results')
     .then(response => {
       // convert int values to boolean values
       var temp=response["data"]
