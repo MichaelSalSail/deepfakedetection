@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, send_file
 from flask_restful import Api, Resource, reqparse
 import os
 import json
@@ -35,6 +35,12 @@ def success():
     all_data[2]["beard"]=int(all_data[2]["beard"])
     all_data[3]["shades"]=int(all_data[3]["shades"])
     return {"models" : all_data}
+
+@app.route('/home/eyeblink_csv', methods=['GET', 'OPTIONS'])
+def get_eyeblink_csv():
+    file_dir = os.path.join(APP_PATH, 'backend/AllResults/eyeblink_data.csv')
+    return send_file(file_dir, mimetype='text/csv', as_attachment=True,
+                     download_name='eyeblink_data.csv')
 
 @app.route('/home/upload', methods = ['POST', 'OPTIONS'])
 def upload_video():

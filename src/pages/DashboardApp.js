@@ -350,7 +350,7 @@ export default function DashboardApp() {
             color="secondary"
             onClick={() => {
               FileSaver.saveAs(
-                process.env.PUBLIC_URL + "/static/raw-data/eyeblink_data.csv",
+                "http://localhost:5001/home/eyeblink_csv",
                 "eyeblink_data.csv");
             }}
           >Excel</Button>

@@ -262,8 +262,8 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                             print("all_closed:",all_closed)
                     plt.clf()
         # save the list of classifications to file
-        eyeblink_csv(total_frames, classifications, total_seconds, 
-                     "../public/static/raw-data/eyeblink_data.csv")
+        eyeblink_csv(total_frames, classifications, total_seconds,
+                     "AllResults/eyeblink_data.csv")
     except Exception as e:
         print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
         result.append("Amount of missing frames: 0.0%\nAmount of unknown frames: 0.0%\nAmount of open eyes frames: 0.0%\nAmount of closed eyes frames: 0.0%")
@@ -273,7 +273,7 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
         print(file_read.read())
         file_read.close()
         # save an empty list of classifications to file
-        eyeblink_csv(total_frames, list(), total_seconds, "../public/static/raw-data/eyeblink_data.csv")
+        eyeblink_csv(total_frames, list(), total_seconds, "AllResults/eyeblink_data.csv")
         return [0,0,0,0]
     # Obtain the percentiles for each classification
     if (all_open+all_closed+all_unknown)<(total_frames):
