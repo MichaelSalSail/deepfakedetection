@@ -1,0 +1,16 @@
+[{
+  "DFD": 16.46
+},{
+  "closed": 19.35,
+  "missing": 0,
+  "open": 72.26,
+  "unknown": 8.39
+},{
+  "age": 32,
+  "beard": true,
+  "gender": "Man",
+  "raw_output": "   Age: 32\nGender: {'Woman': 0.009029897773871198, 'Man': 99.99096393585205}\n"
+},{
+  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nneck_brace (27.85%)\nbow_tie (14.29%)\nWindsor_tie (5.18%)\nsuit (4.75%)\nacademic_gown (2.56%)\n\nCROPPED\nTop 5 Object Detection Predictions\nbow_tie (9.72%)\nBand_Aid (5.90%)\nice_lolly (5.85%)\nseat_belt (5.08%)\nmortarboard (4.47%)\n",
+  "shades": false
+}]

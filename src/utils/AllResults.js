@@ -191,4 +191,4 @@ const fs = require('fs');
 
 list_of_updates= [update_DFD(), update_blink(), update_beard(), update_shades()];
 
-fs.writeFileSync("AllResultsJSON/result_update.json", '['+list_of_updates+']');
+fs.writeFileSync("../../backend/AllResults/result_update.json", '['+list_of_updates+']');
