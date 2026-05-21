@@ -34,7 +34,7 @@ import axios from "axios";
 // all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
 // default values for model outputs
-const default_values={"models": require('../utils/AllResultsJSON/result_default.json')}
+const default_values={"models": require('../utils/result_default.json')}
 // cumulative total of file uploads and 'Generate Results' clicks
 let data_switched = 0;
 // current file duration (sec).
