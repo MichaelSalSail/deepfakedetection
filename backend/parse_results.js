@@ -75,7 +75,7 @@ const extract_text = (fileName) => {
  */
 const update_DFD = () => {
 
-    let DFD_score=extract_percents("/../../backend/AllResults/result_DFD.txt");
+    let DFD_score=extract_percents("/AllResults/result_DFD.txt");
     console.log(DFD_score)
 
     // organize data in json format and write to file
@@ -94,7 +94,7 @@ const update_DFD = () => {
  */
 const update_blink = () => {
 
-    let all_blinks=extract_percents("/../../backend/AllResults/result_blink.txt");
+    let all_blinks=extract_percents("/AllResults/result_blink.txt");
     console.log(all_blinks)
 
     // organize data in json format
@@ -117,7 +117,7 @@ const update_blink = () => {
  */
 const update_beard = () => {
 
-    let beard_text=extract_text("/../../backend/AllResults/result_beard.txt");
+    let beard_text=extract_text("/AllResults/result_beard.txt");
 
     // retrieve age
     let all_beard=[]
@@ -164,7 +164,7 @@ const update_beard = () => {
  */
 const update_shades = () => {
 
-    let shades_text=extract_text("/../../backend/AllResults/result_shades.txt");
+    let shades_text=extract_text("/AllResults/result_shades.txt");
 
     // although unlikely, it's possible for detect_shades() to have segmentation fault
     if(shades_text==="")
@@ -191,4 +191,4 @@ const fs = require('fs');
 
 list_of_updates= [update_DFD(), update_blink(), update_beard(), update_shades()];
 
-fs.writeFileSync("../../backend/AllResults/result_update.json", '['+list_of_updates+']');
+fs.writeFileSync("AllResults/result_update.json", '['+list_of_updates+']');
