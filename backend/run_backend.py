@@ -7,16 +7,16 @@ from helper_functions import get_model
 # Change the directories as you see fit.
 
 cwd = os.getcwd()
-pre2 = "/example_videos"
+pre2 = "/current_upload"
 video_path = cwd+pre2+"/target.mp4"
 
 # This is the directory of the 4 model outputs = 4 txt files.
 output_dir = "AllResults"
 
 # frame and cropped frame from blink_on_video()
-temp_img_original=cwd+"/example_videos/temp/"+'o.png'
-temp_img_cropped=cwd+"/example_videos/temp/"+'p.png'
-temp_img_beard=cwd+"/example_videos/temp/"+'beard.png'
+temp_img_original=cwd+"/current_upload/temp/"+'o.png'
+temp_img_cropped=cwd+"/current_upload/temp/"+'p.png'
+temp_img_beard=cwd+"/current_upload/temp/"+'beard.png'
 
 # Use GPU, if available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

@@ -165,7 +165,7 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
     from helpers.face_extract_1 import FaceExtractor
 
     # delete all frames from a previous run
-    temp_dir= "example_videos/temp/"
+    temp_dir= "current_upload/temp/"
     all_temp_files=[temp_dir+"o.png",temp_dir+"p.png",temp_dir+"beard.png"]
     for i in range(0,len(all_temp_files)):
         if os.path.exists(all_temp_files[i]):
@@ -222,10 +222,10 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                     resized_face = make_square_image(resized_face)
                     plt.imshow(resized_face, interpolation='nearest')
                     # o stands for original
-                    file_name_save_o='example_videos/temp/o.png'
+                    file_name_save_o='current_upload/temp/o.png'
                     plt.savefig(file_name_save_o)
                     # save a zoomed in photo in preparation for beard detection
-                    file_name_save_beard='example_videos/temp/beard.png'
+                    file_name_save_beard='current_upload/temp/beard.png'
                     plt.axis('off')
                     # the first frame that has a persons face should be saved as beard.png
                     if(beard_png_obtained==False):
@@ -238,13 +238,13 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                     cv2.imwrite(file_name_save_o, resized)
                     # successfully resized w/ same name
                     # p stands for cropped
-                    crop_result=save_crop('o.png', 'p.png','example_videos/temp/')
+                    crop_result=save_crop('o.png', 'p.png','current_upload/temp/')
                     if(crop_result==False):
                         all_unknown+=1
                         classifications.append(-1)
                         print("all_unknown:",all_unknown)
                     else:
-                        current=more_tests(use_model, 'example_videos/temp')
+                        current=more_tests(use_model, 'current_upload/temp')
                         if current==1:
                             all_open+=1
                             classifications.append(1)
@@ -337,7 +337,7 @@ def detect_beard(image_dir, output_dir=""):
 
             # Save this image to a temporary directory for later input to DeepFace
             cwd = os.getcwd()
-            img2_path = cwd + "/example_videos/temp/beard.png"
+            img2_path = cwd + "/current_upload/temp/beard.png"
 
             # Save image
             cv2.imwrite(img2_path, resized)

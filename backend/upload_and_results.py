@@ -45,7 +45,7 @@ def get_eyeblink_csv():
 @app.route('/home/upload', methods = ['POST', 'OPTIONS'])
 def upload_video():
     if request.method == 'POST':
-        (request.files["file"]).save(os.path.join(APP_PATH,'backend/example_videos/target.mp4'))
+        (request.files["file"]).save(os.path.join(APP_PATH,'backend/current_upload/target.mp4'))
         return "Successfully saved!"
 
 if __name__ == '__main__':
