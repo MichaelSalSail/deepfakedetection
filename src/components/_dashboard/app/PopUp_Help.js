@@ -7,7 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 let help_text=[]
-help_text[0]="- You may only upload .mp4 videos. Upon upload, click submit!"
+help_text[0]="- You may only upload .mp4 videos. Upload Video saves your file on the server for analysis."
 help_text[1]="- The time it takes to generate results increases with video duration. \
                 Ideally, upload videos w/ durations between 10 seconds and 20 seconds. \
                 The backend is run locally, so make sure to conserve system resources \

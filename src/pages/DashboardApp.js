@@ -31,6 +31,8 @@ import FileSaver from 'file-saver';
 
 import axios from "axios";
 
+const MAX_VIDEO_BYTES = 50000000;
+
 // all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
 // default values for model outputs
@@ -43,16 +45,13 @@ let fileduration = 1;
 var progress_timeout;
 
 export default function DashboardApp() {
-  // current uploaded file
+  // current uploaded file preview URL
   const [file, setFile] = useState('');
   // current file name.
   const [filename, setFilename] = useState('');
-  // current file data
-  const [selectedFile, setSelectedFile] = useState(null);
-  // disable/enable submit button
-  const [submit, setSubmit] = useState(true);
-  // keep track of whether the last POST request was successful
-  const [goodsubmit, setGoodsubmit] = useState(false);
+  // true after the backend has saved the current video file
+  const [videoSaved, setVideoSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
   // file name used on last 'Generate Results' run
   const [lastfilerun, setlastfilerun] = useState('');
   // contain all outputs from GET requests
@@ -60,6 +59,8 @@ export default function DashboardApp() {
 
   // alerts
   const [error, setError] = useState(false);
+  const [uploadError, setUploadError] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [info, setInfo] = useState(false);
 
   // the model starts loading when a user clicks 'Generate Results' and finishes once the GET request is received.
@@ -84,10 +85,47 @@ export default function DashboardApp() {
     }, estimate_runtime(fileduration, data_switched===0)*100);
   };
 
+  const saveVideoToBackend = (fileToSave) => {
+    if (!fileToSave) {
+      return;
+    }
+
+    if (fileToSave.size > MAX_VIDEO_BYTES) {
+      console.log("Failed to save video. Over 50MB file size!");
+      setUploading(false);
+      setVideoSaved(false);
+      setUploadSuccess(false);
+      setUploadError(true);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileToSave);
+
+    axios.post('http://localhost:5001/home/upload', formData)
+      .then(function () {
+        console.log("Successfully saved %s!", fileToSave.name);
+        setVideoSaved(true);
+        setUploadSuccess(true);
+        setUploadError(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+        setVideoSaved(false);
+        setUploadSuccess(false);
+        setUploadError(true);
+      })
+      .finally(function () {
+        setUploading(false);
+      });
+  };
+
   const onFileChange = (data) => {
     // close any open alerts
     setError(false);
     setInfo(false);
+    setUploadError(false);
+    setUploadSuccess(false);
 
     // reset results to default
     setResults(default_values)
@@ -103,52 +141,28 @@ export default function DashboardApp() {
     };
     try
     {
-      reader.readAsDataURL(data.target.files[0]);
+      const pickedFile = data.target.files[0];
+      reader.readAsDataURL(pickedFile);
       // obtain url to play the video
-      setFile(URL.createObjectURL(data.target.files[0]));
-      // if the same video file was uploaded, nothing should change.
-      // successful file upload change should enable 'Submit' button & reset goodsubmit value.
-      if(filename!=(data.target.files[0]['name']))
-      {
-        setSubmit(false)
-        setGoodsubmit(false)
-      }
+      setFile(URL.createObjectURL(pickedFile));
       // get filename for the info alert
-      setFilename(data.target.files[0]['name']);
+      setFilename(pickedFile['name']);
       // reset last file run to default value
       setlastfilerun('');
-      // get file data
-      setSelectedFile(data.target.files[0])
+      setVideoSaved(false);
+      setUploading(true);
+      saveVideoToBackend(pickedFile);
       // set the results to default upon file upload
       if((data_switched%2)===1)
         switched();
     }
-    catch(error)
+    catch(err)
     {
       console.log("Failed to select video!")
+      setUploading(false);
+      setUploadError(true);
     }
   };
-
-  // POST request: save the current video in the backend as model input
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    setSubmit(true)
-    var formData = new FormData();
-    formData.append("file", selectedFile)
-    if((formData.getAll("file"))[0]["size"]>50000000)
-      console.log("Failed to save video. Over 50MB file size!");
-    else
-    {
-      axios.post('http://localhost:5001/home/upload', formData)
-      .then(function () {
-        console.log("Successfully saved %s!",(formData.getAll("file"))[0]["name"]);
-        setGoodsubmit(true)
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-    }
-  }
 
   // GET request: receive model outputs
   const obtainResults = () => {
@@ -178,209 +192,233 @@ export default function DashboardApp() {
   
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Page title="Application">
-        <Container maxWidth="xl">
-          {/* Two possible alerts, an error or information message. */}
-          <Collapse in={error}>
-            <Alert severity="error"
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setError(false);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-            >
-              Unable to generate results. Missing video file or failed to save video.
-            </Alert>
-          </Collapse>
-          <Collapse in={info}>
-            <Alert severity="info"
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setInfo(false);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-            >
-              Results for {filename} are available below.
-            </Alert>
-          </Collapse>
-          <Box sx={{ pb: 5 }}>
-            <Typography variant="h4">Deepfake Video Analysis</Typography>
-            <Box flexDirection="row">
-              <input
-                id="file-upload"
-                hidden
-                disabled={modelLoading}
-                type="file"
-                accept=".mp4"
-                onChange={onFileChange}
-              />
-              {/* The 'Upload Video' button shouldn't be accessible while
-                  the models are still generating outputs.*/}
-              <label htmlFor="file-upload">
-                {modelLoading ? (
-                  <LoadingButton loading={modelLoading} />
-                ) : (
-                  <Button
-                    disabled={modelLoading}
-                    component="span"
-                    variant="contained"
-                  >
-                    Upload Video
-                  </Button>
-                )}
-              {/* Upon fulfilling certain conditions, clicking 'Generate Results'
-                  may return an error or information message. */}
-              </label>
-                {modelLoading ? (
-                  <LoadingButton loading={modelLoading} />
-                ) : (
-                  <Button
-                    disabled={error || info || modelLoading}
-                    style={{ marginLeft: 10 }}
-                    component="span"
-                    variant="contained"
-                    onClick={() => {
-                      if(goodsubmit==false)
-                        setError(true);
-                      else if(lastfilerun===file)
-                        setInfo(true);
-                      else
-                      {
-                        setlastfilerun(file);
-                        wait_for_models();
-                      }
-                    }}
-                  >
-                    Generate Results
-                  </Button>
-                )}
-              <PopUp_Help/>
-            </Box>
+    <Page title="Application">
+      <Container maxWidth="xl">
+        <Collapse in={error}>
+          <Alert severity="error"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setError(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Unable to generate results. Upload a video and wait until it is saved on the server.
+          </Alert>
+        </Collapse>
+        <Collapse in={uploadError}>
+          <Alert severity="error"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setUploadError(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Could not save video. Check that the backend is running, the file is under 50MB, and try again.
+          </Alert>
+        </Collapse>
+        <Collapse in={uploadSuccess}>
+          <Alert severity="success"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setUploadSuccess(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            {filename} saved for analysis. Click Generate Results when ready.
+          </Alert>
+        </Collapse>
+        <Collapse in={info}>
+          <Alert severity="info"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setInfo(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Results for {filename} are available below.
+          </Alert>
+        </Collapse>
+        <Box sx={{ pb: 5 }}>
+          <Typography variant="h4">Deepfake Video Analysis</Typography>
+          <Box flexDirection="row">
             <input
-                type="submit"
-                disabled={submit}
+              id="file-upload"
+              hidden
+              disabled={modelLoading || uploading}
+              type="file"
+              accept=".mp4"
+              onChange={onFileChange}
+            />
+            <label htmlFor="file-upload">
+              {modelLoading || uploading ? (
+                <LoadingButton loading variant="contained">
+                  {uploading ? "Saving video..." : "Loading"}
+                </LoadingButton>
+              ) : (
+                <Button
+                  disabled={modelLoading}
+                  component="span"
+                  variant="contained"
+                >
+                  Upload Video
+                </Button>
+              )}
+            </label>
+            {modelLoading ? (
+              <LoadingButton loading={modelLoading} sx={{ ml: 1 }} />
+            ) : (
+              <Button
+                disabled={error || info || modelLoading || uploading || !videoSaved}
+                style={{ marginLeft: 10 }}
+                component="span"
+                variant="contained"
+                onClick={() => {
+                  if(!videoSaved)
+                    setError(true);
+                  else if(lastfilerun===file)
+                    setInfo(true);
+                  else
+                  {
+                    setlastfilerun(file);
+                    wait_for_models();
+                  }
+                }}
+              >
+                Generate Results
+              </Button>
+            )}
+            <PopUp_Help/>
+          </Box>
+        </Box>
+        <Card>
+          <CardHeader
+            title={<Typography variant="overline" align="center">Video File</Typography>}
+          />
+          <Box
+            sx={{ p: 3 }}
+            style={{ width: "100%", height: "100%" }}
+            dir="ltr"
+          >
+            <ReactPlayer
+              style={{ flex: 1 }}
+              url={file}
+              controls
+              width="100%"
+              height="100%"
             />
           </Box>
-          {/* Upon successful upload of a video, the user may watch the video. */}
-          <Card>
-            <CardHeader
-              title={<Typography variant="overline" align="center">Video File</Typography>}
-            />
-            <Box
-              sx={{ p: 3 }}
-              style={{ width: "100%", height: "100%" }}
-              dir="ltr"
-            >
-              <ReactPlayer
-                style={{ flex: 1 }}
-                url={file}
-                controls
-                width="100%"
-                height="100%"
-              />
-            </Box>
-          </Card>
-          {/* While waiting for model outputs, display a progress bar.
-              If the progress bar w/ label finished but the GET request
-              hasn't finished, show an indeterminate progress bar. */}
-          {modelLoading ? (
-            (progressBarDone && results["models"][0]["DFD"]===0) ? (
-              <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-                <Grid item xs={12}></Grid>
-                  <Grid item xs={8}>
-                    <Box sx={{ width: '100%' }}>
-                      <LinearProgress />
-                    </Box>
-                  </Grid>
-                <Grid item xs={12}></Grid>
-              </Grid>
-              ) : (
-              <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-                <Grid item xs={12}></Grid>
-                  <Grid item xs={8}>
-                    <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
-                  </Grid>
-                <Grid item xs={12}></Grid>
-              </Grid>
-              )
-          ) : (
-            <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+        </Card>
+        {modelLoading ? (
+          (progressBarDone && results["models"][0]["DFD"]===0) ? (
+            <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
               <Grid item xs={12}></Grid>
+                <Grid item xs={8}>
+                  <Box sx={{ width: '100%' }}>
+                    <LinearProgress />
+                  </Box>
+                </Grid>
               <Grid item xs={12}></Grid>
             </Grid>
-          )}
-          {/* Once the model(s) finish loading, display the outputs. */}
-          <Typography variant="h4" align="center">Results</Typography>
-          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            ) : (
+            <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
               <Grid item xs={12}></Grid>
+                <Grid item xs={8}>
+                  <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
+                </Grid>
               <Grid item xs={12}></Grid>
-          </Grid>
-          <Typography variant="overline" align="center">Base Model</Typography>
-          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
-              <DFDscore results={results}/>
             </Grid>
+            )
+        ) : (
+          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            <Grid item xs={12}></Grid>
             <Grid item xs={12}></Grid>
           </Grid>
+        )}
+        <Typography variant="h4" align="center">Results</Typography>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            <Grid item xs={12}></Grid>
+            <Grid item xs={12}></Grid>
+        </Grid>
+        <Typography variant="overline" align="center">Base Model</Typography>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid item xs={12}></Grid>
+          <Grid item xs={12}>
+            <DFDscore results={results}/>
+          </Grid>
+          <Grid item xs={12}></Grid>
+        </Grid>
 
-          <Typography variant="overline" align="center">Eye Blink Model</Typography>
-          <Button
-            disabled={data_switched%2===0}
-            style={{ marginLeft: 10 }}
-            component="span"
-            variant="text"
-            color="secondary"
-            onClick={() => {
-              FileSaver.saveAs(
-                "http://localhost:5001/home/eyeblink_csv",
-                "eyeblink_data.csv");
-            }}
-          >Excel</Button>
-            
-          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={3}>
-              <Eyeblinks results={results} color_card={blink_classes[0]} />
-            </Grid>
-            <Grid item xs={3}>
-              <Eyeblinks results={results} color_card={blink_classes[1]} />
-            </Grid>
-            <Grid item xs={3}>
-              <Eyeblinks results={results} color_card={blink_classes[2]} />
-            </Grid>
-            <Grid item xs={3}>
-              <Eyeblinks results={results} color_card={blink_classes[3]} />
-            </Grid>
-            <Grid item xs={12}></Grid>
+        <Typography variant="overline" align="center">Eye Blink Model</Typography>
+        <Button
+          disabled={data_switched%2===0}
+          style={{ marginLeft: 10 }}
+          component="span"
+          variant="text"
+          color="secondary"
+          onClick={() => {
+            FileSaver.saveAs(
+              "http://localhost:5001/home/eyeblink_csv",
+              "eyeblink_data.csv");
+          }}
+        >Excel</Button>
+          
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid item xs={12}></Grid>
+          <Grid item xs={3}>
+            <Eyeblinks results={results} color_card={blink_classes[0]} />
           </Grid>
+          <Grid item xs={3}>
+            <Eyeblinks results={results} color_card={blink_classes[1]} />
+          </Grid>
+          <Grid item xs={3}>
+            <Eyeblinks results={results} color_card={blink_classes[2]} />
+          </Grid>
+          <Grid item xs={3}>
+            <Eyeblinks results={results} color_card={blink_classes[3]} />
+          </Grid>
+          <Grid item xs={12}></Grid>
+        </Grid>
 
-          <Typography variant="overline" align="center">Other Models</Typography>
-          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
-              <OtherOutputs results={results}/>
-            </Grid>
+        <Typography variant="overline" align="center">Other Models</Typography>
+        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+          <Grid item xs={12}></Grid>
+          <Grid item xs={12}>
+            <OtherOutputs results={results}/>
           </Grid>
-        </Container>
-      </Page>
-    </form>
+        </Grid>
+      </Container>
+    </Page>
   );
 }
