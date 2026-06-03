@@ -1,4 +1,5 @@
 import cv2
+import json
 import math
 import numpy as np
 import pandas as pd
@@ -200,3 +201,14 @@ def eyeblink_csv(frames, labels, mp4_duration, dir):
             blinks_df.loc[i, 'Classification'] = labels[i]
     # Save the dataframe as a .csv file
     blinks_df.to_csv(dir, index=False)
+
+def write_result_update_json(results, output_path):
+    '''
+    Write the four model result dicts to result_update.json.
+
+    Args:
+        results: list of four dicts in UI order (DFD, blink, beard, shades).
+        output_path: path to result_update.json.
+    '''
+    with open(output_path, 'w') as outfile:
+        json.dump(results, outfile, indent=2)

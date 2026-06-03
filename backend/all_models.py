@@ -18,67 +18,115 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
                              eyeblink_csv
 
-def predict_on_video(video_path, fps, device, facedet, output_dir=""):
+PREDICT_TEMPLATE = "????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
+DEFAULT_BEARD_RESULT = {
+    "age": 0,
+    "beard": False,
+    "gender": "??",
+    "raw_output": "   Age: ??\nGender: ??\n",
+}
+DEFAULT_SHADES_RESULT = {
+    "raw_output": (
+        "ORIGINAL\nTop 5 Object Detection Predictions\n"
+        + PREDICT_TEMPLATE + "\n\nCROPPED\nTop 5 Object Detection Predictions\n"
+        + PREDICT_TEMPLATE
+    ),
+    "shades": False,
+}
+
+
+def _normalize_gender(gender_value):
+    if isinstance(gender_value, dict):
+        if gender_value.get("Man", 0) >= gender_value.get("Woman", 0):
+            return "Man"
+        return "Woman"
+    gender_text = str(gender_value)
+    if "Man" in gender_text:
+        return "Man"
+    if "Woman" in gender_text:
+        return "Woman"
+    return "??"
+
+
+def _beard_result(age, gender_value):
+    gender = _normalize_gender(gender_value)
+    raw_output = "   Age: " + str(age) + "\nGender: " + str(gender_value) + "\n"
+    return {
+        "age": int(age),
+        "beard": int(age) >= 20 and gender == "Man",
+        "gender": gender,
+        "raw_output": raw_output,
+    }
+
+
+def _blink_result(missing, unknown, open_pct, closed):
+    return {
+        "closed": closed,
+        "missing": missing,
+        "open": open_pct,
+        "unknown": unknown,
+    }
+
+
+def _percent_of(count, total):
+    if total == 0:
+        return 0.0
+    return round((count / total) * 100, 2)
+
+
+def _top5_prediction_lines(image_path):
+    image = load_img(image_path, target_size=(224, 224))
+    image = img_to_array(image)
+    image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+    image = preprocess_input(image)
+    model = VGG16()
+    yhat = model.predict(image)
+    label = decode_predictions(yhat)
+    lines = []
+    for i in range(5):
+        lines.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2] * 100))
+    return lines
+
+
+def predict_on_video(video_path, fps, device, facedet):
     '''
-    Detects if eyes are open or closed per video frame.
-    
-    Args:
-        video_path: directory of video file.
-        fps: # of frames to extract per second.
-        device: source to run model (CPU, GPU).
-        facedet: blazeface training weights.
-        output_dir: location for the .txt file, optional parameter.
-    
+    Score a video for deepfake probability.
+
     Returns:
-        int value to end function early.
+        {"DFD": float} — percentage score; 50.0 on error.
     '''
 
     print('\npredict_on_video()')
 
-    # Set up libraries
     cwd = os.getcwd()
-    sys.path.insert(0,cwd +  "/imports/inference")
+    sys.path.insert(0, cwd + "/imports/inference")
 
-    # import libraries
     from helpers.read_video_1 import VideoReader
     from helpers.face_extract_1 import FaceExtractor
 
-    # Retrieve video time span
-    video_data=cv2.VideoCapture(video_path)
-    total_seconds=round((video_data.get(cv2.CAP_PROP_FRAME_COUNT))/(video_data.get(cv2.CAP_PROP_FPS)),2)
-    total_frames=math.floor(fps*total_seconds)
-
-    # prepare a list which will be appended to the .txt file
-    if(output_dir!=""):
-        full_name=os.path.join(output_dir,"result_DFD.txt")
-    else:
-        full_name="result_DFD.txt"
-    file_write = open(full_name,"w")
-    result=list()
+    video_data = cv2.VideoCapture(video_path)
+    total_seconds = round(
+        (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
+    total_frames = math.floor(fps * total_seconds)
 
     try:
-        # Get the face from an image
         video_reader = VideoReader()
         frames_per_video = total_frames
         video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
         face_extractor = FaceExtractor(video_read_fn, facedet)
-
-        # face_extractor extracts total_frames number of frames 
-        # from the entire video runtime.
         faces = face_extractor.process_video(video_path)
-        # If there are multiple people in the video, use one face
         face_extractor.keep_only_best_face(faces)
 
-        input_size =224
+        input_size = 224
         mean = [0.43216, 0.394666, 0.37645]
         std = [0.22803, 0.22145, 0.216989]
-        normalize_transform = Normalize(mean,std)
+        normalize_transform = Normalize(mean, std)
 
         class MyResNeXt(models.resnet.ResNet):
             def __init__(self, training=True):
                 super(MyResNeXt, self).__init__(block=models.resnet.Bottleneck,
-                                                layers=[3, 4, 6, 3], 
-                                                groups=32, 
+                                                layers=[3, 4, 6, 3],
+                                                groups=32,
                                                 width_per_group=4)
                 self.fc = nn.Linear(2048, 1)
 
@@ -87,7 +135,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
         model.load_state_dict(checkpoint)
         _ = model.eval()
         del checkpoint
- 
+
         if len(faces) > 0:
             x = np.zeros((total_frames, input_size, input_size, 3), dtype=np.uint8)
             n = 0
@@ -99,8 +147,7 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
                         x[n] = resized_face
                         n += 1
             if n > total_frames:
-                temp="WARNING: have "+str(n)+" faces but batch size is "+str(total_frames)+'\n'
-                result.append(temp)
+                print("WARNING: have " + str(n) + " faces but batch size is " + str(total_frames))
 
             if n > 0:
                 x = torch.tensor(x, device=device).float()
@@ -111,109 +158,62 @@ def predict_on_video(video_path, fps, device, facedet, output_dir=""):
                 with torch.no_grad():
                     y_pred = model(x)
                     y_pred = torch.sigmoid(y_pred.squeeze())
-                    data_res=y_pred[:n].mean().item()
-                    result.append(str(round(data_res*100,2))+"%")
-                    file_write.writelines(result)
-                    file_write.close()
-
-                    # Print contents
-                    file_read = open(full_name,"r")
-                    print(file_read.read())
-                    return 0
+                    data_res = y_pred[:n].mean().item()
+                    score = round(data_res * 100, 2)
+                    print(str(score) + "%")
+                    return {"DFD": score}
 
     except Exception as e:
-        print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
+        print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
 
-    result.append("50.0%")
-    file_write.writelines(result)
-    file_write.close()
+    print("50.0%")
+    return {"DFD": 50.0}
 
-    # Print contents
-    file_read = open(full_name,"r")
-    print(file_read.read())
-    file_read.close()
-    return 0.5
 
-def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
+def blink_on_video(video_path, fps, facedet, use_model):
     '''
-    Detects if eyes are 'open' or 'closed' per video frame. If a face was 
-    detected by FaceExtractor but unable to be cropped by face_recognition, 
-    then it is given an 'unknown' classification. The difference between 
-    total_frames and sizeof(faces) are all given classifications of 
-    'Face DNE'.
-    
-    Args:
-        video_path: directory of video file.
-        fps: # of frames to extract per second.
-        facedet: blazeface training weights.
-        use_model: vgg16() model ready for use.
-        output_dir: location for the .txt file, optional parameter.
-    
+    Classify eye-open/closed state per sampled video frame.
+
     Returns:
-        A list of size 4 that has the percentile distribution of video
-        frame classifications.
+        {"closed", "missing", "open", "unknown"} percentage dict.
     '''
 
     print('\nblink_on_video()')
 
-    # Set up libraries
     cwd = os.getcwd()
-    sys.path.insert(0,cwd +  "/imports/inference")
+    sys.path.insert(0, cwd + "/imports/inference")
 
-    # import libraries
     from helpers.read_video_1 import VideoReader
     from helpers.face_extract_1 import FaceExtractor
 
-    # delete all frames from a previous run
-    temp_dir= "current_upload/temp/"
-    all_temp_files=[temp_dir+"o.png",temp_dir+"p.png",temp_dir+"beard.png"]
-    for i in range(0,len(all_temp_files)):
-        if os.path.exists(all_temp_files[i]):
-            os.remove(all_temp_files[i])
+    temp_dir = "current_upload/temp/"
+    all_temp_files = [temp_dir + "o.png", temp_dir + "p.png", temp_dir + "beard.png"]
+    for temp_file in all_temp_files:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
 
-    # Retrieve video time span
-    video_data=cv2.VideoCapture(video_path)
-    total_seconds=round((video_data.get(cv2.CAP_PROP_FRAME_COUNT))/(video_data.get(cv2.CAP_PROP_FPS)),2)
-    total_frames=math.floor(fps*total_seconds)
+    video_data = cv2.VideoCapture(video_path)
+    total_seconds = round(
+        (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
+    total_frames = math.floor(fps * total_seconds)
 
-    # Put it all in a list then append to the .txt file
-    if(output_dir!=""):
-        full_name=os.path.join(output_dir,"result_blink.txt")
-    else:
-        full_name="result_blink.txt"
-    file_write = open(full_name,"w")
-    result=list()
+    all_open = 0
+    all_closed = 0
+    all_unknown = 0
+    all_missing = 0
+    classifications = list()
 
-    # face_extractor extracts total_frames number of frames 
-    # from the entire video runtime.
     try:
-        # Get the face from an image
         video_reader = VideoReader()
         frames_per_video = total_frames
         video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
         face_extractor = FaceExtractor(video_read_fn, facedet)
         faces = face_extractor.process_video(video_path)
-        # If there are multiple people in the frame, use one face
         face_extractor.keep_only_best_face(faces)
 
-        input_size =224
-
-        # Get eye blink classifications per frame
-        all_open=0
-        all_closed=0
-        all_unknown=0
-        all_missing=0
-
-        # Keep track of all classifications in a list.
-        # -1 if unknown frame, 1 if eyes open frame, and 0 if eyes closed frame.
-        classifications=list()
-
-        # Status on whether beard.png exists yet or not.
-        beard_png_obtained=False
-        # detect_beard() is able to predict gender w/ greater accuracy
-        # if the subjects eyes are open.
-        # Status on whether beard.png is an open eye frame.
-        beard_png_open=False
+        input_size = 224
+        beard_png_obtained = False
+        beard_png_open = False
 
         if len(faces) > 0:
             for frame_data in faces:
@@ -221,235 +221,137 @@ def blink_on_video(video_path, fps, facedet, use_model, output_dir=""):
                     resized_face = isotropically_resize_image(face, input_size)
                     resized_face = make_square_image(resized_face)
                     plt.imshow(resized_face, interpolation='nearest')
-                    # o stands for original
-                    file_name_save_o='current_upload/temp/o.png'
+                    file_name_save_o = 'current_upload/temp/o.png'
                     plt.savefig(file_name_save_o)
-                    # save a zoomed in photo in preparation for beard detection
-                    file_name_save_beard='current_upload/temp/beard.png'
+                    file_name_save_beard = 'current_upload/temp/beard.png'
                     plt.axis('off')
-                    # the first frame that has a persons face should be saved as beard.png
-                    if(beard_png_obtained==False):
+                    if beard_png_obtained is False:
                         plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
-                        beard_png_obtained=True
-                    # ensure equivalent o.png dimensions, regardless of .py or .ipynb
-                    read_o=cv2.imread(file_name_save_o)
-                    dimensions=(432,288)
-                    resized=cv2.resize(read_o, dimensions)
+                        beard_png_obtained = True
+                    read_o = cv2.imread(file_name_save_o)
+                    dimensions = (432, 288)
+                    resized = cv2.resize(read_o, dimensions)
                     cv2.imwrite(file_name_save_o, resized)
-                    # successfully resized w/ same name
-                    # p stands for cropped
-                    crop_result=save_crop('o.png', 'p.png','current_upload/temp/')
-                    if(crop_result==False):
-                        all_unknown+=1
+                    crop_result = save_crop('o.png', 'p.png', 'current_upload/temp/')
+                    if crop_result is False:
+                        all_unknown += 1
                         classifications.append(-1)
-                        print("all_unknown:",all_unknown)
+                        print("all_unknown:", all_unknown)
                     else:
-                        current=more_tests(use_model, 'current_upload/temp')
-                        if current==1:
-                            all_open+=1
+                        current = more_tests(use_model, 'current_upload/temp')
+                        if current == 1:
+                            all_open += 1
                             classifications.append(1)
-                            # the most recent open eye frame should be saved as beard.png
                             plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
-                            if(beard_png_open==False):
-                                beard_png_open=True
-                            print("all_open:",all_open)
+                            if beard_png_open is False:
+                                beard_png_open = True
+                            print("all_open:", all_open)
                         else:
-                            all_closed+=1
+                            all_closed += 1
                             classifications.append(0)
-                            # a closed eye frame may be saved as beard.png up until an open eye frame is found
-                            if(beard_png_open==False):
+                            if beard_png_open is False:
                                 plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
-                            print("all_closed:",all_closed)
+                            print("all_closed:", all_closed)
                     plt.clf()
-        # save the list of classifications to file
+
         eyeblink_csv(total_frames, classifications, total_seconds,
                      "AllResults/eyeblink_data.csv")
     except Exception as e:
-        print("Prediction error on video "+str(video_path)+": "+str(e)+"\n")
-        result.append("Amount of missing frames: 0.0%\nAmount of unknown frames: 0.0%\nAmount of open eyes frames: 0.0%\nAmount of closed eyes frames: 0.0%")
-        file_write.writelines(result)
-        file_write.close()
-        file_read = open(full_name,"r")
-        print(file_read.read())
-        file_read.close()
-        # save an empty list of classifications to file
+        print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
         eyeblink_csv(total_frames, list(), total_seconds, "AllResults/eyeblink_data.csv")
-        return [0,0,0,0]
-    # Obtain the percentiles for each classification
-    if (all_open+all_closed+all_unknown)<(total_frames):
-        all_missing=total_frames-(all_open+all_closed+all_unknown)
-    temp="Amount of missing frames: "+str(round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%\n"
-    result.append(temp)
-    temp="Amount of unknown frames: "+ str(round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100,2)) +"%\n"
-    result.append(temp)
-    temp="Amount of open eyes frames: "+str(round((all_open/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%\n"
-    result.append(temp)
-    temp="Amount of closed eyes frames: "+str(round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100,2))+"%"
-    result.append(temp)
-    file_write.writelines(result)
-    file_write.close()
+        result = _blink_result(0.0, 0.0, 0.0, 0.0)
+        print(result)
+        return result
 
-    # Print contents
-    file_read = open(full_name,"r")
-    print(file_read.read())
-    file_read.close()
+    if (all_open + all_closed + all_unknown) < total_frames:
+        all_missing = total_frames - (all_open + all_closed + all_unknown)
 
-    # Print and return percentile distributions list
-    final_percents=[round((all_missing/(all_open+all_closed+all_unknown+all_missing))*100, 2),
-                    round((all_unknown/(all_open+all_closed+all_unknown+all_missing))*100, 2),
-                    round((all_open/(all_open+all_closed+all_unknown+all_missing))*100, 2),
-                    round((all_closed/(all_open+all_closed+all_unknown+all_missing))*100, 2)]
-    print(final_percents)
-    return final_percents
+    total = all_open + all_closed + all_unknown + all_missing
+    result = _blink_result(
+        _percent_of(all_missing, total),
+        _percent_of(all_unknown, total),
+        _percent_of(all_open, total),
+        _percent_of(all_closed, total),
+    )
+    print(result)
+    return result
 
-def detect_beard(image_dir, output_dir=""):
+
+def detect_beard(image_dir):
     '''
-    Detects an adult male from image.
-    
-    Args:
-        image_dir: directory of input image.
-        output_dir: location for the .txt file, optional parameter.
-        
+    Predict age and gender from a still face image.
+
     Returns:
-        None
+        {"age", "gender", "beard", "raw_output"} dict.
     '''
 
     print('\ndetect_beard()')
 
-    # store all relevant information in a .txt file
-    if(output_dir!=""):
-        full_name=os.path.join(output_dir,"result_beard.txt")
-    else:
-        full_name="result_beard.txt"
-    file_write = open(full_name,"w")
-
-    result=list()
-
-    # perform analysis if the image exists
-    if(os.path.exists(image_dir)):
-        try:
-            # Read image
-            img2 = cv2.imread(image_dir)
-
-            # DeepFace expects a 152 by 152 sized image as input
-            dimensions=(152,152)
-            resized=cv2.resize(img2, dimensions)
-
-            # Save this image to a temporary directory for later input to DeepFace
-            cwd = os.getcwd()
-            img2_path = cwd + "/current_upload/temp/beard.png"
-
-            # Save image
-            cv2.imwrite(img2_path, resized)
-
-            # Put it all in result then append to the .txt file
-            obj = DeepFace.analyze(img_path = img2_path,
-                                actions = ['age', 'gender'],
-                                enforce_detection=False)
-            obj = obj[0] if isinstance(obj, list) else obj
-            temp="   Age: "+str(obj["age"])+'\n'
-            result.append(temp)
-            temp="Gender: "+str(obj["gender"])+'\n'
-            result.append(temp)
-        except Exception as e:
-            print("Error:"+str(e)+"\n")
-            result=list()
-            result.append("   Age: ??\nGender: ??\n")
-    # otherwise
-    else:
-        result=list()
-        result.append("   Age: ??\nGender: ??\n")
-    # write to file
-    file_write.writelines(result)
-    file_write.close()
-    # Print contents
-    file_read = open(full_name,"r")
-    print(file_read.read())
-    file_read.close()
-
-def detect_shades(image_dir1, output_dir="", image_dir2=""):
-    '''
-    Uses the default VGG16 model for image classification.
-    VGG16 is able to detect 1000 object types in photos.
-    We are focusing on sunglasses classification.
-    
-    Args:
-        image_dir1: directory of first input image.
-        output_dir: location for the .txt file, optional parameter.
-        image_dir2: directory of cropped version of first input image, optional parameter.
-    
-    Returns:
-        None
-    '''
-    print('\ndetect_shades()')
-
-    # store all relevant information in a .txt file
-    if(output_dir!=""):
-        full_name=os.path.join(output_dir,"result_shades.txt")
-    else:
-        full_name="result_shades.txt"
-    file_write = open(full_name,"w")
-
-    # format of Top 5 Object Detection Predictions
-    predict_template="????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
-
-    # put it all in a list then append to the .txt file
-    result=list()
+    if not os.path.exists(image_dir):
+        print(DEFAULT_BEARD_RESULT["raw_output"])
+        return dict(DEFAULT_BEARD_RESULT)
 
     try:
-        # perform analysis if the image exists. otherwise, file DNE.
-        if(os.path.exists(image_dir1)):
+        img2 = cv2.imread(image_dir)
+        dimensions = (152, 152)
+        resized = cv2.resize(img2, dimensions)
+        cwd = os.getcwd()
+        img2_path = cwd + "/current_upload/temp/beard.png"
+        cv2.imwrite(img2_path, resized)
+
+        obj = DeepFace.analyze(img_path=img2_path,
+                               actions=['age', 'gender'],
+                               enforce_detection=False)
+        obj = obj[0] if isinstance(obj, list) else obj
+        result = _beard_result(obj["age"], obj["gender"])
+        print(result["raw_output"])
+        return result
+    except Exception as e:
+        print("Error:" + str(e) + "\n")
+        print(DEFAULT_BEARD_RESULT["raw_output"])
+        return dict(DEFAULT_BEARD_RESULT)
+
+
+def detect_shades(image_dir1, image_dir2=""):
+    '''
+    Detect eyewear from original and cropped face images.
+
+    Returns:
+        {"shades", "raw_output"} dict.
+    '''
+
+    print('\ndetect_shades()')
+
+    result = list()
+
+    try:
+        if os.path.exists(image_dir1):
             result.append('ORIGINAL\nTop 5 Object Detection Predictions\n')
-
-            # resizes an image to required VGG16 dimensions.
-            image = load_img(image_dir1, target_size=(224, 224))
-            # convert the image pixels to a numpy array
-            image = img_to_array(image)
-            # reshape data for the model
-            image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
-            # prepare the image for the VGG model
-            image = preprocess_input(image)
-            # load the model
-            model = VGG16()
-            # predict the probability across all output classes
-            yhat = model.predict(image)
-            # convert the probabilities to class labels
-            label = decode_predictions(yhat)
-
-            # label 'n04356056' is 'sunglasses, dark glasses, shades'
-            for i in range(0,5):
-                result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
+            result.extend(_top5_prediction_lines(image_dir1))
         else:
             result.append('ORIGINAL (file DNE)\nTop 5 Object Detection Predictions\n')
-            result.append(predict_template+'\n')
+            result.append(PREDICT_TEMPLATE + '\n')
 
-        # perform analysis if the user gave an argument. otherwise, file argument missing.
-        if(image_dir2!=""):
-            # perform analysis if the image exists. otherwise, file DNE.
-            if(os.path.exists(image_dir2)):
-                image = load_img(image_dir2, target_size=(224, 224))
-                image = img_to_array(image)
-                image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
-                image = preprocess_input(image)
-                model = VGG16()
-                yhat = model.predict(image)
-                label = decode_predictions(yhat)
+        if image_dir2 != "":
+            if os.path.exists(image_dir2):
                 result.append('\nCROPPED\nTop 5 Object Detection Predictions\n')
-                for i in range(0,5):
-                    result.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2]*100))
+                result.extend(_top5_prediction_lines(image_dir2))
             else:
                 result.append("\nCROPPED (file DNE)\nTop 5 Object Detection Predictions\n")
-                result.append(predict_template)
+                result.append(PREDICT_TEMPLATE)
         else:
             result.append("\nCROPPED (file argument missing)\nTop 5 Object Detection Predictions\n")
-            result.append(predict_template)
+            result.append(PREDICT_TEMPLATE)
     except Exception as e:
-        print("Error:"+str(e)+"\n")
-    # write result to file
-    file_write.writelines(result)
-    # close file
-    file_write.close()
-    # print contents
-    file_read = open(full_name,"r")
-    print(file_read.read())
-    file_read.close()
+        print("Error:" + str(e) + "\n")
+        shades_result = dict(DEFAULT_SHADES_RESULT)
+        print(shades_result["raw_output"])
+        return shades_result
+
+    raw_output = ''.join(result)
+    shades_result = {
+        "raw_output": raw_output,
+        "shades": "sunglasses" in raw_output,
+    }
+    print(raw_output)
+    return shades_result
