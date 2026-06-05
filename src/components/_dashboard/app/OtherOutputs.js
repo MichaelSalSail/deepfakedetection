@@ -35,7 +35,7 @@ function OrderItem({ item, isLast, result_beard, result_shades }) {
         <TimelineDot
           sx={{
             bgcolor:
-              (type === "Beard" && from_beard===true && "success.main") ||
+              (type === "Person" && from_beard===true && "success.main") ||
               (type === "Shades" && from_shades===true && "success.main") ||
               "error.main",
           }}
@@ -88,7 +88,7 @@ export default function OtherOutputs(input) {
       {
         title: `${beard_content}`,
         time: faker.date.past(),
-        type: "Beard",
+        type: "Person",
       },
       {
         title: `${shades_content}`,
@@ -115,7 +115,7 @@ export default function OtherOutputs(input) {
                   </React.Fragment>
                 }
               >
-              <Button color="secondary">Beard Raw Data</Button>
+              <Button color="secondary">Person Raw Data</Button>
           </HtmlTooltip>
           <HtmlTooltip
           title={
