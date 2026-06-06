@@ -1,143 +1,148 @@
-import * as React from 'react';
-import { styled } from '@mui/material/styles';
 import { useEffect, useState } from "react";
-
-import faker from "faker";
-import PropTypes from "prop-types";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 // material
-import { Card, Typography, CardContent, Box, Button } from "@mui/material";
 import {
-  Timeline,
-  TimelineItem,
-  TimelineContent,
-  TimelineConnector,
-  TimelineSeparator,
-  TimelineDot,
-} from "@mui/lab";
-import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 
-// ----------------------------------------------------------------------
+const FACE_CROP_URL = "http://localhost:5001/home/face_crop";
+const SUBJECT_HELP =
+  "Eyewear and facial hair are often harder to fake, so they can be signs of a genuine video. " +
+  "These models focus on one person only—the cropped face shown here. " +
+  "If your video has multiple people, the results describe just this subject.";
 
-OrderItem.propTypes = {
-  item: PropTypes.object,
-  isLast: PropTypes.bool,
-};
+function formatAge(age, isPlaceholder) {
+  if (isPlaceholder || age === 0) {
+    return "?";
+  }
+  return String(age);
+}
 
-function OrderItem({ item, isLast, result_beard, result_shades }) {
-  const {type, title} = item;
-  // obtain the booleans
-  let from_beard=result_beard["beard"]
-  let from_shades=result_shades["shades"]
+function formatGender(gender, isPlaceholder) {
+  if (isPlaceholder || gender === "??") {
+    return "?";
+  }
+  return gender;
+}
 
+function formatShades(shades, isPlaceholder) {
+  if (isPlaceholder) {
+    return "?";
+  }
+  return shades ? "Detected" : "Not detected";
+}
+
+function FactRow({ label, value }) {
   return (
-    <TimelineItem>
-      <TimelineSeparator>
-        <TimelineDot
-          sx={{
-            bgcolor:
-              (type === "Person" && from_beard===true && "success.main") ||
-              (type === "Shades" && from_shades===true && "success.main") ||
-              "error.main",
-          }}
-        />
-        {isLast ? null : <TimelineConnector />}
-      </TimelineSeparator>
-      <TimelineContent>
-        <Typography variant="subtitle1">{title}</Typography>
-        <Typography variant="paragraph" sx={{ color: "text.secondary" }}>
-          {type}
-        </Typography>
-      </TimelineContent>
-    </TimelineItem>
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="overline" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="h5">{value}</Typography>
+    </Box>
   );
 }
 
-const HtmlTooltip = styled(({ className, ...props }) => (
-  <Tooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-  [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 220,
-    fontSize: theme.typography.pxToRem(12),
-    border: '1px solid #dadde9',
-  },
-}));
+export default function OtherOutputs({ results, analysisComplete, subjectImageKey }) {
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const person = results["models"][2];
+  const shades = results["models"][3];
+  const isPlaceholder = !analysisComplete || (person["age"] === 0 && person["gender"] === "??");
 
-export default function OtherOutputs(input) {
-  const [timeline, setTimeline] = useState([]);
-  let result_beard = input["results"]["models"][2];
-  let result_shades = input["results"]["models"][3];
-  // only need 4 values
-  let from_beard=result_beard["beard"]
-  let from_shades=result_shades["shades"]
-  let output_beard=result_beard["raw_output"]
-  let output_shades=result_shades["raw_output"]
+  const age = formatAge(person["age"], isPlaceholder);
+  const gender = formatGender(person["gender"], isPlaceholder);
+  const eyewear = formatShades(shades["shades"], isPlaceholder);
 
-  let beard_content="The subject is young and/or female."
-  if(from_beard===true)
-    beard_content="There appears to be an adult male."
- 
-  let shades_content="It's unlikely the subject has eyewear"
-  if(from_shades===true)
-    shades_content="It's likely the subject has eyewear." 
+  const imageUrl = analysisComplete && !imageLoadFailed
+    ? `${FACE_CROP_URL}?t=${subjectImageKey}`
+    : null;
 
   useEffect(() => {
-
-    setTimeline([
-      {
-        title: `${beard_content}`,
-        time: faker.date.past(),
-        type: "Person",
-      },
-      {
-        title: `${shades_content}`,
-        time: faker.date.past(),
-        type: "Shades",
-      }
-    ]);
-  }, [beard_content, shades_content]);
+    setImageLoadFailed(false);
+  }, [subjectImageKey, analysisComplete]);
 
   return (
-    <Card
-      sx={{
-        "& .MuiTimelineItem-missingOppositeContent:before": {
-          display: "none",
-        },
-      }}
-    >
+    <Card>
       <CardContent>
-        <Box>
-          <HtmlTooltip
-          title={
-                  <React.Fragment>
-                    {output_beard}
-                  </React.Fragment>
-                }
-              >
-              <Button color="secondary">Person Raw Data</Button>
-          </HtmlTooltip>
-          <HtmlTooltip
-          title={
-                  <React.Fragment>
-                    {output_shades}
-                  </React.Fragment>
-                }
-              >
-              <Button color="secondary">Shades Raw Data</Button>
-          </HtmlTooltip>
-          <Timeline>
-            {timeline.map((item) => (
-              <OrderItem
-                key={item.title}
-                item={item}
-                isLast={true}
-                result_beard={result_beard}
-                result_shades={result_shades}
-              />
-            ))}
-          </Timeline>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+            One subject per video — the face used for age, gender, and eyewear checks.
+          </Typography>
+          <Tooltip title={SUBJECT_HELP} arrow placement="left">
+            <IconButton size="small" aria-label="About subject analysis">
+              <InfoOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
+
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} sm={5} md={4}>
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 280,
+                mx: "auto",
+                aspectRatio: "1",
+                borderRadius: 2,
+                overflow: "hidden",
+                bgcolor: "grey.100",
+                border: "1px dashed",
+                borderColor: "grey.300",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {imageUrl ? (
+                <Box
+                  component="img"
+                  src={imageUrl}
+                  alt="Cropped face used for subject analysis"
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                  onError={() => setImageLoadFailed(true)}
+                />
+              ) : (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  align="center"
+                  sx={{ px: 2 }}
+                >
+                  {analysisComplete
+                    ? "Subject crop unavailable"
+                    : "Subject crop will appear here after analysis"}
+                </Typography>
+              )}
+            </Box>
+            {imageUrl ? (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                align="center"
+                sx={{ mt: 1 }}
+              >
+                Cropped face from your video
+              </Typography>
+            ) : null}
+          </Grid>
+
+          <Grid item xs={12} sm={7} md={8}>
+            <FactRow label="Age" value={age} />
+            <FactRow label="Gender" value={gender} />
+            <FactRow label="Eyewear" value={eyewear} />
+          </Grid>
+        </Grid>
       </CardContent>
     </Card>
   );

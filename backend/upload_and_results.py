@@ -42,6 +42,13 @@ def get_eyeblink_csv():
     return send_file(file_dir, mimetype='text/csv', as_attachment=True,
                      download_name='eyeblink_data.csv')
 
+@app.route('/home/face_crop', methods=['GET', 'OPTIONS'])
+def get_face_crop():
+    file_dir = os.path.join(APP_PATH, 'backend/current_upload/temp/p.png')
+    if not os.path.exists(file_dir):
+        return "Face crop not found", 404
+    return send_file(file_dir, mimetype='image/png')
+
 @app.route('/home/upload', methods = ['POST', 'OPTIONS'])
 def upload_video():
     if request.method == 'POST':

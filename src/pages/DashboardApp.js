@@ -67,6 +67,8 @@ export default function DashboardApp() {
   const [modelLoading, setModelLoading] = useState(false);
   // has the progress bar w/ value finished?
   const [progressBarDone, setProgressBarDone] = useState(false);
+  // cache-bust subject face crop after each successful results fetch
+  const [subjectImageKey, setSubjectImageKey] = useState(0);
 
   // increment data_switched each time a new file is uploaded or 'Generate Results' completes a GET request
   const switched = () => {
@@ -173,6 +175,7 @@ export default function DashboardApp() {
       temp["models"][2]["beard"]=Boolean(temp["models"][2]["beard"])
       temp["models"][3]["shades"]=Boolean(temp["models"][3]["shades"])
       setResults(temp)
+      setSubjectImageKey(Date.now())
       // the process attached w/ 'Generate Results' has ended, update the count
       switched();
       // the request is complete, remove all loading icons and progress bars
@@ -411,11 +414,15 @@ export default function DashboardApp() {
           <Grid item xs={12}></Grid>
         </Grid>
 
-        <Typography variant="overline" align="center">Other Models</Typography>
+        <Typography variant="overline" align="center">Subject</Typography>
         <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           <Grid item xs={12}></Grid>
           <Grid item xs={12}>
-            <OtherOutputs results={results}/>
+            <OtherOutputs
+              results={results}
+              analysisComplete={data_switched % 2 === 1}
+              subjectImageKey={subjectImageKey}
+            />
           </Grid>
         </Grid>
       </Container>
