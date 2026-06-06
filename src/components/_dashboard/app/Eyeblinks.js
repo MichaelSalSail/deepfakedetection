@@ -9,34 +9,41 @@ import { Card, Typography } from "@mui/material";
 
 // ----------------------------------------------------------------------
 
-const RootStyle1 = styled(Card)(({ theme }) => ({
+const cardLayout = {
   boxShadow: "none",
   textAlign: "center",
-  padding: theme.spacing(5, 0),
+  height: "100%",
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+};
+
+const RootStyle1 = styled(Card)(({ theme }) => ({
+  ...cardLayout,
+  padding: theme.spacing(2, 1),
   color: theme.palette.warning.darker,
   backgroundColor: theme.palette.warning.lighter,
 }));
 
 const RootStyle2 = styled(Card)(({ theme }) => ({
-  boxShadow: "none",
-  textAlign: "center",
-  padding: theme.spacing(5, 0),
+  ...cardLayout,
+  padding: theme.spacing(2, 1),
   color: theme.palette.info.darker,
   backgroundColor: theme.palette.info.lighter,
 }));
 
 const RootStyle3 = styled(Card)(({ theme }) => ({
-  boxShadow: "none",
-  textAlign: "center",
-  padding: theme.spacing(5, 0),
+  ...cardLayout,
+  padding: theme.spacing(2, 1),
   color: theme.palette.primary.darker,
   backgroundColor: theme.palette.primary.lighter,
 }));
 
 const RootStyle4 = styled(Card)(({ theme }) => ({
-  boxShadow: "none",
-  textAlign: "center",
-  padding: theme.spacing(5, 0),
+  ...cardLayout,
+  padding: theme.spacing(2, 1),
   color: theme.palette.error.darker,
   backgroundColor: theme.palette.error.lighter,
 }));
@@ -46,10 +53,10 @@ const IconWrapperStyle1 = styled("div")(({ theme }) => ({
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(8),
-  height: theme.spacing(8),
+  width: theme.spacing(5),
+  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(3),
+  marginBottom: theme.spacing(1),
   color: theme.palette.warning.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(
     theme.palette.warning.dark,
@@ -62,10 +69,10 @@ const IconWrapperStyle2 = styled("div")(({ theme }) => ({
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(8),
-  height: theme.spacing(8),
+  width: theme.spacing(5),
+  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(3),
+  marginBottom: theme.spacing(1),
   color: theme.palette.info.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(
     theme.palette.info.dark,
@@ -78,10 +85,10 @@ const IconWrapperStyle3 = styled("div")(({ theme }) => ({
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(8),
-  height: theme.spacing(8),
+  width: theme.spacing(5),
+  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(3),
+  marginBottom: theme.spacing(1),
   color: theme.palette.primary.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(
     theme.palette.primary.dark,
@@ -94,10 +101,10 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(8),
-  height: theme.spacing(8),
+  width: theme.spacing(5),
+  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(3),
+  marginBottom: theme.spacing(1),
   color: theme.palette.error.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(
     theme.palette.error.dark,
@@ -116,8 +123,8 @@ export default function Eyeblinks(input) {
         <IconWrapperStyle1>
           <Icon icon={closeSquareOutlined} width={24} height={24} />
         </IconWrapperStyle1>
-        <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-        <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
+        <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
+        <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
           of frames are missing
         </Typography>
       </RootStyle1>
@@ -130,8 +137,8 @@ export default function Eyeblinks(input) {
       <IconWrapperStyle2>
         <Icon icon={questionCircleOutlined} width={24} height={24} />
       </IconWrapperStyle2>
-      <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-      <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
+      <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
+      <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
         of frames are unknown
       </Typography>
     </RootStyle2>
@@ -144,8 +151,8 @@ export default function Eyeblinks(input) {
         <IconWrapperStyle3>
           <Icon icon={eyeFilled} width={24} height={24} />
         </IconWrapperStyle3>
-        <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-        <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
+        <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
+        <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
           of frames have open eyes
         </Typography>
       </RootStyle3>
@@ -158,8 +165,8 @@ export default function Eyeblinks(input) {
         <IconWrapperStyle4>
           <Icon icon={eyeInvisibleFilled} width={24} height={24} />
         </IconWrapperStyle4>
-        <Typography variant="h3">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-        <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
+        <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
+        <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
           of frames have closed eyes
         </Typography>
       </RootStyle4>

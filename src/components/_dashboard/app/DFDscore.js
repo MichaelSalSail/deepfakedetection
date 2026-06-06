@@ -26,7 +26,7 @@ export default function DFDscore(input) {
 
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
         <Typography
           variant="body2"
           fontWeight="bold"

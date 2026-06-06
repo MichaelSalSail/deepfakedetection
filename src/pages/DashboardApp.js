@@ -363,66 +363,94 @@ export default function DashboardApp() {
               <Grid item xs={12}></Grid>
             </Grid>
             )
-        ) : (
-          <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}></Grid>
-          </Grid>
-        )}
-        <Typography variant="h4" align="center">Results</Typography>
-        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}></Grid>
-        </Grid>
-        <Typography variant="overline" align="center">Base Model</Typography>
-        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-          <Grid item xs={12}></Grid>
-          <Grid item xs={12}>
+        ) : null}
+
+        <Typography variant="h6" sx={{ mt: 2, mb: 1.5 }}>
+          Results
+        </Typography>
+
+        <Grid container spacing={2} alignItems="stretch">
+          <Grid
+            item
+            xs={12}
+            md={7}
+            order={{ xs: 2, md: 1 }}
+            sx={{ display: "flex", flexDirection: "column" }}
+          >
+            <Typography variant="overline" color="text.secondary">
+              Base Model
+            </Typography>
             <DFDscore results={results}/>
-          </Grid>
-          <Grid item xs={12}></Grid>
-        </Grid>
 
-        <Typography variant="overline" align="center">Eye Blink Model</Typography>
-        <Button
-          disabled={data_switched%2===0}
-          style={{ marginLeft: 10 }}
-          component="span"
-          variant="text"
-          color="secondary"
-          onClick={() => {
-            FileSaver.saveAs(
-              "http://localhost:5001/home/eyeblink_csv",
-              "eyeblink_data.csv");
-          }}
-        >Download frame data (CSV)</Button>
-          
-        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-          <Grid item xs={12}></Grid>
-          <Grid item xs={3}>
-            <Eyeblinks results={results} color_card={blink_classes[0]} />
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                flex: { xs: "0 0 auto", md: 1 },
+                mt: 2,
+                minHeight: 0,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography variant="overline" color="text.secondary">
+                  Eye Blink Model
+                </Typography>
+                <Button
+                  disabled={data_switched%2===0}
+                  component="span"
+                  variant="text"
+                  color="secondary"
+                  size="small"
+                  onClick={() => {
+                    FileSaver.saveAs(
+                      "http://localhost:5001/home/eyeblink_csv",
+                      "eyeblink_data.csv");
+                  }}
+                >
+                  Download frame data (CSV)
+                </Button>
+              </Box>
+              <Grid container spacing={1} sx={{ flex: { md: 1 }, alignItems: "stretch" }}>
+                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[0]} />
+                </Grid>
+                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[1]} />
+                </Grid>
+                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[2]} />
+                </Grid>
+                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[3]} />
+                </Grid>
+              </Grid>
+            </Box>
           </Grid>
-          <Grid item xs={3}>
-            <Eyeblinks results={results} color_card={blink_classes[1]} />
-          </Grid>
-          <Grid item xs={3}>
-            <Eyeblinks results={results} color_card={blink_classes[2]} />
-          </Grid>
-          <Grid item xs={3}>
-            <Eyeblinks results={results} color_card={blink_classes[3]} />
-          </Grid>
-          <Grid item xs={12}></Grid>
-        </Grid>
 
-        <Typography variant="overline" align="center">Subject</Typography>
-        <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-          <Grid item xs={12}></Grid>
-          <Grid item xs={12}>
-            <OtherOutputs
-              results={results}
-              analysisComplete={data_switched % 2 === 1}
-              subjectImageKey={subjectImageKey}
-            />
+          <Grid
+            item
+            xs={12}
+            md={5}
+            order={{ xs: 1, md: 2 }}
+            sx={{ display: "flex", flexDirection: "column" }}
+          >
+            <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+              Subject
+            </Typography>
+            <Box sx={{ flex: { md: 1 }, display: "flex", minHeight: 0, width: "100%" }}>
+              <OtherOutputs
+                results={results}
+                analysisComplete={data_switched % 2 === 1}
+                subjectImageKey={subjectImageKey}
+              />
+            </Box>
           </Grid>
         </Grid>
       </Container>

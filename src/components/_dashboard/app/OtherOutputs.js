@@ -5,7 +5,6 @@ import {
   Box,
   Card,
   CardContent,
-  Grid,
   IconButton,
   Tooltip,
   Typography,
@@ -38,13 +37,15 @@ function formatShades(shades, isPlaceholder) {
   return shades ? "Detected" : "Not detected";
 }
 
-function FactRow({ label, value }) {
+function FactRow({ label, value, isLast }) {
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="overline" color="text.secondary">
+    <Box sx={{ mb: isLast ? 0 : 1 }}>
+      <Typography variant="caption" color="text.secondary" display="block">
         {label}
       </Typography>
-      <Typography variant="h5">{value}</Typography>
+      <Typography variant="h6" fontWeight="medium" lineHeight={1.2}>
+        {value}
+      </Typography>
     </Box>
   );
 }
@@ -68,81 +69,92 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
   }, [subjectImageKey, analysisComplete]);
 
   return (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-            One subject per video — the face used for age, gender, and eyewear checks.
+    <Card sx={{ height: { md: "100%" }, width: "100%", display: "flex", flexDirection: "column" }}>
+      <CardContent
+        sx={{
+          py: 2,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          "&:last-child": { pb: 2 },
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1, pr: 1 }}>
+            One subject per video — results reflect only this face.
           </Typography>
           <Tooltip title={SUBJECT_HELP} arrow placement="left">
-            <IconButton size="small" aria-label="About subject analysis">
+            <IconButton size="small" aria-label="About subject analysis" sx={{ mt: -0.5 }}>
               <InfoOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>
 
-        <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} sm={5} md={4}>
-            <Box
-              sx={{
-                width: "100%",
-                maxWidth: 280,
-                mx: "auto",
-                aspectRatio: "1",
-                borderRadius: 2,
-                overflow: "hidden",
-                bgcolor: "grey.100",
-                border: "1px dashed",
-                borderColor: "grey.300",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {imageUrl ? (
-                <Box
-                  component="img"
-                  src={imageUrl}
-                  alt="Cropped face used for subject analysis"
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                  onError={() => setImageLoadFailed(true)}
-                />
-              ) : (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  align="center"
-                  sx={{ px: 2 }}
-                >
-                  {analysisComplete
-                    ? "Subject crop unavailable"
-                    : "Subject crop will appear here after analysis"}
-                </Typography>
-              )}
-            </Box>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            alignItems: "center",
+            flex: 1,
+            width: "100%",
+          }}
+        >
+          <Box
+            sx={{
+              width: "68%",
+              maxWidth: 240,
+              flexShrink: 0,
+              aspectRatio: "1",
+              borderRadius: 2,
+              overflow: "hidden",
+              bgcolor: "grey.100",
+              border: "1px dashed",
+              borderColor: "grey.300",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             {imageUrl ? (
+              <Box
+                component="img"
+                src={imageUrl}
+                alt="Cropped face used for subject analysis"
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+                onError={() => setImageLoadFailed(true)}
+              />
+            ) : (
               <Typography
                 variant="caption"
                 color="text.secondary"
-                display="block"
                 align="center"
-                sx={{ mt: 1 }}
+                sx={{ px: 1.5, lineHeight: 1.35 }}
               >
-                Cropped face from your video
+                {analysisComplete
+                  ? "Crop unavailable"
+                  : "Crop appears after analysis"}
               </Typography>
-            ) : null}
-          </Grid>
+            )}
+          </Box>
 
-          <Grid item xs={12} sm={7} md={8}>
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
             <FactRow label="Age" value={age} />
             <FactRow label="Gender" value={gender} />
-            <FactRow label="Eyewear" value={eyewear} />
-          </Grid>
-        </Grid>
+            <FactRow label="Eyewear" value={eyewear} isLast />
+          </Box>
+        </Box>
       </CardContent>
     </Card>
   );
