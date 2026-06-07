@@ -11,11 +11,13 @@ import {
   CardContent,
   Alert,
   IconButton,
-  Collapse
+  Collapse,
+  Tooltip,
 } from "@mui/material";
 import LoadingButton from "@mui/lab/node/LoadingButton/index.js";
 import ReactPlayer from "react-player";
 import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LinearProgress from '@mui/material/LinearProgress';
 // components
 import Page from "../components/Page.js";
@@ -32,6 +34,16 @@ import FileSaver from 'file-saver';
 import axios from "axios";
 
 const MAX_VIDEO_BYTES = 50000000;
+
+const BASE_MODEL_HELP =
+  "In our testing, the base model is most likely to yield incorrect predictions in the yellow range. " +
+  "Use the Subject model outputs to draw any final conclusions. " +
+  "A green score indicates a genuine video; a red score indicates a deepfake.";
+
+const EYE_BLINK_HELP =
+  "The eye blink model returns two classifications (open and closed eyes). " +
+  "For clarity, we show four categories: Missing (no face detected), Unknown (face detected but only partially visible), Open, and Closed. " +
+  "All other frames are sent to the model and classified as open or closed eyes.";
 
 // all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
@@ -377,9 +389,23 @@ export default function DashboardApp() {
             order={{ xs: 2, md: 1 }}
             sx={{ display: "flex", flexDirection: "column" }}
           >
-            <Typography variant="overline" color="text.secondary">
-              Base Model
-            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1,
+              }}
+            >
+              <Typography variant="overline" color="text.secondary">
+                Base Model
+              </Typography>
+              <Tooltip title={BASE_MODEL_HELP} arrow placement="left">
+                <IconButton size="small" aria-label="About base model" sx={{ mt: -0.5 }}>
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
             <DFDscore results={results}/>
 
             <Box
@@ -402,20 +428,27 @@ export default function DashboardApp() {
                 <Typography variant="overline" color="text.secondary">
                   Eye Blink Model
                 </Typography>
-                <Button
-                  disabled={data_switched%2===0}
-                  component="span"
-                  variant="text"
-                  color="secondary"
-                  size="small"
-                  onClick={() => {
-                    FileSaver.saveAs(
-                      "http://localhost:5001/home/eyeblink_csv",
-                      "eyeblink_data.csv");
-                  }}
-                >
-                  Download frame data (CSV)
-                </Button>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Button
+                    disabled={data_switched%2===0}
+                    component="span"
+                    variant="text"
+                    color="secondary"
+                    size="small"
+                    onClick={() => {
+                      FileSaver.saveAs(
+                        "http://localhost:5001/home/eyeblink_csv",
+                        "eyeblink_data.csv");
+                    }}
+                  >
+                    Download frame data (CSV)
+                  </Button>
+                  <Tooltip title={EYE_BLINK_HELP} arrow placement="left">
+                    <IconButton size="small" aria-label="About eye blink model" sx={{ mt: -0.5 }}>
+                      <InfoOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </Box>
               <Grid container spacing={1} sx={{ flex: { md: 1 }, alignItems: "stretch" }}>
                 <Grid item xs={6} sm={3} sx={{ display: "flex" }}>

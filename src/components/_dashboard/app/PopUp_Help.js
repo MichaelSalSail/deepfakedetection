@@ -9,22 +9,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 let help_text=[]
 help_text[0]="- You may only upload .mp4 videos. Upload Video saves your file on the server for analysis."
 help_text[1]="- The time it takes to generate results increases with video duration. \
-                Ideally, upload videos w/ durations between 10 seconds and 20 seconds. \
                 The backend is run locally, so make sure to conserve system resources \
                 by closing any unnecessary applications."
-help_text[2]="- The eye blink model returns 2 classifications. For greater interpretability, \
-                we display 2 more classifications. If a face isn't detected, the frame is \
-                called missing. If a persons face is detected but only partially, it's \
-                called unknown. All other frames are put into the model and classified as \
-                open eyes or closed eyes."
-help_text[3]="- From our testing, the base model is most likely to yield incorrect predictions \
-                in the yellow range. Look at the user trust model outputs to draw any final \
-                conclusions. Otherwise, a green score indicates a genuine video and a red score \
-                indicates a deepfake."
-help_text[4]="- Look at the raw data! Unless there are a significant number of missing frames, \
+help_text[2]="- Look at the raw data! Unless there are a significant number of missing frames, \
                 the eye blink classification for each video frame is recorded on a .csv for \
-                download. The other models data can be found by hovering over buttons."
-help_text[5]="Troubleshooting: If the output didn't change upon clicking \'Generate Results\', \
+                download."
+help_text[3]="Troubleshooting: If the output didn't change upon clicking \'Generate Results\', \
               it's possible the program exceeded system resources and ended abruptly. If the base \
               model returned a score of 50%, the program possibly ran into exception \
               DefaultCPUAllocator, not enough available memory to run a prediction. \
@@ -75,9 +65,7 @@ export default function PopUp_Help() {
             {help_text[0]}<br/><br/>
             {help_text[1]}<br/><br/>
             {help_text[2]}<br/><br/>
-            {help_text[3]}<br/><br/>
-            {help_text[4]}<br/><br/>
-            {help_text[5]}
+            {help_text[3]}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
