@@ -50,7 +50,7 @@ function FactRow({ label, value, isLast }) {
   );
 }
 
-export default function OtherOutputs({ results, analysisComplete, subjectImageKey }) {
+export default function OtherOutputs({ results, analysisComplete, subjectImageKey, compact = false }) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const person = results["models"][2];
   const shades = results["models"][3];
@@ -93,16 +93,18 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
         <Box
           sx={{
             display: "flex",
-            gap: 2,
-            alignItems: "center",
+            gap: compact ? 1.5 : 2,
+            alignItems: compact ? "stretch" : "center",
+            flexDirection: compact ? "column" : "row",
             flex: 1,
             width: "100%",
           }}
         >
           <Box
             sx={{
-              width: "68%",
-              maxWidth: 240,
+              width: compact ? "100%" : "68%",
+              maxWidth: compact ? 160 : 240,
+              mx: compact ? "auto" : 0,
               flexShrink: 0,
               aspectRatio: "1",
               borderRadius: 2,
@@ -146,12 +148,14 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
               flex: 1,
               minWidth: 0,
               display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
+              flexDirection: compact ? "row" : "column",
+              flexWrap: compact ? "wrap" : "nowrap",
+              justifyContent: compact ? "space-around" : "center",
+              gap: compact ? 1 : 0,
             }}
           >
-            <FactRow label="Age" value={age} />
-            <FactRow label="Gender" value={gender} />
+            <FactRow label="Age" value={age} isLast={compact} />
+            <FactRow label="Gender" value={gender} isLast={compact} />
             <FactRow label="Eyewear" value={eyewear} isLast />
           </Box>
         </Box>

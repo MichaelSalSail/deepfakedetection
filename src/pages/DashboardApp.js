@@ -410,24 +410,94 @@ export default function DashboardApp() {
             MP4 only, up to 50MB.
           </Typography>
         </Box>
-        <Card>
-          <CardHeader
-            title={<Typography variant="overline" align="center">Video File</Typography>}
-          />
-          <Box
-            sx={{ p: 3 }}
-            style={{ width: "100%", height: "100%" }}
-            dir="ltr"
-          >
-            <ReactPlayer
-              style={{ flex: 1 }}
-              url={file}
-              controls
-              width="100%"
-              height="100%"
-            />
+
+        <Typography variant="h6" sx={{ mt: 2, mb: 1.5 }}>
+          Results
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+            alignItems: "stretch",
+          }}
+        >
+          <Box sx={{ width: { xs: "100%", md: "70%" }, minWidth: 0 }}>
+            <Card sx={{ height: "100%" }}>
+              <CardHeader
+                title={<Typography variant="overline" align="center">Video File</Typography>}
+                sx={{ py: 1.5 }}
+              />
+              <Box sx={{ px: 2, pb: 2 }} dir="ltr">
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    pt: "56.25%",
+                    bgcolor: "grey.900",
+                    borderRadius: 1,
+                    overflow: "hidden",
+                  }}
+                >
+                  <ReactPlayer
+                    url={file}
+                    controls
+                    width="100%"
+                    height="100%"
+                    style={{ position: "absolute", top: 0, left: 0 }}
+                  />
+                </Box>
+              </Box>
+            </Card>
           </Box>
-        </Card>
+
+          <Box
+            sx={{
+              width: { xs: "100%", md: "30%" },
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography variant="overline" color="text.secondary">
+                  Base Model
+                </Typography>
+                <Tooltip title={BASE_MODEL_HELP} arrow placement="left">
+                  <IconButton size="small" aria-label="About base model" sx={{ mt: -0.5 }}>
+                    <InfoOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <DFDscore results={results} />
+            </Box>
+
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+                Subject
+              </Typography>
+              <Box sx={{ flex: 1, display: "flex", minHeight: 0, width: "100%" }}>
+                <OtherOutputs
+                  results={results}
+                  analysisComplete={data_switched % 2 === 1}
+                  subjectImageKey={subjectImageKey}
+                  compact
+                />
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
         {modelLoading ? (
           <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center" sx={{ mt: 2 }}>
             <Grid item xs={12} md={8}>
@@ -445,115 +515,55 @@ export default function DashboardApp() {
           </Grid>
         ) : null}
 
-        <Typography variant="h6" sx={{ mt: 2, mb: 1.5 }}>
-          Results
-        </Typography>
-
-        <Grid container spacing={2} alignItems="stretch">
-          <Grid
-            item
-            xs={12}
-            md={7}
-            order={{ xs: 2, md: 1 }}
-            sx={{ display: "flex", flexDirection: "column" }}
+        <Box sx={{ mt: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mb: 1,
-              }}
-            >
-              <Typography variant="overline" color="text.secondary">
-                Base Model
-              </Typography>
-              <Tooltip title={BASE_MODEL_HELP} arrow placement="left">
-                <IconButton size="small" aria-label="About base model" sx={{ mt: -0.5 }}>
+            <Typography variant="overline" color="text.secondary">
+              Eye Blink Model
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Button
+                disabled={data_switched%2===0}
+                component="span"
+                variant="text"
+                color="secondary"
+                size="small"
+                onClick={() => {
+                  FileSaver.saveAs(
+                    "http://localhost:5001/home/eyeblink_csv",
+                    "eyeblink_data.csv");
+                }}
+              >
+                Download frame data (CSV)
+              </Button>
+              <Tooltip title={EYE_BLINK_HELP} arrow placement="left">
+                <IconButton size="small" aria-label="About eye blink model" sx={{ mt: -0.5 }}>
                   <InfoOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </Box>
-            <DFDscore results={results}/>
-
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                flex: { xs: "0 0 auto", md: 1 },
-                mt: 2,
-                minHeight: 0,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mb: 1,
-                }}
-              >
-                <Typography variant="overline" color="text.secondary">
-                  Eye Blink Model
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Button
-                    disabled={data_switched%2===0}
-                    component="span"
-                    variant="text"
-                    color="secondary"
-                    size="small"
-                    onClick={() => {
-                      FileSaver.saveAs(
-                        "http://localhost:5001/home/eyeblink_csv",
-                        "eyeblink_data.csv");
-                    }}
-                  >
-                    Download frame data (CSV)
-                  </Button>
-                  <Tooltip title={EYE_BLINK_HELP} arrow placement="left">
-                    <IconButton size="small" aria-label="About eye blink model" sx={{ mt: -0.5 }}>
-                      <InfoOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Box>
-              <Grid container spacing={1} sx={{ flex: { md: 1 }, alignItems: "stretch" }}>
-                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[0]} />
-                </Grid>
-                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[1]} />
-                </Grid>
-                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[2]} />
-                </Grid>
-                <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[3]} />
-                </Grid>
-              </Grid>
-            </Box>
+          </Box>
+          <Grid container spacing={1} alignItems="stretch">
+            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+              <Eyeblinks results={results} color_card={blink_classes[0]} />
+            </Grid>
+            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+              <Eyeblinks results={results} color_card={blink_classes[1]} />
+            </Grid>
+            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+              <Eyeblinks results={results} color_card={blink_classes[2]} />
+            </Grid>
+            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
+              <Eyeblinks results={results} color_card={blink_classes[3]} />
+            </Grid>
           </Grid>
-
-          <Grid
-            item
-            xs={12}
-            md={5}
-            order={{ xs: 1, md: 2 }}
-            sx={{ display: "flex", flexDirection: "column" }}
-          >
-            <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
-              Subject
-            </Typography>
-            <Box sx={{ flex: { md: 1 }, display: "flex", minHeight: 0, width: "100%" }}>
-              <OtherOutputs
-                results={results}
-                analysisComplete={data_switched % 2 === 1}
-                subjectImageKey={subjectImageKey}
-              />
-            </Box>
-          </Grid>
-        </Grid>
+        </Box>
       </Container>
     </Page>
   );
