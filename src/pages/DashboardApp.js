@@ -56,6 +56,12 @@ const EYE_BLINK_INTERPRETATION_POINTS = [
   "Blink patterns should stay fairly consistent over time; an unusually high number of switches between open and closed eyes may also point to a deepfake.",
 ];
 
+const MANUAL_DEEPFAKE_TIPS = [
+  "Deepfakes are often easier to create when the subject stays still than when they move naturally through a scene.",
+  "Check whether the lips stay in sync with what the person is saying.",
+  "Watch for unusual lighting, blur, or other visual artifacts throughout the video.",
+];
+
 const ANALYSIS_STALE_MESSAGE =
   "Results did not update. Analysis may still be running, may not have started, or may have failed — " +
   "try again and use a shorter video if the process ran out of memory.";
@@ -642,6 +648,32 @@ export default function DashboardApp() {
               </Typography>
             ))}
           </Box>
+        </Box>
+
+        <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
+          Tips for Spotting Deepfakes
+        </Typography>
+
+        <Box
+          component="ol"
+          sx={{
+            m: 0,
+            pl: 2.5,
+            width: "100%",
+            color: "text.secondary",
+            "& > li:not(:last-of-type)": { mb: 1.25 },
+          }}
+        >
+          {MANUAL_DEEPFAKE_TIPS.map((tip, index) => (
+            <Typography
+              key={index}
+              component="li"
+              variant="body2"
+              sx={{ lineHeight: 1.6 }}
+            >
+              {tip}
+            </Typography>
+          ))}
         </Box>
       </Container>
     </Page>
