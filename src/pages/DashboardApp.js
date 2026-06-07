@@ -371,7 +371,9 @@ export default function DashboardApp() {
           </Alert>
         </Collapse>
         <Box sx={{ pb: 2 }}>
-          <Typography variant="h4">Deepfake Video Analysis</Typography>
+          <Typography variant="h3" align="center">
+            Deepfake Video Analysis
+          </Typography>
         </Box>
 
         <Box
