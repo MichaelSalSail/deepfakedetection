@@ -25,9 +25,9 @@ import {
   Eyeblinks,
   OtherOutputs,
   DFDscore,
-  PopUp_Help,
   Display_Wait,
   EyeBlinkTimelineChart,
+  ModelTimingLog,
 } from "../components/_dashboard/app/index.js";
 import estimate_runtime from "../utils/Wait.js";
 import FileSaver from 'file-saver';
@@ -372,7 +372,7 @@ export default function DashboardApp() {
         </Collapse>
         <Box sx={{ pb: 5 }}>
           <Typography variant="h4">Deepfake Video Analysis</Typography>
-          <Box flexDirection="row">
+          <Box sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
             <input
               id="file-upload"
               hidden
@@ -420,7 +420,7 @@ export default function DashboardApp() {
                 Generate Results
               </Button>
             )}
-            <PopUp_Help/>
+            <ModelTimingLog />
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
             MP4 only, up to 50MB.
