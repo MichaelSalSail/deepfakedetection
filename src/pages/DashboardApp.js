@@ -47,6 +47,11 @@ const EYE_BLINK_HELP =
   "All other frames are sent to the model and classified as open or closed eyes. " +
   "Per-frame classifications are in the downloadable CSV.";
 
+const EYE_BLINK_INTERPRETATION_POINTS = [
+  "A high share of missing or unknown frames can suggest a deepfake, since the model is struggling to detect a face. That can also happen when someone turns away from the camera—but sporadic missing or unknown frames scattered throughout the video are more suspicious.",
+  "Blink patterns should stay fairly consistent over time; an unusually high number of switches between open and closed eyes may also point to a deepfake.",
+];
+
 const ANALYSIS_STALE_MESSAGE =
   "Results did not update. Analysis may still be running, may not have started, or may have failed — " +
   "try again and use a shorter video if the process ran out of memory.";
@@ -578,6 +583,31 @@ export default function DashboardApp() {
             </Box>
             <Box sx={{ width: { xs: "100%", md: "60%" }, minWidth: 0, display: "flex" }}>
               <EyeBlinkTimelineChart />
+            </Box>
+          </Box>
+          <Box sx={{ mt: 2.5, width: "100%" }}>
+            <Typography variant="overline" color="text.secondary" sx={{ mb: 1.5, display: "block" }}>
+              Interpreting Results
+            </Typography>
+            <Box
+              component="ol"
+              sx={{
+                m: 0,
+                pl: 2.5,
+                color: "text.secondary",
+                "& > li:not(:last-of-type)": { mb: 1.25 },
+              }}
+            >
+              {EYE_BLINK_INTERPRETATION_POINTS.map((point, index) => (
+                <Typography
+                  key={index}
+                  component="li"
+                  variant="body2"
+                  sx={{ lineHeight: 1.6 }}
+                >
+                  {point}
+                </Typography>
+              ))}
             </Box>
           </Box>
         </Box>

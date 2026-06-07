@@ -23,15 +23,15 @@ const cardLayout = {
 const RootStyle1 = styled(Card)(({ theme }) => ({
   ...cardLayout,
   padding: theme.spacing(2, 1),
-  color: theme.palette.warning.darker,
-  backgroundColor: theme.palette.warning.lighter,
+  color: theme.palette.error.darker,
+  backgroundColor: theme.palette.error.lighter,
 }));
 
 const RootStyle2 = styled(Card)(({ theme }) => ({
   ...cardLayout,
   padding: theme.spacing(2, 1),
-  color: theme.palette.info.darker,
-  backgroundColor: theme.palette.info.lighter,
+  color: theme.palette.error.dark,
+  backgroundColor: alpha(theme.palette.error.light, 0.35),
 }));
 
 const RootStyle3 = styled(Card)(({ theme }) => ({
@@ -44,8 +44,8 @@ const RootStyle3 = styled(Card)(({ theme }) => ({
 const RootStyle4 = styled(Card)(({ theme }) => ({
   ...cardLayout,
   padding: theme.spacing(2, 1),
-  color: theme.palette.error.darker,
-  backgroundColor: theme.palette.error.lighter,
+  color: theme.palette.info.darker,
+  backgroundColor: theme.palette.info.lighter,
 }));
 
 const IconWrapperStyle1 = styled("div")(({ theme }) => ({
@@ -57,11 +57,11 @@ const IconWrapperStyle1 = styled("div")(({ theme }) => ({
   height: theme.spacing(5),
   justifyContent: "center",
   marginBottom: theme.spacing(1),
-  color: theme.palette.warning.dark,
+  color: theme.palette.error.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.warning.dark,
+    theme.palette.error.dark,
     0
-  )} 0%, ${alpha(theme.palette.warning.dark, 0.24)} 100%)`,
+  )} 0%, ${alpha(theme.palette.error.dark, 0.24)} 100%)`,
 }));
 
 const IconWrapperStyle2 = styled("div")(({ theme }) => ({
@@ -73,11 +73,11 @@ const IconWrapperStyle2 = styled("div")(({ theme }) => ({
   height: theme.spacing(5),
   justifyContent: "center",
   marginBottom: theme.spacing(1),
-  color: theme.palette.info.dark,
+  color: theme.palette.error.main,
   backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.info.dark,
+    theme.palette.error.main,
     0
-  )} 0%, ${alpha(theme.palette.info.dark, 0.24)} 100%)`,
+  )} 0%, ${alpha(theme.palette.error.main, 0.2)} 100%)`,
 }));
 
 const IconWrapperStyle3 = styled("div")(({ theme }) => ({
@@ -105,11 +105,11 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
   height: theme.spacing(5),
   justifyContent: "center",
   marginBottom: theme.spacing(1),
-  color: theme.palette.error.dark,
+  color: theme.palette.info.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.error.dark,
+    theme.palette.info.dark,
     0
-  )} 0%, ${alpha(theme.palette.error.dark, 0.24)} 100%)`,
+  )} 0%, ${alpha(theme.palette.info.dark, 0.24)} 100%)`,
 }));
 
 // ----------------------------------------------------------------------
