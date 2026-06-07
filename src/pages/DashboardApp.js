@@ -370,76 +370,98 @@ export default function DashboardApp() {
             {analysisErrorMessage}
           </Alert>
         </Collapse>
-        <Box sx={{ pb: 5 }}>
+        <Box sx={{ pb: 2 }}>
           <Typography variant="h4">Deepfake Video Analysis</Typography>
-          <Box sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
-            <input
-              id="file-upload"
-              hidden
-              disabled={modelLoading || uploading}
-              type="file"
-              accept=".mp4"
-              onChange={onFileChange}
-            />
-            <label htmlFor="file-upload">
-              {modelLoading || uploading ? (
-                <LoadingButton loading variant="contained">
-                  {uploading ? "Saving video..." : "Loading"}
-                </LoadingButton>
-              ) : (
-                <Button
-                  disabled={modelLoading}
-                  component="span"
-                  variant="contained"
-                >
-                  Upload Video
-                </Button>
-              )}
-            </label>
-            {modelLoading ? (
-              <LoadingButton loading={modelLoading} sx={{ ml: 1 }} />
-            ) : (
-              <Button
-                disabled={error || info || modelLoading || uploading || !videoSaved}
-                style={{ marginLeft: 10 }}
-                component="span"
-                variant="contained"
-                onClick={() => {
-                  setUploadSuccess(false);
-                  if(!videoSaved)
-                    setError(true);
-                  else if(lastfilerun===file)
-                    setInfo(true);
-                  else
-                  {
-                    setlastfilerun(file);
-                    wait_for_models();
-                  }
-                }}
-              >
-                Generate Results
-              </Button>
-            )}
-            <ModelTimingLog />
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-            MP4 only, up to 50MB.
-          </Typography>
         </Box>
-
-        <Typography variant="h6" sx={{ mt: 2, mb: 1.5 }}>
-          Results
-        </Typography>
 
         <Box
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
+            display: { xs: "flex", md: "grid" },
+            gridTemplateColumns: { md: "70% 30%" },
+            columnGap: 2,
+            rowGap: 1.5,
             alignItems: "stretch",
+            flexDirection: "column",
           }}
         >
-          <Box sx={{ width: { xs: "100%", md: "70%" }, minWidth: 0 }}>
+          <Box
+            sx={{
+              gridColumn: { md: "1" },
+              gridRow: { md: "1" },
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+              pr: { xs: 0, md: 3 },
+            }}
+          >
+            <Typography variant="h6">Results</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 1.5,
+                width: "100%",
+              }}
+            >
+              <input
+                id="file-upload"
+                hidden
+                disabled={modelLoading || uploading}
+                type="file"
+                accept=".mp4"
+                onChange={onFileChange}
+              />
+              <label htmlFor="file-upload">
+                {modelLoading || uploading ? (
+                  <LoadingButton loading variant="contained">
+                    {uploading ? "Saving video..." : "Loading"}
+                  </LoadingButton>
+                ) : (
+                  <Button
+                    disabled={modelLoading}
+                    component="span"
+                    variant="contained"
+                  >
+                    Upload Video
+                  </Button>
+                )}
+              </label>
+              {modelLoading ? (
+                <LoadingButton loading={modelLoading} />
+              ) : (
+                <Button
+                  disabled={error || info || modelLoading || uploading || !videoSaved}
+                  component="span"
+                  variant="contained"
+                  onClick={() => {
+                    setUploadSuccess(false);
+                    if(!videoSaved)
+                      setError(true);
+                    else if(lastfilerun===file)
+                      setInfo(true);
+                    else
+                    {
+                      setlastfilerun(file);
+                      wait_for_models();
+                    }
+                  }}
+                >
+                  Generate Results
+                </Button>
+              )}
+              <ModelTimingLog />
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              gridColumn: { md: "1" },
+              gridRow: { md: "2" },
+              minWidth: 0,
+            }}
+          >
             <Card sx={{ height: "100%" }}>
               <CardHeader
                 title={<Typography variant="overline" align="center">Video File</Typography>}
@@ -470,7 +492,8 @@ export default function DashboardApp() {
 
           <Box
             sx={{
-              width: { xs: "100%", md: "30%" },
+              gridColumn: { md: "2" },
+              gridRow: { md: "2" },
               minWidth: 0,
               display: "flex",
               flexDirection: "column",

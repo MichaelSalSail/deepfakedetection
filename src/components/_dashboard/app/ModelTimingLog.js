@@ -11,8 +11,6 @@ export default function ModelTimingLog() {
   return (
     <Box
       sx={{
-        ml: { xs: 0, sm: 1.25 },
-        mt: { xs: 1.5, sm: 0 },
         px: 2,
         py: 1,
         bgcolor: "#F5F0E6",
@@ -22,6 +20,8 @@ export default function ModelTimingLog() {
         display: "flex",
         alignItems: "center",
         flexWrap: "nowrap",
+        maxWidth: "100%",
+        overflow: "hidden",
       }}
     >
       <Typography
@@ -36,7 +36,7 @@ export default function ModelTimingLog() {
           borderColor: "grey.400",
         }}
       >
-        Analysis Runtime
+        Runtime Log
       </Typography>
       {TIMING_ROWS.map((row, index) => (
         <Box
