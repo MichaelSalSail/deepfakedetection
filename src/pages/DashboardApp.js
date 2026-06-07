@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 // material
 import {
   Box,
@@ -82,6 +82,7 @@ export default function DashboardApp() {
   const [error, setError] = useState(false);
   const [uploadError, setUploadError] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadSuccessKey, setUploadSuccessKey] = useState(0);
   const [info, setInfo] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
   const [analysisErrorMessage, setAnalysisErrorMessage] = useState("");
@@ -92,6 +93,16 @@ export default function DashboardApp() {
   const [progressBarDone, setProgressBarDone] = useState(false);
   // cache-bust subject face crop after each successful results fetch
   const [subjectImageKey, setSubjectImageKey] = useState(0);
+
+  useEffect(() => {
+    if (!uploadSuccess) {
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      setUploadSuccess(false);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, [uploadSuccess]);
 
   // increment data_switched each time a new file is uploaded or 'Generate Results' completes a GET request
   const switched = () => {
@@ -132,6 +143,7 @@ export default function DashboardApp() {
       .then(function () {
         console.log("Successfully saved %s!", fileToSave.name);
         setVideoSaved(true);
+        setUploadSuccessKey((key) => key + 1);
         setUploadSuccess(true);
         setUploadError(false);
       })
@@ -280,9 +292,28 @@ export default function DashboardApp() {
                 <CloseIcon fontSize="inherit" />
               </IconButton>
             }
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, position: "relative", overflow: "hidden" }}
           >
             {filename} saved for analysis. Click Generate Results when ready.
+            <Box
+              key={uploadSuccessKey}
+              aria-hidden
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 3,
+                bgcolor: "success.main",
+                opacity: 0.35,
+                transformOrigin: "left center",
+                animation: "uploadAlertProgress 7s linear forwards",
+                "@keyframes uploadAlertProgress": {
+                  from: { transform: "scaleX(1)" },
+                  to: { transform: "scaleX(0)" },
+                },
+              }}
+            />
           </Alert>
         </Collapse>
         <Collapse in={info}>
@@ -358,6 +389,7 @@ export default function DashboardApp() {
                 component="span"
                 variant="contained"
                 onClick={() => {
+                  setUploadSuccess(false);
                   if(!videoSaved)
                     setError(true);
                   else if(lastfilerun===file)
