@@ -43,7 +43,16 @@ const BASE_MODEL_HELP =
 const EYE_BLINK_HELP =
   "The eye blink model returns two classifications (open and closed eyes). " +
   "For clarity, we show four categories: Missing (no face detected), Unknown (face detected but only partially visible), Open, and Closed. " +
-  "All other frames are sent to the model and classified as open or closed eyes.";
+  "All other frames are sent to the model and classified as open or closed eyes. " +
+  "Per-frame classifications are in the downloadable CSV.";
+
+const ANALYSIS_STALE_MESSAGE =
+  "Results did not update. Analysis may still be running, may not have started, or may have failed — " +
+  "try again and use a shorter video if the process ran out of memory.";
+
+const ANALYSIS_REQUEST_FAILED_MESSAGE =
+  "Could not load results from the backend. Check that Flask is running on port 5001 " +
+  "and that analysis completed successfully.";
 
 // all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
@@ -74,6 +83,8 @@ export default function DashboardApp() {
   const [uploadError, setUploadError] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [info, setInfo] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
+  const [analysisErrorMessage, setAnalysisErrorMessage] = useState("");
 
   // the model starts loading when a user clicks 'Generate Results' and finishes once the GET request is received.
   const [modelLoading, setModelLoading] = useState(false);
@@ -88,6 +99,7 @@ export default function DashboardApp() {
   };
 
   const wait_for_models = () => {
+    setAnalysisError(false);
     setModelLoading(true);
     console.log("Video has a duration of", fileduration, "seconds.");
     console.log("Will this have a first video runtime delay?", data_switched===0);
@@ -140,6 +152,7 @@ export default function DashboardApp() {
     setInfo(false);
     setUploadError(false);
     setUploadSuccess(false);
+    setAnalysisError(false);
 
     // reset results to default
     setResults(default_values)
@@ -195,12 +208,18 @@ export default function DashboardApp() {
       setModelLoading(false);
       // clear the lingering timeout() from wait_for_models()
       clearTimeout(progress_timeout);
+      if (temp["models"][0]["DFD"] === 0) {
+        setAnalysisErrorMessage(ANALYSIS_STALE_MESSAGE);
+        setAnalysisError(true);
+      }
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
       switched();
       setProgressBarDone(false);
       setModelLoading(false);
       clearTimeout(progress_timeout);
+      setAnalysisErrorMessage(ANALYSIS_REQUEST_FAILED_MESSAGE);
+      setAnalysisError(true);
       console.log(error)
     })
   }
@@ -285,6 +304,25 @@ export default function DashboardApp() {
             Results for {filename} are available below.
           </Alert>
         </Collapse>
+        <Collapse in={analysisError}>
+          <Alert severity="error"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setAnalysisError(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            {analysisErrorMessage}
+          </Alert>
+        </Collapse>
         <Box sx={{ pb: 5 }}>
           <Typography variant="h4">Deepfake Video Analysis</Typography>
           <Box flexDirection="row">
@@ -336,6 +374,9 @@ export default function DashboardApp() {
             )}
             <PopUp_Help/>
           </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+            MP4 only, up to 50MB.
+          </Typography>
         </Box>
         <Card>
           <CardHeader
@@ -356,25 +397,20 @@ export default function DashboardApp() {
           </Box>
         </Card>
         {modelLoading ? (
-          (progressBarDone && results["models"][0]["DFD"]===0) ? (
-            <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-              <Grid item xs={12}></Grid>
-                <Grid item xs={8}>
-                  <Box sx={{ width: '100%' }}>
-                    <LinearProgress />
-                  </Box>
-                </Grid>
-              <Grid item xs={12}></Grid>
+          <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center" sx={{ mt: 2 }}>
+            <Grid item xs={12} md={8}>
+              <Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mb: 1.5 }}>
+                Analysis runs locally — longer videos take longer. 10–20 seconds works best.
+              </Typography>
+              {(progressBarDone && results["models"][0]["DFD"]===0) ? (
+                <Box sx={{ width: '100%' }}>
+                  <LinearProgress />
+                </Box>
+              ) : (
+                <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
+              )}
             </Grid>
-            ) : (
-            <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-              <Grid item xs={12}></Grid>
-                <Grid item xs={8}>
-                  <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
-                </Grid>
-              <Grid item xs={12}></Grid>
-            </Grid>
-            )
+          </Grid>
         ) : null}
 
         <Typography variant="h6" sx={{ mt: 2, mb: 1.5 }}>
