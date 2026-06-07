@@ -24,33 +24,61 @@ function getDfdDisplay(dfdScore) {
     return { color: "green", verdict: "Likely Authentic", failureHint: null };
   }
   if (dfdScore <= 68) {
-    return { color: "yellow", verdict: "Uncertain", failureHint: null };
+    return {
+      color: "yellow",
+      verdict: "Uncertain",
+      failureHint: "Use the Subject and Eye Blink results to help reach a conclusion.",
+    };
   }
   return { color: "red", verdict: "Likely deepfake", failureHint: null };
 }
 
-export default function DFDscore(input) {
-  const dfdScore = input["results"]["models"][0]["DFD"];
+export default function DFDscore({ results, prominent = false }) {
+  const dfdScore = results["models"][0]["DFD"];
   const { color, verdict, failureHint } = getDfdDisplay(dfdScore);
 
   return (
-    <Card>
-      <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+    <Card
+      sx={{
+        height: prominent ? "100%" : "auto",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <CardContent
+        sx={{
+          flex: prominent ? 1 : "none",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: prominent ? "center" : "flex-start",
+          alignItems: "center",
+          textAlign: "center",
+          pt: prominent ? 4 : 2,
+          pb: prominent ? 3 : 1.5,
+          px: 2,
+          "&:last-child": { pb: prominent ? 3 : 1.5 },
+        }}
+      >
         <Typography
-          variant="body2"
           fontWeight="bold"
           color={color}
           fontFamily="Monospace"
-          fontSize="h6.fontSize"
-          textAlign="center"
+          sx={{
+            fontSize: prominent ? { xs: "2.25rem", md: "2.75rem" } : "h6.fontSize",
+            lineHeight: 1.1,
+            mb: prominent ? 3 : 1,
+          }}
         >
           SCORE: {dfdScore}%
         </Typography>
         <Typography
-          variant="subtitle2"
+          variant={prominent ? "body1" : "subtitle2"}
           color={color}
-          textAlign="center"
-          sx={{ mt: 1, opacity: dfdScore === 0 || dfdScore === 50 ? 0.9 : 1 }}
+          sx={{
+            maxWidth: 320,
+            opacity: dfdScore === 0 || dfdScore === 50 ? 0.9 : 1,
+          }}
         >
           {verdict}
         </Typography>
@@ -58,9 +86,8 @@ export default function DFDscore(input) {
           <Typography
             variant="caption"
             color="text.secondary"
-            textAlign="center"
             display="block"
-            sx={{ mt: 1, px: 1 }}
+            sx={{ mt: 1.5, px: 1, maxWidth: 320 }}
           >
             {failureHint}
           </Typography>

@@ -69,17 +69,24 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
   }, [subjectImageKey, analysisComplete]);
 
   return (
-    <Card sx={{ height: { md: "100%" }, width: "100%", display: "flex", flexDirection: "column" }}>
+    <Card
+      sx={{
+        height: compact ? "auto" : { md: "100%" },
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <CardContent
         sx={{
-          py: 2,
-          flex: 1,
+          py: compact ? 1.5 : 2,
+          flex: compact ? "none" : 1,
           display: "flex",
           flexDirection: "column",
-          "&:last-child": { pb: 2 },
+          "&:last-child": { pb: compact ? 1.5 : 2 },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "flex-start", mb: compact ? 1 : 1.5 }}>
           <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1, pr: 1 }}>
             One subject per video — results reflect only this face.
           </Typography>
@@ -96,14 +103,13 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
             gap: compact ? 1.5 : 2,
             alignItems: compact ? "stretch" : "center",
             flexDirection: compact ? "column" : "row",
-            flex: 1,
             width: "100%",
           }}
         >
           <Box
             sx={{
               width: compact ? "100%" : "68%",
-              maxWidth: compact ? 160 : 240,
+              maxWidth: compact ? 140 : 240,
               mx: compact ? "auto" : 0,
               flexShrink: 0,
               aspectRatio: "1",

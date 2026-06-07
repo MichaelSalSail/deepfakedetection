@@ -459,15 +459,17 @@ export default function DashboardApp() {
               display: "flex",
               flexDirection: "column",
               gap: 2,
+              alignSelf: "stretch",
             }}
           >
-            <Box>
+            <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   mb: 1,
+                  flexShrink: 0,
                 }}
               >
                 <Typography variant="overline" color="text.secondary">
@@ -479,21 +481,21 @@ export default function DashboardApp() {
                   </IconButton>
                 </Tooltip>
               </Box>
-              <DFDscore results={results} />
+              <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
+                <DFDscore results={results} prominent />
+              </Box>
             </Box>
 
-            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <Box sx={{ flexShrink: 0 }}>
               <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
                 Subject
               </Typography>
-              <Box sx={{ flex: 1, display: "flex", minHeight: 0, width: "100%" }}>
-                <OtherOutputs
-                  results={results}
-                  analysisComplete={data_switched % 2 === 1}
-                  subjectImageKey={subjectImageKey}
-                  compact
-                />
-              </Box>
+              <OtherOutputs
+                results={results}
+                analysisComplete={data_switched % 2 === 1}
+                subjectImageKey={subjectImageKey}
+                compact
+              />
             </Box>
           </Box>
         </Box>
