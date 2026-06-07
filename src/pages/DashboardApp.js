@@ -26,7 +26,8 @@ import {
   OtherOutputs,
   DFDscore,
   PopUp_Help,
-  Display_Wait
+  Display_Wait,
+  EyeBlinkTimelineChart,
 } from "../components/_dashboard/app/index.js";
 import estimate_runtime from "../utils/Wait.js";
 import FileSaver from 'file-saver';
@@ -551,20 +552,34 @@ export default function DashboardApp() {
               </Tooltip>
             </Box>
           </Box>
-          <Grid container spacing={1} alignItems="stretch">
-            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-              <Eyeblinks results={results} color_card={blink_classes[0]} />
-            </Grid>
-            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-              <Eyeblinks results={results} color_card={blink_classes[1]} />
-            </Grid>
-            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-              <Eyeblinks results={results} color_card={blink_classes[2]} />
-            </Grid>
-            <Grid item xs={6} sm={3} sx={{ display: "flex" }}>
-              <Eyeblinks results={results} color_card={blink_classes[3]} />
-            </Grid>
-          </Grid>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 2,
+              alignItems: "stretch",
+            }}
+          >
+            <Box sx={{ width: { xs: "100%", md: "40%" }, minWidth: 0 }}>
+              <Grid container spacing={1} alignItems="stretch" sx={{ height: "100%" }}>
+                <Grid item xs={6} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[0]} />
+                </Grid>
+                <Grid item xs={6} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[1]} />
+                </Grid>
+                <Grid item xs={6} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[2]} />
+                </Grid>
+                <Grid item xs={6} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[3]} />
+                </Grid>
+              </Grid>
+            </Box>
+            <Box sx={{ width: { xs: "100%", md: "60%" }, minWidth: 0, display: "flex" }}>
+              <EyeBlinkTimelineChart />
+            </Box>
+          </Box>
         </Box>
       </Container>
     </Page>
