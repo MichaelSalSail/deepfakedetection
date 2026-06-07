@@ -12,7 +12,6 @@ import {
 
 const FACE_CROP_URL = "http://localhost:5001/home/face_crop";
 const SUBJECT_HELP =
-  "Eyewear and facial hair are often harder to fake, so they can be signs of a genuine video. " +
   "These models focus on one person only—the cropped face shown here. " +
   "If your video has multiple people, the results describe just this subject.";
 

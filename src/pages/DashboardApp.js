@@ -38,7 +38,7 @@ const MAX_VIDEO_BYTES = 50000000;
 
 const BASE_MODEL_HELP =
   "In our testing, the base model is most likely to yield incorrect predictions in the yellow range. " +
-  "Use the Subject model outputs to draw any final conclusions. " +
+  "Use the other model outputs to draw any final conclusions. " +
   "A green score indicates a genuine video; a red score indicates a deepfake.";
 
 const EYE_BLINK_HELP =
@@ -46,6 +46,10 @@ const EYE_BLINK_HELP =
   "For clarity, we show four categories: Missing (no face detected), Unknown (face detected but only partially visible), Open, and Closed. " +
   "All other frames are sent to the model and classified as open or closed eyes. " +
   "Per-frame classifications are in the downloadable CSV.";
+
+const SUBJECT_INTERPRETATION_POINTS = [
+  "Eyewear and facial hair are often harder to fake, so they can be signs of a genuine video.",
+];
 
 const EYE_BLINK_INTERPRETATION_POINTS = [
   "A high share of missing or unknown frames can suggest a deepfake, since the model is struggling to detect a face. That can also happen when someone turns away from the camera—but sporadic missing or unknown frames scattered throughout the video are more suspicious.",
@@ -585,30 +589,58 @@ export default function DashboardApp() {
               <EyeBlinkTimelineChart />
             </Box>
           </Box>
-          <Box sx={{ mt: 2.5, width: "100%" }}>
-            <Typography variant="overline" color="text.secondary" sx={{ mb: 1.5, display: "block" }}>
-              Interpreting Results
-            </Typography>
-            <Box
-              component="ol"
-              sx={{
-                m: 0,
-                pl: 2.5,
-                color: "text.secondary",
-                "& > li:not(:last-of-type)": { mb: 1.25 },
-              }}
-            >
-              {EYE_BLINK_INTERPRETATION_POINTS.map((point, index) => (
-                <Typography
-                  key={index}
-                  component="li"
-                  variant="body2"
-                  sx={{ lineHeight: 1.6 }}
-                >
-                  {point}
-                </Typography>
-              ))}
-            </Box>
+        </Box>
+
+        <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
+          Interpreting Results
+        </Typography>
+
+        <Box sx={{ width: "100%", color: "text.secondary" }}>
+          <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+            Subject
+          </Typography>
+          <Box
+            component="ol"
+            sx={{
+              m: 0,
+              pl: 2.5,
+              mb: 2.5,
+              "& > li:not(:last-of-type)": { mb: 1.25 },
+            }}
+          >
+            {SUBJECT_INTERPRETATION_POINTS.map((point, index) => (
+              <Typography
+                key={index}
+                component="li"
+                variant="body2"
+                sx={{ lineHeight: 1.6 }}
+              >
+                {point}
+              </Typography>
+            ))}
+          </Box>
+
+          <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+            Eye Blink Model
+          </Typography>
+          <Box
+            component="ol"
+            sx={{
+              m: 0,
+              pl: 2.5,
+              "& > li:not(:last-of-type)": { mb: 1.25 },
+            }}
+          >
+            {EYE_BLINK_INTERPRETATION_POINTS.map((point, index) => (
+              <Typography
+                key={index}
+                component="li"
+                variant="body2"
+                sx={{ lineHeight: 1.6 }}
+              >
+                {point}
+              </Typography>
+            ))}
           </Box>
         </Box>
       </Container>
