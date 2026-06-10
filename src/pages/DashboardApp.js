@@ -27,6 +27,7 @@ import {
   DFDscore,
   Display_Wait,
   EyeBlinkTimelineChart,
+  GeminiFrameAnalysis,
   ModelTimingLog,
 } from "../components/_dashboard/app/index.js";
 import estimate_runtime from "../utils/Wait.js";
@@ -539,6 +540,10 @@ export default function DashboardApp() {
               />
             </Box>
           </Box>
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
+          <GeminiFrameAnalysis />
         </Box>
 
         {modelLoading ? (
