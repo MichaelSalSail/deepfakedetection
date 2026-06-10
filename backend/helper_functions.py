@@ -114,7 +114,7 @@ def more_tests(model, folder_dir):
     Returns:
         1 if the eyes are open, 0 if the eyes are closed.
     '''
-    fast_blink_names = ["p.png"]
+    fast_blink_names = ["face_tight_crop.png"]
     fast_blink_names=np.array(fast_blink_names)
     fast_blink_names=images_ready(fast_blink_names, folder_dir+"/")
     regular_3=np.array(fast_blink_names)

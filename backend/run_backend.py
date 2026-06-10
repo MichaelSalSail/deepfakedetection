@@ -12,10 +12,9 @@ video_path = cwd+pre2+"/target.mp4"
 
 results_path = "AllResults/result_update.json"
 
-# frame and cropped frame from blink_on_video()
-temp_img_original=cwd+"/current_upload/temp/"+'o.png'
-temp_img_cropped=cwd+"/current_upload/temp/"+'p.png'
-temp_img_beard=cwd+"/current_upload/temp/"+'beard.png'
+# Frame crops from blink_on_video()
+temp_img_tight_crop = cwd + "/current_upload/temp/" + "face_tight_crop.png"
+temp_img_subject_reference = cwd + "/current_upload/temp/" + "subject_reference.png"
 
 # Use GPU, if available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -40,8 +39,8 @@ print("\nIgnore any warnings above. So far, so good.")
 # Run all models
 dfd_result = predict_on_video(video_path, 15, device, facedet)
 blink_result = blink_on_video(video_path, 15, facedet, model_for_tests)
-beard_result = detect_beard(temp_img_beard)
-shades_result = detect_shades(temp_img_beard, temp_img_cropped)
+beard_result = detect_beard(temp_img_subject_reference)
+shades_result = detect_shades(temp_img_subject_reference, temp_img_tight_crop)
 
 write_result_update_json(
     [dfd_result, blink_result, beard_result, shades_result],

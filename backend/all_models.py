@@ -187,7 +187,14 @@ def blink_on_video(video_path, fps, facedet, use_model):
     from helpers.face_extract_1 import FaceExtractor
 
     temp_dir = "current_upload/temp/"
-    all_temp_files = [temp_dir + "o.png", temp_dir + "p.png", temp_dir + "beard.png"]
+    all_temp_files = [
+        temp_dir + "face_detected.png",
+        temp_dir + "face_tight_crop.png",
+        temp_dir + "subject_reference.png",
+        temp_dir + "o.png",
+        temp_dir + "p.png",
+        temp_dir + "beard.png",
+    ]
     for temp_file in all_temp_files:
         if os.path.exists(temp_file):
             os.remove(temp_file)
@@ -212,8 +219,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
         face_extractor.keep_only_best_face(faces)
 
         input_size = 224
-        beard_png_obtained = False
-        beard_png_open = False
+        subject_reference_obtained = False
+        subject_reference_open = False
 
         if len(faces) > 0:
             for frame_data in faces:
@@ -221,18 +228,19 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     resized_face = isotropically_resize_image(face, input_size)
                     resized_face = make_square_image(resized_face)
                     plt.imshow(resized_face, interpolation='nearest')
-                    file_name_save_o = 'current_upload/temp/o.png'
-                    plt.savefig(file_name_save_o)
-                    file_name_save_beard = 'current_upload/temp/beard.png'
+                    file_name_save_detected = 'current_upload/temp/face_detected.png'
+                    plt.savefig(file_name_save_detected)
+                    file_name_save_subject_reference = 'current_upload/temp/subject_reference.png'
                     plt.axis('off')
-                    if beard_png_obtained is False:
-                        plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
-                        beard_png_obtained = True
-                    read_o = cv2.imread(file_name_save_o)
+                    if subject_reference_obtained is False:
+                        plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                        subject_reference_obtained = True
+                    read_detected = cv2.imread(file_name_save_detected)
                     dimensions = (432, 288)
-                    resized = cv2.resize(read_o, dimensions)
-                    cv2.imwrite(file_name_save_o, resized)
-                    crop_result = save_crop('o.png', 'p.png', 'current_upload/temp/')
+                    resized = cv2.resize(read_detected, dimensions)
+                    cv2.imwrite(file_name_save_detected, resized)
+                    crop_result = save_crop(
+                        'face_detected.png', 'face_tight_crop.png', 'current_upload/temp/')
                     if crop_result is False:
                         all_unknown += 1
                         classifications.append(-1)
@@ -242,15 +250,15 @@ def blink_on_video(video_path, fps, facedet, use_model):
                         if current == 1:
                             all_open += 1
                             classifications.append(1)
-                            plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
-                            if beard_png_open is False:
-                                beard_png_open = True
+                            plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                            if subject_reference_open is False:
+                                subject_reference_open = True
                             print("all_open:", all_open)
                         else:
                             all_closed += 1
                             classifications.append(0)
-                            if beard_png_open is False:
-                                plt.savefig(file_name_save_beard, bbox_inches='tight', pad_inches=0)
+                            if subject_reference_open is False:
+                                plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                             print("all_closed:", all_closed)
                     plt.clf()
 
@@ -296,7 +304,7 @@ def detect_beard(image_dir):
         dimensions = (152, 152)
         resized = cv2.resize(img2, dimensions)
         cwd = os.getcwd()
-        img2_path = cwd + "/current_upload/temp/beard.png"
+        img2_path = cwd + "/current_upload/temp/subject_reference.png"
         cv2.imwrite(img2_path, resized)
 
         obj = DeepFace.analyze(img_path=img2_path,
