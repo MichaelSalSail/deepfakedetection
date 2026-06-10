@@ -20,6 +20,18 @@ const cardLayout = {
   alignItems: "center",
 };
 
+const BLINK_OPEN = {
+  lighter: "#F3E8FF",
+  dark: "#6D28D9",
+  darker: "#5B21B6",
+};
+
+const BLINK_CLOSED = {
+  lighter: "#EEF2FF",
+  dark: "#4338CA",
+  darker: "#312E81",
+};
+
 const RootStyle1 = styled(Card)(({ theme }) => ({
   ...cardLayout,
   padding: theme.spacing(2, 1),
@@ -37,15 +49,15 @@ const RootStyle2 = styled(Card)(({ theme }) => ({
 const RootStyle3 = styled(Card)(({ theme }) => ({
   ...cardLayout,
   padding: theme.spacing(2, 1),
-  color: theme.palette.primary.darker,
-  backgroundColor: theme.palette.primary.lighter,
+  color: BLINK_OPEN.darker,
+  backgroundColor: BLINK_OPEN.lighter,
 }));
 
 const RootStyle4 = styled(Card)(({ theme }) => ({
   ...cardLayout,
   padding: theme.spacing(2, 1),
-  color: theme.palette.info.darker,
-  backgroundColor: theme.palette.info.lighter,
+  color: BLINK_CLOSED.darker,
+  backgroundColor: BLINK_CLOSED.lighter,
 }));
 
 const IconWrapperStyle1 = styled("div")(({ theme }) => ({
@@ -89,11 +101,8 @@ const IconWrapperStyle3 = styled("div")(({ theme }) => ({
   height: theme.spacing(5),
   justifyContent: "center",
   marginBottom: theme.spacing(1),
-  color: theme.palette.primary.dark,
-  backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.primary.dark,
-    0
-  )} 0%, ${alpha(theme.palette.primary.dark, 0.24)} 100%)`,
+  color: BLINK_OPEN.dark,
+  backgroundImage: `linear-gradient(135deg, ${alpha(BLINK_OPEN.dark, 0)} 0%, ${alpha(BLINK_OPEN.dark, 0.24)} 100%)`,
 }));
 
 const IconWrapperStyle4 = styled("div")(({ theme }) => ({
@@ -105,11 +114,8 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
   height: theme.spacing(5),
   justifyContent: "center",
   marginBottom: theme.spacing(1),
-  color: theme.palette.info.dark,
-  backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.info.dark,
-    0
-  )} 0%, ${alpha(theme.palette.info.dark, 0.24)} 100%)`,
+  color: BLINK_CLOSED.dark,
+  backgroundImage: `linear-gradient(135deg, ${alpha(BLINK_CLOSED.dark, 0)} 0%, ${alpha(BLINK_CLOSED.dark, 0.24)} 100%)`,
 }));
 
 // ----------------------------------------------------------------------
