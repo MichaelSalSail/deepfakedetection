@@ -463,6 +463,9 @@ export default function DashboardApp() {
               gridColumn: { md: "1" },
               gridRow: { md: "2" },
               minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
             <Card sx={{ height: "100%" }}>
@@ -491,6 +494,21 @@ export default function DashboardApp() {
                 </Box>
               </Box>
             </Card>
+
+            {modelLoading ? (
+              <Box sx={{ width: "100%" }}>
+                <Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mb: 1.5 }}>
+                  Analysis runs locally — longer videos take longer. 10–20 seconds works best.
+                </Typography>
+                {(progressBarDone && results["models"][0]["DFD"] === 0) ? (
+                  <Box sx={{ width: "100%" }}>
+                    <LinearProgress />
+                  </Box>
+                ) : (
+                  <Display_Wait per_increment={estimate_runtime(fileduration, data_switched === 0)} />
+                )}
+              </Box>
+            ) : null}
           </Box>
 
           <Box
@@ -545,23 +563,6 @@ export default function DashboardApp() {
         <Box sx={{ mt: 2 }}>
           <GeminiFrameAnalysis />
         </Box>
-
-        {modelLoading ? (
-          <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center" sx={{ mt: 2 }}>
-            <Grid item xs={12} md={8}>
-              <Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mb: 1.5 }}>
-                Analysis runs locally — longer videos take longer. 10–20 seconds works best.
-              </Typography>
-              {(progressBarDone && results["models"][0]["DFD"]===0) ? (
-                <Box sx={{ width: '100%' }}>
-                  <LinearProgress />
-                </Box>
-              ) : (
-                <Display_Wait per_increment={estimate_runtime(fileduration, data_switched===0)}/>
-              )}
-            </Grid>
-          </Grid>
-        ) : null}
 
         <Box sx={{ mt: 2 }}>
           <Box
