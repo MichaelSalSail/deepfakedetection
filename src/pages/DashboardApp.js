@@ -96,7 +96,6 @@ export default function DashboardApp() {
   const [results, setResults] = useState(default_values);
 
   // alerts
-  const [error, setError] = useState(false);
   const [uploadError, setUploadError] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadSuccessKey, setUploadSuccessKey] = useState(0);
@@ -182,7 +181,6 @@ export default function DashboardApp() {
     }
 
     // close any open alerts
-    setError(false);
     setInfo(false);
     setUploadError(false);
     setUploadSuccess(false);
@@ -261,25 +259,6 @@ export default function DashboardApp() {
   return (
     <Page title="Application">
       <Container maxWidth="xl">
-        <Collapse in={error}>
-          <Alert severity="error"
-            action={
-              <IconButton
-                aria-label="close"
-                color="inherit"
-                size="small"
-                onClick={() => {
-                  setError(false);
-                }}
-              >
-                <CloseIcon fontSize="inherit" />
-              </IconButton>
-            }
-            sx={{ mb: 2 }}
-          >
-            Unable to generate results. Upload a video and wait until it is saved on the server.
-          </Alert>
-        </Collapse>
         <Collapse in={uploadError}>
           <Alert severity="error"
             action={
@@ -439,17 +418,14 @@ export default function DashboardApp() {
                 <LoadingButton loading={modelLoading} />
               ) : (
                 <Button
-                  disabled={error || info || modelLoading || uploading || !videoSaved}
+                  disabled={info || modelLoading || uploading || !videoSaved}
                   component="span"
                   variant="contained"
                   onClick={() => {
                     setUploadSuccess(false);
-                    if(!videoSaved)
-                      setError(true);
-                    else if(lastfilerun===file)
+                    if (lastfilerun === file) {
                       setInfo(true);
-                    else
-                    {
+                    } else {
                       setlastfilerun(file);
                       wait_for_models();
                     }
