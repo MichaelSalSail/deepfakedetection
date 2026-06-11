@@ -15,6 +15,13 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
                              eyeblink_csv
 
+BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
+BLINK_TEMP_FILES = (
+    "face_detected.png",
+    "face_tight_crop.png",
+    "subject_reference.png",
+)
+
 PREDICT_TEMPLATE = "????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
 DEFAULT_BEARD_RESULT = {
     "age": 0,
@@ -183,29 +190,18 @@ def blink_on_video(video_path, fps, facedet, use_model):
     from helpers.read_video_1 import VideoReader
     from helpers.face_extract_1 import FaceExtractor
 
-    temp_dir = "current_upload/temp/"
-    all_temp_files = [
-        temp_dir + "face_detected.png",
-        temp_dir + "face_tight_crop.png",
-        temp_dir + "subject_reference.png",
-        temp_dir + "o.png",
-        temp_dir + "p.png",
-        temp_dir + "beard.png",
-    ]
-    for temp_file in all_temp_files:
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
+    for filename in BLINK_TEMP_FILES:
+        path = os.path.join(BLINK_TEMP_DIR, filename)
+        if os.path.isfile(path):
+            os.remove(path)
 
     video_data = cv2.VideoCapture(video_path)
     total_seconds = round(
         (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
     total_frames = math.floor(fps * total_seconds)
 
-    all_open = 0
-    all_closed = 0
-    all_unknown = 0
-    all_missing = 0
-    classifications = list()
+    all_open, all_closed, all_unknown, all_missing = 0, 0, 0, 0
+    classifications = []
 
     try:
         video_reader = VideoReader()
