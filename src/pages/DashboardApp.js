@@ -64,12 +64,10 @@ const MANUAL_DEEPFAKE_TIPS = [
 ];
 
 const ANALYSIS_STALE_MESSAGE =
-  "Results did not update. Analysis may still be running, may not have started, or may have failed — " +
-  "try again and use a shorter video if the process ran out of memory.";
+  "Results did not update. Analysis may still be running or may have failed — try again, or use a shorter video.";
 
 const ANALYSIS_REQUEST_FAILED_MESSAGE =
-  "Could not load results from the backend. Check that Flask is running on port 5001 " +
-  "and that analysis completed successfully.";
+  "Could not load results. Check that the backend is running on port 5001 and that analysis completed.";
 
 // all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
@@ -275,7 +273,7 @@ export default function DashboardApp() {
             }
             sx={{ mb: 2 }}
           >
-            Could not save video. Check that the backend is running, the file is under 50MB, and try again.
+            Upload failed. Make sure the backend is running and the file is under 50MB, then try again.
           </Alert>
         </Collapse>
         <Collapse in={uploadSuccess}>
@@ -294,7 +292,7 @@ export default function DashboardApp() {
             }
             sx={{ mb: 2, position: "relative", overflow: "hidden" }}
           >
-            {filename} saved for analysis. Click Generate Results when ready.
+            {filename} uploaded. Click Generate Results to analyze.
             <Box
               key={uploadSuccessKey}
               aria-hidden
@@ -332,7 +330,7 @@ export default function DashboardApp() {
             }
             sx={{ mb: 2 }}
           >
-            Results for {filename} are available below.
+            Results for this video are already shown below.
           </Alert>
         </Collapse>
         <Collapse in={analysisError}>
