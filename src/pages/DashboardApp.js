@@ -69,6 +69,30 @@ const ANALYSIS_STALE_MESSAGE =
 const ANALYSIS_REQUEST_FAILED_MESSAGE =
   "Could not load results. Check that the backend is running on port 5001 and that analysis completed.";
 
+const ALERT_PROGRESS_MS = 5000;
+
+const alertProgressBarSx = {
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  right: 0,
+  height: 3,
+  bgcolor: "success.main",
+  opacity: 0.35,
+  transformOrigin: "left center",
+  animation: `alertProgress ${ALERT_PROGRESS_MS}ms linear forwards`,
+  "@keyframes alertProgress": {
+    from: { transform: "scaleX(1)" },
+    to: { transform: "scaleX(0)" },
+  },
+};
+
+const alertWithProgressSx = {
+  mb: 2,
+  position: "relative",
+  overflow: "hidden",
+};
+
 // all major classifications for eye blink model
 const blink_classes=["missing","unknown","open","closed"];
 // default values for model outputs
@@ -98,6 +122,7 @@ export default function DashboardApp() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadSuccessKey, setUploadSuccessKey] = useState(0);
   const [info, setInfo] = useState(false);
+  const [infoKey, setInfoKey] = useState(0);
   const [analysisError, setAnalysisError] = useState(false);
   const [analysisErrorMessage, setAnalysisErrorMessage] = useState("");
 
@@ -114,9 +139,19 @@ export default function DashboardApp() {
     }
     const timer = setTimeout(() => {
       setUploadSuccess(false);
-    }, 7000);
+    }, ALERT_PROGRESS_MS);
     return () => clearTimeout(timer);
-  }, [uploadSuccess]);
+  }, [uploadSuccess, uploadSuccessKey]);
+
+  useEffect(() => {
+    if (!info) {
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      setInfo(false);
+    }, ALERT_PROGRESS_MS);
+    return () => clearTimeout(timer);
+  }, [info, infoKey]);
 
   // increment data_switched each time a new file is uploaded or 'Generate Results' completes a GET request
   const switched = () => {
@@ -290,28 +325,10 @@ export default function DashboardApp() {
                 <CloseIcon fontSize="inherit" />
               </IconButton>
             }
-            sx={{ mb: 2, position: "relative", overflow: "hidden" }}
+            sx={alertWithProgressSx}
           >
             {filename} uploaded. Click Generate Results to analyze.
-            <Box
-              key={uploadSuccessKey}
-              aria-hidden
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 3,
-                bgcolor: "success.main",
-                opacity: 0.35,
-                transformOrigin: "left center",
-                animation: "uploadAlertProgress 7s linear forwards",
-                "@keyframes uploadAlertProgress": {
-                  from: { transform: "scaleX(1)" },
-                  to: { transform: "scaleX(0)" },
-                },
-              }}
-            />
+            <Box key={uploadSuccessKey} aria-hidden sx={alertProgressBarSx} />
           </Alert>
         </Collapse>
         <Collapse in={info}>
@@ -328,9 +345,10 @@ export default function DashboardApp() {
                 <CloseIcon fontSize="inherit" />
               </IconButton>
             }
-            sx={{ mb: 2 }}
+            sx={alertWithProgressSx}
           >
             Results for this video are already shown below.
+            <Box key={infoKey} aria-hidden sx={alertProgressBarSx} />
           </Alert>
         </Collapse>
         <Collapse in={analysisError}>
@@ -416,12 +434,13 @@ export default function DashboardApp() {
                 <LoadingButton loading={modelLoading} />
               ) : (
                 <Button
-                  disabled={info || modelLoading || uploading || !videoSaved}
+                  disabled={modelLoading || uploading || !videoSaved}
                   component="span"
                   variant="contained"
                   onClick={() => {
                     setUploadSuccess(false);
                     if (lastfilerun === file) {
+                      setInfoKey((key) => key + 1);
                       setInfo(true);
                     } else {
                       setlastfilerun(file);
