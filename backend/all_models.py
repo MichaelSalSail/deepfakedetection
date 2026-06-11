@@ -215,8 +215,10 @@ def blink_on_video(video_path, fps, facedet, use_model):
         face_extractor.keep_only_best_face(faces)
 
         input_size = 224
-        subject_reference_obtained = False
-        subject_reference_open = False
+        file_name_save_subject_reference = 'current_upload/temp/subject_reference.png'
+        subject_reference_first_face_saved = False
+        subject_reference_open_locked = False
+        subject_reference_closed_provisional = False
 
         if len(faces) > 0:
             for frame_data in faces:
@@ -226,17 +228,15 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     plt.imshow(resized_face, interpolation='nearest')
                     file_name_save_detected = 'current_upload/temp/face_detected.png'
                     plt.savefig(file_name_save_detected)
-                    file_name_save_subject_reference = 'current_upload/temp/subject_reference.png'
                     plt.axis('off')
-                    if subject_reference_obtained is False:
+                    if not subject_reference_first_face_saved:
                         plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
-                        subject_reference_obtained = True
+                        subject_reference_first_face_saved = True
                     read_detected = cv2.imread(file_name_save_detected)
                     dimensions = (432, 288)
                     resized = cv2.resize(read_detected, dimensions)
                     cv2.imwrite(file_name_save_detected, resized)
-                    crop_result = save_crop(
-                        'face_detected.png', 'face_tight_crop.png', 'current_upload/temp/')
+                    crop_result = save_crop('face_detected.png', 'face_tight_crop.png', 'current_upload/temp/')
                     if crop_result is False:
                         all_unknown += 1
                         classifications.append(-1)
@@ -246,15 +246,17 @@ def blink_on_video(video_path, fps, facedet, use_model):
                         if current == 1:
                             all_open += 1
                             classifications.append(1)
-                            plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
-                            if subject_reference_open is False:
-                                subject_reference_open = True
+                            if not subject_reference_open_locked:
+                                plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                                subject_reference_open_locked = True
+                                subject_reference_closed_provisional = False
                             print("all_open:", all_open)
                         else:
                             all_closed += 1
                             classifications.append(0)
-                            if subject_reference_open is False:
+                            if (not subject_reference_open_locked and not subject_reference_closed_provisional):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                                subject_reference_closed_provisional = True
                             print("all_closed:", all_closed)
                     plt.clf()
 
