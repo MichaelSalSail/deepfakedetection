@@ -176,6 +176,11 @@ export default function DashboardApp() {
   };
 
   const onFileChange = (data) => {
+    const pickedFile = data.target.files?.[0];
+    if (!pickedFile) {
+      return;
+    }
+
     // close any open alerts
     setError(false);
     setInfo(false);
@@ -197,7 +202,6 @@ export default function DashboardApp() {
     };
     try
     {
-      const pickedFile = data.target.files[0];
       reader.readAsDataURL(pickedFile);
       // obtain url to play the video
       setFile(URL.createObjectURL(pickedFile));
