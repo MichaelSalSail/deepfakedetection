@@ -5,9 +5,6 @@ import math
 from deepface import DeepFace
 import torch
 import torch.nn as nn
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import torchvision.models as models
 from torchvision.transforms import Normalize
 from tensorflow.keras.preprocessing.image import load_img
@@ -227,18 +224,13 @@ def blink_on_video(video_path, fps, facedet, use_model):
                 for face in frame_data["faces"]:
                     resized_face = isotropically_resize_image(face, input_size)
                     resized_face = make_square_image(resized_face)
-                    plt.imshow(resized_face, interpolation='nearest')
                     file_name_save_detected = 'current_upload/temp/face_detected.png'
-                    plt.savefig(file_name_save_detected)
                     file_name_save_subject_reference = 'current_upload/temp/subject_reference.png'
-                    plt.axis('off')
+                    face_detected = cv2.resize(resized_face, (432, 288))
+                    cv2.imwrite(file_name_save_detected, face_detected)
                     if subject_reference_obtained is False:
-                        plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                        cv2.imwrite(file_name_save_subject_reference, resized_face)
                         subject_reference_obtained = True
-                    read_detected = cv2.imread(file_name_save_detected)
-                    dimensions = (432, 288)
-                    resized = cv2.resize(read_detected, dimensions)
-                    cv2.imwrite(file_name_save_detected, resized)
                     crop_result = save_crop(
                         'face_detected.png', 'face_tight_crop.png', 'current_upload/temp/')
                     if crop_result is False:
@@ -250,7 +242,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
                         if current == 1:
                             all_open += 1
                             classifications.append(1)
-                            plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                            cv2.imwrite(file_name_save_subject_reference, resized_face)
                             if subject_reference_open is False:
                                 subject_reference_open = True
                             print("all_open:", all_open)
@@ -258,9 +250,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
                             all_closed += 1
                             classifications.append(0)
                             if subject_reference_open is False:
-                                plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
+                                cv2.imwrite(file_name_save_subject_reference, resized_face)
                             print("all_closed:", all_closed)
-                    plt.clf()
 
         eyeblink_csv(total_frames, classifications, total_seconds,
                      "AllResults/eyeblink_data.csv")
