@@ -36,8 +36,8 @@ DEFAULT_AGE_GENDER_RESULT = {
 }
 DEFAULT_SHADES_RESULT = {
     "raw_output": (
-        "ORIGINAL\nTop 5 Object Detection Predictions\n"
-        + PREDICT_TEMPLATE + "\n\nCROPPED\nTop 5 Object Detection Predictions\n"
+        "SUBJECT_REFERENCE\nTop 5 Object Detection Predictions\n"
+        + PREDICT_TEMPLATE + "\n\nFACE_TIGHT_CROP\nTop 5 Object Detection Predictions\n"
         + PREDICT_TEMPLATE
     ),
     "shades": False,
@@ -480,7 +480,7 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
 
 def detect_shades(image_dir1, image_dir2=""):
     '''
-    Detect eyewear from original and cropped face images.
+    Detect eyewear from subject_reference and face_tight_crop images.
 
     Returns:
         {"shades", "raw_output"} dict.
@@ -492,21 +492,21 @@ def detect_shades(image_dir1, image_dir2=""):
 
     try:
         if os.path.exists(image_dir1):
-            result.append('ORIGINAL\nTop 5 Object Detection Predictions\n')
+            result.append('SUBJECT_REFERENCE\nTop 5 Object Detection Predictions\n')
             result.extend(_top5_prediction_lines(image_dir1))
         else:
-            result.append('ORIGINAL (file DNE)\nTop 5 Object Detection Predictions\n')
+            result.append('SUBJECT_REFERENCE (file not found)\nTop 5 Object Detection Predictions\n')
             result.append(PREDICT_TEMPLATE + '\n')
 
         if image_dir2 != "":
             if os.path.exists(image_dir2):
-                result.append('\nCROPPED\nTop 5 Object Detection Predictions\n')
+                result.append('\nFACE_TIGHT_CROP\nTop 5 Object Detection Predictions\n')
                 result.extend(_top5_prediction_lines(image_dir2))
             else:
-                result.append("\nCROPPED (file DNE)\nTop 5 Object Detection Predictions\n")
+                result.append("\nFACE_TIGHT_CROP (file not found)\nTop 5 Object Detection Predictions\n")
                 result.append(PREDICT_TEMPLATE)
         else:
-            result.append("\nCROPPED (file argument missing)\nTop 5 Object Detection Predictions\n")
+            result.append("\nFACE_TIGHT_CROP (file argument missing)\nTop 5 Object Detection Predictions\n")
             result.append(PREDICT_TEMPLATE)
     except Exception as e:
         print("Error:" + str(e) + "\n")
