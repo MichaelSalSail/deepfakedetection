@@ -1,5 +1,6 @@
 import cv2
 import os, sys
+import statistics
 import numpy as np
 import math
 from deepface import DeepFace
@@ -24,6 +25,8 @@ BLINK_TEMP_FILES = (
     "face_tight_crop.png",
     "subject_reference.png",
 )
+GENDER_CONFIDENCE_MARGIN = 20
+DEEPFACE_INPUT_SIZE = (152, 152)
 
 PREDICT_TEMPLATE = "????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
 DEFAULT_BEARD_RESULT = {
@@ -55,15 +58,138 @@ def _normalize_gender(gender_value):
     return "??"
 
 
-def _beard_result(age, gender_value):
-    gender = _normalize_gender(gender_value)
-    raw_output = "   Age: " + str(age) + "\nGender: " + str(gender_value) + "\n"
+def _beard_result(age, gender, raw_output):
     return {
         "age": int(age),
         "beard": int(age) >= 20 and gender == "Man",
         "gender": gender,
         "raw_output": raw_output,
     }
+
+
+def _gender_scores(gender_value):
+    if isinstance(gender_value, dict):
+        return float(gender_value.get("Man", 0)), float(gender_value.get("Woman", 0))
+    gender_text = str(gender_value)
+    if "Man" in gender_text:
+        return 100.0, 0.0
+    if "Woman" in gender_text:
+        return 0.0, 100.0
+    return None, None
+
+
+def _deepface_analyze_still(image_path):
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError("Could not read image: " + image_path)
+
+    resized = cv2.resize(img, DEEPFACE_INPUT_SIZE)
+    scratch_path = os.path.join(
+        os.path.dirname(image_path),
+        "_deepface_" + os.path.basename(image_path),
+    )
+    cv2.imwrite(scratch_path, resized)
+
+    obj = DeepFace.analyze(
+        img_path=scratch_path,
+        actions=['age', 'gender'],
+        enforce_detection=False,
+    )
+    return obj[0] if isinstance(obj, list) else obj
+
+
+def _analyze_beard_image(label, image_path):
+    if not os.path.exists(image_path):
+        return {
+            "label": label,
+            "ok": False,
+            "missing": True,
+            "section": label + "\n   (file not found)\n\n",
+        }
+
+    try:
+        obj = _deepface_analyze_still(image_path)
+        man, woman = _gender_scores(obj["gender"])
+        margin = abs(man - woman) if man is not None else 0.0
+        if man is None:
+            gender_line = "Gender: " + str(obj["gender"])
+        else:
+            gender_line = (
+                "Gender: Man: {:.1f}%, Woman: {:.1f}% (margin: {:.1f})".format(
+                    man, woman, margin
+                )
+            )
+        section = (
+            label + "\n"
+            + "   Age: " + str(int(obj["age"])) + "\n"
+            + "   " + gender_line + "\n\n"
+        )
+        return {
+            "label": label,
+            "ok": True,
+            "missing": False,
+            "section": section,
+            "age": int(obj["age"]),
+            "gender_raw": obj["gender"],
+            "man": man,
+            "woman": woman,
+            "margin": margin,
+        }
+    except Exception as e:
+        return {
+            "label": label,
+            "ok": False,
+            "missing": False,
+            "section": label + "\n   Error: " + str(e) + "\n\n",
+        }
+
+
+def _aggregate_beard_analyses(analyses):
+    successful = [item for item in analyses if item.get("ok")]
+    high_confidence = [
+        item for item in successful
+        if item.get("man") is not None
+        and item.get("margin", 0) > GENDER_CONFIDENCE_MARGIN
+    ]
+
+    if high_confidence:
+        avg_man = statistics.mean(item["man"] for item in high_confidence)
+        avg_woman = statistics.mean(item["woman"] for item in high_confidence)
+        gender = "Man" if avg_man >= avg_woman else "Woman"
+        age = int(round(statistics.median(item["age"] for item in high_confidence)))
+        source_note = (
+            "Gender from {} high-confidence image(s) "
+            "(margin > {}%)".format(len(high_confidence), GENDER_CONFIDENCE_MARGIN)
+        )
+    else:
+        subject = next(
+            (item for item in analyses if item.get("label") == "SUBJECT_REFERENCE" and item.get("ok")),
+            None,
+        )
+        if subject is None:
+            successful_ages = [item["age"] for item in successful]
+            age = int(round(statistics.median(successful_ages))) if successful_ages else 0
+            gender = "??"
+            source_note = (
+                "Gender unavailable (no image met margin threshold; "
+                "subject_reference missing or failed)"
+            )
+        else:
+            gender = _normalize_gender(subject["gender_raw"])
+            age = subject["age"]
+            source_note = (
+                "Gender from subject_reference fallback "
+                "(no image met margin threshold of {}%)".format(GENDER_CONFIDENCE_MARGIN)
+            )
+
+    aggregate_section = (
+        "AGGREGATE\n"
+        + "   Age: " + str(age) + "\n"
+        + "   Gender: " + gender + "\n"
+        + "   Beard: " + str(int(age) >= 20 and gender == "Man") + "\n"
+        + "   " + source_note + "\n"
+    )
+    return age, gender, aggregate_section
 
 
 def _blink_result(missing, unknown, open_pct, closed):
@@ -315,9 +441,13 @@ def blink_on_video(video_path, fps, facedet, use_model):
     return result
 
 
-def detect_beard(image_dir):
+def detect_beard(subject_reference_path, face_tight_crop_path, face_detected_path):
     '''
-    Predict age and gender from a still face image.
+    Predict age and gender from subject_reference, face_tight_crop, and face_detected.
+
+    Gender uses high-confidence images only (|Man - Woman| > GENDER_CONFIDENCE_MARGIN).
+    Falls back to subject_reference when none qualify. Age is the median across the
+    images used for the gender decision.
 
     Returns:
         {"age", "gender", "beard", "raw_output"} dict.
@@ -325,24 +455,25 @@ def detect_beard(image_dir):
 
     print('\ndetect_beard()')
 
-    if not os.path.exists(image_dir):
-        print(DEFAULT_BEARD_RESULT["raw_output"])
-        return dict(DEFAULT_BEARD_RESULT)
+    image_sources = (
+        ("SUBJECT_REFERENCE", subject_reference_path),
+        ("FACE_TIGHT_CROP", face_tight_crop_path),
+        ("FACE_DETECTED", face_detected_path),
+    )
 
     try:
-        img2 = cv2.imread(image_dir)
-        dimensions = (152, 152)
-        resized = cv2.resize(img2, dimensions)
-        cwd = os.getcwd()
-        img2_path = cwd + "/current_upload/temp/subject_reference.png"
-        cv2.imwrite(img2_path, resized)
+        analyses = [_analyze_beard_image(label, path) for label, path in image_sources]
+        raw_output = ''.join(item["section"] for item in analyses)
 
-        obj = DeepFace.analyze(img_path=img2_path,
-                               actions=['age', 'gender'],
-                               enforce_detection=False)
-        obj = obj[0] if isinstance(obj, list) else obj
-        result = _beard_result(obj["age"], obj["gender"])
-        print(result["raw_output"])
+        if not any(item.get("ok") for item in analyses):
+            print(raw_output)
+            print(DEFAULT_BEARD_RESULT["raw_output"])
+            return dict(DEFAULT_BEARD_RESULT)
+
+        age, gender, aggregate_section = _aggregate_beard_analyses(analyses)
+        raw_output += aggregate_section
+        result = _beard_result(age, gender, raw_output)
+        print(raw_output)
         return result
     except Exception as e:
         print("Error:" + str(e) + "\n")
