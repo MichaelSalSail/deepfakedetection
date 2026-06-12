@@ -81,13 +81,28 @@ def _percent_of(count, total):
     return round((count / total) * 100, 2)
 
 
+def _blink_frame_timestamp(frame_index, total_frames, total_seconds):
+    if total_frames <= 1:
+        return 0.0
+    return round(frame_index * (total_seconds / (total_frames - 1)), 2)
+
+
+def _print_blink_frame_log(frame_index, total_frames, total_seconds, label):
+    frame_num = frame_index + 1
+    timestamp = _blink_frame_timestamp(frame_index, total_frames, total_seconds)
+    print(
+        f"blink frame {frame_num:03d}/{total_frames}  "
+        f"t={timestamp:.2f}s  {label}"
+    )
+
+
 def _top5_prediction_lines(image_path):
     image = load_img(image_path, target_size=(224, 224))
     image = img_to_array(image)
     image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
     image = preprocess_input(image)
     model = VGG16()
-    yhat = model.predict(image)
+    yhat = model.predict(image, verbose=0)
     label = decode_predictions(yhat)
     lines = []
     for i in range(5):
@@ -214,6 +229,16 @@ def blink_on_video(video_path, fps, facedet, use_model):
         faces = face_extractor.process_video(video_path)
         face_extractor.keep_only_best_face(faces)
 
+        if len(faces) != total_frames:
+            unprocessed = total_frames - len(faces)
+            unprocessed_pct = round((unprocessed / total_frames) * 100, 2) if total_frames else 0.0
+            print(
+                f"blink_on_video() warning: only {len(faces)}/{total_frames} sampled frames "
+                f"were returned by face extraction ({unprocessed} not processed, "
+                f"{unprocessed_pct}% of expected samples). "
+                f"Missing counts may include those slots."
+            )
+
         input_size = 224
         file_name_save_subject_reference = 'current_upload/temp/subject_reference.png'
         subject_reference_first_face_saved = False
@@ -221,7 +246,12 @@ def blink_on_video(video_path, fps, facedet, use_model):
         subject_reference_closed_provisional = False
 
         if len(faces) > 0:
-            for frame_data in faces:
+            for frame_index, frame_data in enumerate(faces):
+                if len(frame_data["faces"]) == 0:
+                    all_missing += 1
+                    _print_blink_frame_log(frame_index, total_frames, total_seconds, "missing")
+                    continue
+
                 for face in frame_data["faces"]:
                     resized_face = isotropically_resize_image(face, input_size)
                     resized_face = make_square_image(resized_face)
@@ -240,7 +270,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     if crop_result is False:
                         all_unknown += 1
                         classifications.append(-1)
-                        print("all_unknown:", all_unknown)
+                        _print_blink_frame_log(frame_index, total_frames, total_seconds, "unknown")
                     else:
                         current = more_tests(use_model, 'current_upload/temp')
                         if current == 1:
@@ -250,14 +280,14 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_open_locked = True
                                 subject_reference_closed_provisional = False
-                            print("all_open:", all_open)
+                            _print_blink_frame_log(frame_index, total_frames, total_seconds, "open")
                         else:
                             all_closed += 1
                             classifications.append(0)
                             if (not subject_reference_open_locked and not subject_reference_closed_provisional):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_closed_provisional = True
-                            print("all_closed:", all_closed)
+                            _print_blink_frame_log(frame_index, total_frames, total_seconds, "closed")
                     plt.clf()
 
         eyeblink_csv(total_frames, classifications, total_seconds,
@@ -271,6 +301,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
 
     if (all_open + all_closed + all_unknown) < total_frames:
         all_missing = total_frames - (all_open + all_closed + all_unknown)
+
+    print("all_missing:", all_missing)
 
     total = all_open + all_closed + all_unknown + all_missing
     result = _blink_result(

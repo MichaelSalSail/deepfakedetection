@@ -119,7 +119,7 @@ def more_tests(model, folder_dir):
     fast_blink_names=images_ready(fast_blink_names, folder_dir+"/")
     regular_3=np.array(fast_blink_names)
     good_shape_3=np.squeeze(regular_3, axis=0)
-    result_vgg16_2= model.predict(good_shape_3)
+    result_vgg16_2 = model.predict(good_shape_3, verbose=0)
     count_1=0
     for i in range(0,len(result_vgg16_2)):
         if result_vgg16_2[i]>0.5:
