@@ -10,7 +10,6 @@
     }, 
     {
       "age": 0, 
-      "beard": false, 
       "gender": "??", 
       "raw_output": "   Age: ??\nGender: ??\n"
     }, 

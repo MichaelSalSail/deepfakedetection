@@ -261,7 +261,6 @@ export default function DashboardApp() {
     .then(response => {
       // convert int values to boolean values
       var temp=response["data"]
-      temp["models"][2]["beard"]=Boolean(temp["models"][2]["beard"])
       temp["models"][3]["shades"]=Boolean(temp["models"][3]["shades"])
       setResults(temp)
       setSubjectImageKey(Date.now())

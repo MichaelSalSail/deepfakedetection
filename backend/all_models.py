@@ -29,9 +29,8 @@ GENDER_CONFIDENCE_MARGIN = 20
 DEEPFACE_INPUT_SIZE = (152, 152)
 
 PREDICT_TEMPLATE = "????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
-DEFAULT_BEARD_RESULT = {
+DEFAULT_AGE_GENDER_RESULT = {
     "age": 0,
-    "beard": False,
     "gender": "??",
     "raw_output": "   Age: ??\nGender: ??\n",
 }
@@ -58,10 +57,9 @@ def _normalize_gender(gender_value):
     return "??"
 
 
-def _beard_result(age, gender, raw_output):
+def _age_gender_result(age, gender, raw_output):
     return {
         "age": int(age),
-        "beard": int(age) >= 20 and gender == "Man",
         "gender": gender,
         "raw_output": raw_output,
     }
@@ -98,7 +96,7 @@ def _deepface_analyze_still(image_path):
     return obj[0] if isinstance(obj, list) else obj
 
 
-def _analyze_beard_image(label, image_path):
+def _analyze_age_gender_image(label, image_path):
     if not os.path.exists(image_path):
         return {
             "label": label,
@@ -144,7 +142,7 @@ def _analyze_beard_image(label, image_path):
         }
 
 
-def _aggregate_beard_analyses(analyses):
+def _aggregate_age_gender_analyses(analyses):
     successful = [item for item in analyses if item.get("ok")]
     high_confidence = [
         item for item in successful
@@ -186,7 +184,6 @@ def _aggregate_beard_analyses(analyses):
         "AGGREGATE\n"
         + "   Age: " + str(age) + "\n"
         + "   Gender: " + gender + "\n"
-        + "   Beard: " + str(int(age) >= 20 and gender == "Man") + "\n"
         + "   " + source_note + "\n"
     )
     return age, gender, aggregate_section
@@ -441,7 +438,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
     return result
 
 
-def detect_beard(subject_reference_path, face_tight_crop_path, face_detected_path):
+def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detected_path):
     '''
     Predict age and gender from subject_reference, face_tight_crop, and face_detected.
 
@@ -450,10 +447,10 @@ def detect_beard(subject_reference_path, face_tight_crop_path, face_detected_pat
     images used for the gender decision.
 
     Returns:
-        {"age", "gender", "beard", "raw_output"} dict.
+        {"age", "gender", "raw_output"} dict.
     '''
 
-    print('\ndetect_beard()')
+    print('\ndetect_age_gender()')
 
     image_sources = (
         ("SUBJECT_REFERENCE", subject_reference_path),
@@ -462,23 +459,23 @@ def detect_beard(subject_reference_path, face_tight_crop_path, face_detected_pat
     )
 
     try:
-        analyses = [_analyze_beard_image(label, path) for label, path in image_sources]
+        analyses = [_analyze_age_gender_image(label, path) for label, path in image_sources]
         raw_output = ''.join(item["section"] for item in analyses)
 
         if not any(item.get("ok") for item in analyses):
             print(raw_output)
-            print(DEFAULT_BEARD_RESULT["raw_output"])
-            return dict(DEFAULT_BEARD_RESULT)
+            print(DEFAULT_AGE_GENDER_RESULT["raw_output"])
+            return dict(DEFAULT_AGE_GENDER_RESULT)
 
-        age, gender, aggregate_section = _aggregate_beard_analyses(analyses)
+        age, gender, aggregate_section = _aggregate_age_gender_analyses(analyses)
         raw_output += aggregate_section
-        result = _beard_result(age, gender, raw_output)
+        result = _age_gender_result(age, gender, raw_output)
         print(raw_output)
         return result
     except Exception as e:
         print("Error:" + str(e) + "\n")
-        print(DEFAULT_BEARD_RESULT["raw_output"])
-        return dict(DEFAULT_BEARD_RESULT)
+        print(DEFAULT_AGE_GENDER_RESULT["raw_output"])
+        return dict(DEFAULT_AGE_GENDER_RESULT)
 
 
 def detect_shades(image_dir1, image_dir2=""):

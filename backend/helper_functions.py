@@ -207,7 +207,7 @@ def write_result_update_json(results, output_path):
     Write the four model result dicts to result_update.json.
 
     Args:
-        results: list of four dicts in UI order (DFD, blink, beard, shades).
+        results: list of four dicts in UI order (DFD, blink, age/gender, shades).
         output_path: path to result_update.json.
     '''
     with open(output_path, 'w') as outfile:

@@ -32,7 +32,6 @@ def success():
         file_mod_time=os.path.getmtime(file_dir)
     all_data=json.load(open(file_dir))
     # true->True, false->False... uppercase keywords undefined in JS.
-    all_data[2]["beard"]=int(all_data[2]["beard"])
     all_data[3]["shades"]=int(all_data[3]["shades"])
     return {"models" : all_data}
 
