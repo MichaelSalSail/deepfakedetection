@@ -1,5 +1,6 @@
 import cv2
 import os, sys
+import re
 import statistics
 import numpy as np
 import math
@@ -29,6 +30,9 @@ GENDER_CONFIDENCE_MARGIN = 20
 DEEPFACE_INPUT_SIZE = (152, 152)
 
 PREDICT_TEMPLATE = "????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
+_TOP5_LABEL_RE = re.compile(r"^([a-zA-Z0-9_]+) \([\d.]+%\)", re.MULTILINE)
+# ImageNet has only these eyewear classes in VGG16 decode_predictions output.
+EYEWEAR_IMAGENET_LABELS = frozenset({"sunglasses", "sunglass"})
 DEFAULT_AGE_GENDER_RESULT = {
     "age": 0,
     "gender": "??",
@@ -231,6 +235,19 @@ def _top5_prediction_lines(image_path):
     for i in range(5):
         lines.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2] * 100))
     return lines
+
+
+def _vgg16_raw_output_indicates_eyewear(raw_output):
+    '''
+    True when any VGG16 top-5 line uses an ImageNet eyewear label.
+
+    ImageNet exposes only sunglass (n04355933) and sunglasses (n04356056).
+    Checking "sunglasses" alone misses top-5 rows that list only "sunglass".
+    '''
+    return any(
+        label in EYEWEAR_IMAGENET_LABELS
+        for label in _TOP5_LABEL_RE.findall(raw_output)
+    )
 
 
 def predict_on_video(video_path, fps, device, facedet):
@@ -517,7 +534,7 @@ def detect_shades(image_dir1, image_dir2=""):
     raw_output = ''.join(result)
     shades_result = {
         "raw_output": raw_output,
-        "shades": "sunglasses" in raw_output,
+        "shades": _vgg16_raw_output_indicates_eyewear(raw_output),
     }
     print(raw_output)
     return shades_result
