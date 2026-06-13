@@ -29,16 +29,15 @@ function formatGender(gender, isPlaceholder) {
   return gender;
 }
 
-function formatShades(shades, isPlaceholder) {
-  if (isPlaceholder) {
-    return "?";
-  }
-  return shades ? "Detected" : "Not detected";
-}
-
-function FactRow({ label, value, isLast }) {
+function FactRow({ label, value, isLast, centered = false }) {
   return (
-    <Box sx={{ mb: isLast ? 0 : 1 }}>
+    <Box
+      sx={{
+        mb: isLast ? 0 : 1,
+        width: centered ? "100%" : "auto",
+        textAlign: centered ? "center" : "left",
+      }}
+    >
       <Typography variant="caption" color="text.secondary" display="block">
         {label}
       </Typography>
@@ -57,7 +56,7 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
 
   const age = formatAge(person["age"], isPlaceholder);
   const gender = formatGender(person["gender"], isPlaceholder);
-  const eyewear = formatShades(shades["shades"], isPlaceholder);
+  const showEyewear = !isPlaceholder && shades["shades"];
 
   const imageUrl = analysisComplete && !imageLoadFailed
     ? `${FACE_CROP_URL}?t=${subjectImageKey}`
@@ -155,13 +154,18 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
               display: "flex",
               flexDirection: compact ? "row" : "column",
               flexWrap: compact ? "wrap" : "nowrap",
-              justifyContent: compact ? "space-around" : "center",
+              justifyContent: compact
+                ? (showEyewear ? "space-around" : "center")
+                : "center",
+              alignItems: "center",
               gap: compact ? 1 : 0,
             }}
           >
-            <FactRow label="Age" value={age} isLast={compact} />
-            <FactRow label="Gender" value={gender} isLast={compact} />
-            <FactRow label="Eyewear" value={eyewear} isLast />
+            <FactRow label="Age" value={age} centered={!showEyewear} />
+            <FactRow label="Gender" value={gender} isLast={!showEyewear} centered={!showEyewear} />
+            {showEyewear && (
+              <FactRow label="Eyewear" value="Detected" isLast />
+            )}
           </Box>
         </Box>
       </CardContent>
