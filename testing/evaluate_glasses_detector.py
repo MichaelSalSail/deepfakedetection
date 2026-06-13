@@ -1,52 +1,13 @@
 """
-Eyewear evaluation: glasses-detector (0.1.x) vs legacy VGG16 baseline CSVs.
+Tentative eyewear evaluation script (not run yet).
 
-Background — limitations of the current VGG16 eyewear path (detect_shades)
---------------------------------------------------------------------------
-The production backend uses ImageNet-pretrained VGG16 and checks whether the
-word "sunglasses" appears in the top-5 object labels for face crops. That
-approach has several structural limits:
+Runs glasses-detector==0.1.1 (AnyglassesClassifier, small) on PNGs in testing/images/
+for filenames listed in sunglasses_shades.csv and sunglasses_glasses.csv. Exports
+side-by-side CSVs with VGG16 (legacy Predict % from input) and glasses-detector
+(probability * 100). Requires Python 3.10+. See tentative_eyewear_model_testing.ipynb
+for background on VGG16 limits and accuracy comparison.
 
-1. Wrong task: ImageNet classifies general scene objects, not "person wearing
-   glasses." There is no reliable "clear eyeglasses" class — only labels like
-   "sunglasses" / "sunglass" and unrelated "field glasses."
-2. Sunglasses-only trigger: regular prescription glasses rarely appear as
-   "sunglasses" in top-5, so stored results in sunglasses_glasses.csv are
-   mostly 0% despite visible glasses.
-3. False positives: unrelated labels (wig, mask, etc.) can occasionally include
-   "sunglasses" with low confidence; the code uses a string match with no
-   score threshold.
-4. Face crops are out-of-domain for ImageNet, so top-5 predictions are noisy
-   on tight face PNGs.
-
-Why glasses-detector is being considered
-----------------------------------------
-glasses-detector==0.1.x provides pretrained face-attribute classifiers trained
-for glasses on face images. AnyglassesClassifier combines eyeglasses +
-sunglasses detectors and outputs a calibrated probability (0–1) instead of
-searching ImageNet label text. It targets the same UI question ("any eyewear?")
-much more directly than VGG16.
-
-Requirements
-------------
-- Python 3.10+ (glasses-detector 0.1.x)
-- pip install glasses-detector==0.1.1 pandas
-
-Usage (from testing/)
----------------------
-    python evaluate_glasses_detector.py
-
-Place all PNGs listed in the input CSVs under testing/images/.
-
-Outputs (VGG16 baseline + glasses-detector side-by-side):
-    Stored Test Results/sunglasses_glasses_glasses_detector.csv
-    Stored Test Results/sunglasses_shades_glasses_detector.csv
-
-Columns: Name, Size (KB), VGG16, glasses-detector
-
-VGG16 values are copied from the input CSV Predict (%) column (legacy baseline).
-glasses-detector values are AnyglassesClassifier probability * 100 (rounded to 2
-decimals). Use Predict > 0 as "detected" when comparing to All_Models_Evaluation.ipynb.
+Usage (from testing/): python evaluate_glasses_detector.py
 """
 
 from __future__ import annotations
