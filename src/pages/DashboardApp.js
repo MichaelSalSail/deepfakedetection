@@ -502,7 +502,7 @@ export default function DashboardApp() {
             {modelLoading ? (
               <Box sx={{ width: "100%" }}>
                 <Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mb: 1.5 }}>
-                  Analysis runs locally — longer videos take longer. 10–20 seconds works best.
+                  Analysis runs locally. For fastest results, use a 10 to 20 second video.
                 </Typography>
                 {(progressBarDone && results["models"][0]["DFD"] === 0) ? (
                   <Box sx={{ width: "100%" }}>
