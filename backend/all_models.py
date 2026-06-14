@@ -2,6 +2,7 @@ import cv2
 import os, sys
 import re
 import statistics
+import time
 import numpy as np
 import math
 from deepface import DeepFace
@@ -193,6 +194,20 @@ def _aggregate_age_gender_analyses(analyses):
     return age, gender, aggregate_section
 
 
+def _format_runtime(elapsed_seconds):
+    if elapsed_seconds < 60:
+        return f"{round(elapsed_seconds, 2)}s"
+    total_seconds = round(elapsed_seconds)
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
+    return f"{minutes}m {seconds}s"
+
+
+def _print_runtime(start_time):
+    elapsed = time.perf_counter() - start_time
+    print("runtime: " + _format_runtime(elapsed))
+
+
 def _dfd_verdict(score):
     if score == 0 or score == 50:
         return "?"
@@ -275,6 +290,7 @@ def predict_on_video(video_path, fps, device, facedet):
     '''
 
     print('\npredict_on_video()')
+    start_time = time.perf_counter()
 
     cwd = os.getcwd()
     sys.path.insert(0, cwd + "/imports/inference")
@@ -339,12 +355,14 @@ def predict_on_video(video_path, fps, device, facedet):
                     data_res = y_pred[:n].mean().item()
                     score = round(data_res * 100, 2)
                     _print_dfd_score(score)
+                    _print_runtime(start_time)
                     return {"DFD": score}
 
     except Exception as e:
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
 
     _print_dfd_score(50.0)
+    _print_runtime(start_time)
     return {"DFD": 50.0}
 
 
@@ -357,6 +375,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
     '''
 
     print('\nblink_on_video()')
+    start_time = time.perf_counter()
 
     cwd = os.getcwd()
     sys.path.insert(0, cwd + "/imports/inference")
@@ -455,6 +474,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         eyeblink_csv(total_frames, list(), total_seconds, "AllResults/eyeblink_data.csv")
         result = _blink_result(0.0, 0.0, 0.0, 0.0)
         print(result)
+        _print_runtime(start_time)
         return result
 
     if (all_open + all_closed + all_unknown) < total_frames:
@@ -470,6 +490,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         _percent_of(all_closed, total),
     )
     print(result)
+    _print_runtime(start_time)
     return result
 
 
@@ -486,6 +507,7 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
     '''
 
     print('\ndetect_age_gender()')
+    start_time = time.perf_counter()
 
     image_sources = (
         ("SUBJECT_REFERENCE", subject_reference_path),
@@ -500,16 +522,19 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
         if not any(item.get("ok") for item in analyses):
             print(raw_output)
             print(DEFAULT_AGE_GENDER_RESULT["raw_output"])
+            _print_runtime(start_time)
             return dict(DEFAULT_AGE_GENDER_RESULT)
 
         age, gender, aggregate_section = _aggregate_age_gender_analyses(analyses)
         raw_output += aggregate_section
         result = _age_gender_result(age, gender, raw_output)
         print(raw_output)
+        _print_runtime(start_time)
         return result
     except Exception as e:
         print("Error:" + str(e) + "\n")
         print(DEFAULT_AGE_GENDER_RESULT["raw_output"])
+        _print_runtime(start_time)
         return dict(DEFAULT_AGE_GENDER_RESULT)
 
 
@@ -522,6 +547,7 @@ def detect_shades(image_dir1, image_dir2=""):
     '''
 
     print('\ndetect_shades()')
+    start_time = time.perf_counter()
 
     result = list()
 
@@ -547,6 +573,7 @@ def detect_shades(image_dir1, image_dir2=""):
         print("Error:" + str(e) + "\n")
         shades_result = dict(DEFAULT_SHADES_RESULT)
         print(shades_result["raw_output"])
+        _print_runtime(start_time)
         return shades_result
 
     raw_output = ''.join(result)
@@ -555,4 +582,5 @@ def detect_shades(image_dir1, image_dir2=""):
         "shades": _vgg16_raw_output_indicates_eyewear(raw_output),
     }
     print(raw_output)
+    _print_runtime(start_time)
     return shades_result
