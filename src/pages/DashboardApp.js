@@ -387,13 +387,12 @@ export default function DashboardApp() {
         >
           <Box
             sx={{
-              gridColumn: { md: "1" },
+              gridColumn: { md: "1 / -1" },
               gridRow: { md: "1" },
               minWidth: 0,
               display: "flex",
               flexDirection: "column",
               gap: 1.5,
-              pr: { xs: 0, md: 3 },
             }}
           >
             <Typography variant="h6">Results</Typography>
@@ -401,9 +400,10 @@ export default function DashboardApp() {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                flexWrap: "wrap",
+                flexWrap: "nowrap",
                 gap: 1.5,
                 width: "100%",
+                minWidth: 0,
               }}
             >
               <input
@@ -414,6 +414,7 @@ export default function DashboardApp() {
                 accept=".mp4"
                 onChange={onFileChange}
               />
+              <Box sx={{ flexShrink: 0 }}>
               <label htmlFor="file-upload">
                 {modelLoading || uploading ? (
                   <LoadingButton loading variant="contained">
@@ -429,6 +430,8 @@ export default function DashboardApp() {
                   </Button>
                 )}
               </label>
+              </Box>
+              <Box sx={{ flexShrink: 0 }}>
               {modelLoading ? (
                 <LoadingButton loading={modelLoading} />
               ) : (
@@ -450,6 +453,7 @@ export default function DashboardApp() {
                   Generate Results
                 </Button>
               )}
+              </Box>
               <ModelTimingLog results={results} />
             </Box>
           </Box>
