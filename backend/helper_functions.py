@@ -206,6 +206,7 @@ def write_result_update_json(results, output_path):
 
     Args:
         results: list of four dicts in UI order (DFD, blink, age/gender, shades).
+                 Each dict may include a "runtime" field (seconds, float).
         output_path: path to result_update.json.
     '''
     with open(output_path, 'w') as outfile:

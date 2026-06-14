@@ -1,13 +1,29 @@
 import { Box, Typography } from "@mui/material";
+import formatRuntime from "../../../utils/formatRuntime.js";
 
-const TIMING_ROWS = [
-  { label: "Base Model", duration: "0s" },
-  { label: "Subject", duration: "0s" },
-  { label: "Eye Blink Model", duration: "0s" },
-  { label: "Total", duration: "0s", isTotal: true },
-];
+function modelRuntime(model) {
+  return model?.runtime ?? 0;
+}
 
-export default function ModelTimingLog() {
+function buildTimingRows(models) {
+  const baseRuntime = modelRuntime(models[0]);
+  const blinkRuntime = modelRuntime(models[1]);
+  const ageGenderRuntime = modelRuntime(models[2]);
+  const shadesRuntime = modelRuntime(models[3]);
+  const subjectRuntime = ageGenderRuntime + shadesRuntime;
+  const totalRuntime = baseRuntime + blinkRuntime + ageGenderRuntime + shadesRuntime;
+
+  return [
+    { label: "Base Model", duration: formatRuntime(baseRuntime) },
+    { label: "Subject", duration: formatRuntime(subjectRuntime) },
+    { label: "Eye Blink Model", duration: formatRuntime(blinkRuntime) },
+    { label: "Total", duration: formatRuntime(totalRuntime), isTotal: true },
+  ];
+}
+
+export default function ModelTimingLog({ results }) {
+  const timingRows = buildTimingRows(results?.models ?? []);
+
   return (
     <Box
       sx={{
@@ -38,7 +54,7 @@ export default function ModelTimingLog() {
       >
         Runtime Log
       </Typography>
-      {TIMING_ROWS.map((row, index) => (
+      {timingRows.map((row, index) => (
         <Box
           key={row.label}
           sx={{

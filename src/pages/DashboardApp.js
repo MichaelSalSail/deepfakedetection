@@ -450,7 +450,7 @@ export default function DashboardApp() {
                   Generate Results
                 </Button>
               )}
-              <ModelTimingLog />
+              <ModelTimingLog results={results} />
             </Box>
           </Box>
 

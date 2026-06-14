@@ -203,9 +203,12 @@ def _format_runtime(elapsed_seconds):
     return f"{minutes}m {seconds}s"
 
 
+def _elapsed_seconds(start_time):
+    return time.perf_counter() - start_time
+
+
 def _print_runtime(start_time):
-    elapsed = time.perf_counter() - start_time
-    print("runtime: " + _format_runtime(elapsed))
+    print("runtime: " + _format_runtime(_elapsed_seconds(start_time)))
 
 
 def _dfd_verdict(score):
@@ -356,14 +359,14 @@ def predict_on_video(video_path, fps, device, facedet):
                     score = round(data_res * 100, 2)
                     _print_dfd_score(score)
                     _print_runtime(start_time)
-                    return {"DFD": score}
+                    return {"DFD": score, "runtime": _elapsed_seconds(start_time)}
 
     except Exception as e:
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
 
     _print_dfd_score(50.0)
     _print_runtime(start_time)
-    return {"DFD": 50.0}
+    return {"DFD": 50.0, "runtime": _elapsed_seconds(start_time)}
 
 
 def blink_on_video(video_path, fps, facedet, use_model):
@@ -473,6 +476,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
         eyeblink_csv(total_frames, list(), total_seconds, "AllResults/eyeblink_data.csv")
         result = _blink_result(0.0, 0.0, 0.0, 0.0)
+        result["runtime"] = _elapsed_seconds(start_time)
         print(result)
         _print_runtime(start_time)
         return result
@@ -489,6 +493,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         _percent_of(all_open, total),
         _percent_of(all_closed, total),
     )
+    result["runtime"] = _elapsed_seconds(start_time)
     print(result)
     _print_runtime(start_time)
     return result
@@ -523,11 +528,14 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
             print(raw_output)
             print(DEFAULT_AGE_GENDER_RESULT["raw_output"])
             _print_runtime(start_time)
-            return dict(DEFAULT_AGE_GENDER_RESULT)
+            result = dict(DEFAULT_AGE_GENDER_RESULT)
+            result["runtime"] = _elapsed_seconds(start_time)
+            return result
 
         age, gender, aggregate_section = _aggregate_age_gender_analyses(analyses)
         raw_output += aggregate_section
         result = _age_gender_result(age, gender, raw_output)
+        result["runtime"] = _elapsed_seconds(start_time)
         print(raw_output)
         _print_runtime(start_time)
         return result
@@ -535,7 +543,9 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
         print("Error:" + str(e) + "\n")
         print(DEFAULT_AGE_GENDER_RESULT["raw_output"])
         _print_runtime(start_time)
-        return dict(DEFAULT_AGE_GENDER_RESULT)
+        result = dict(DEFAULT_AGE_GENDER_RESULT)
+        result["runtime"] = _elapsed_seconds(start_time)
+        return result
 
 
 def detect_shades(image_dir1, image_dir2=""):
@@ -572,6 +582,7 @@ def detect_shades(image_dir1, image_dir2=""):
     except Exception as e:
         print("Error:" + str(e) + "\n")
         shades_result = dict(DEFAULT_SHADES_RESULT)
+        shades_result["runtime"] = _elapsed_seconds(start_time)
         print(shades_result["raw_output"])
         _print_runtime(start_time)
         return shades_result
@@ -580,6 +591,7 @@ def detect_shades(image_dir1, image_dir2=""):
     shades_result = {
         "raw_output": raw_output,
         "shades": _vgg16_raw_output_indicates_eyewear(raw_output),
+        "runtime": _elapsed_seconds(start_time),
     }
     print(raw_output)
     _print_runtime(start_time)
