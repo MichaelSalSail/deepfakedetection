@@ -15,16 +15,28 @@ export function isModelTimingError(model, index) {
   return matchesDefaultValues(model, index) || (model?.runtime ?? 0) === 0;
 }
 
-export function buildModelTimingRows(models = [], analysisComplete = false) {
-  const baseError = analysisComplete && isModelTimingError(models[0], 0);
-  const blinkError = analysisComplete && isModelTimingError(models[1], 1);
-  const subjectError = analysisComplete && (
-    isModelTimingError(models[2], 2) || isModelTimingError(models[3], 3)
-  );
+export function getModelErrors(models = []) {
+  const baseError = isModelTimingError(models[0], 0);
+  const blinkError = isModelTimingError(models[1], 1);
+  const subjectError =
+    isModelTimingError(models[2], 2) || isModelTimingError(models[3], 3);
+  return { baseError, blinkError, subjectError };
+}
 
-  const baseDuration = baseError ? "?" : formatRuntime(models[0]?.runtime ?? 0);
-  const blinkDuration = blinkError ? "?" : formatRuntime(models[1]?.runtime ?? 0);
-  const subjectDuration = subjectError
+export function hasAnyModelError(models = []) {
+  const { baseError, blinkError, subjectError } = getModelErrors(models);
+  return baseError || blinkError || subjectError;
+}
+
+export function buildModelTimingRows(models = [], analysisComplete = false) {
+  const { baseError, blinkError, subjectError } = getModelErrors(models);
+  const baseFailed = analysisComplete && baseError;
+  const blinkFailed = analysisComplete && blinkError;
+  const subjectFailed = analysisComplete && subjectError;
+
+  const baseDuration = baseFailed ? "?" : formatRuntime(models[0]?.runtime ?? 0);
+  const blinkDuration = blinkFailed ? "?" : formatRuntime(models[1]?.runtime ?? 0);
+  const subjectDuration = subjectFailed
     ? "?"
     : formatRuntime((models[2]?.runtime ?? 0) + (models[3]?.runtime ?? 0));
 
@@ -45,19 +57,19 @@ export function buildModelTimingRows(models = [], analysisComplete = false) {
     {
       label: "Base Model",
       duration: baseDuration,
-      hasError: baseError,
+      hasError: baseFailed,
       showStatusIcon: analysisComplete,
     },
     {
       label: "Eye Blink Model",
       duration: blinkDuration,
-      hasError: blinkError,
+      hasError: blinkFailed,
       showStatusIcon: analysisComplete,
     },
     {
       label: "Subject",
       duration: subjectDuration,
-      hasError: subjectError,
+      hasError: subjectFailed,
       showStatusIcon: analysisComplete,
     },
     { label: "Total", duration: totalDuration, isTotal: true },

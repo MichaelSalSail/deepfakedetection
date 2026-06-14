@@ -31,6 +31,7 @@ import {
   ModelTimingLog,
 } from "../components/_dashboard/app/index.js";
 import estimate_runtime from "../utils/Wait.js";
+import { hasAnyModelError } from "../utils/modelTimingStatus.js";
 import FileSaver from 'file-saver';
 
 import axios from "axios";
@@ -63,8 +64,8 @@ const MANUAL_DEEPFAKE_TIPS = [
   "Watch for unusual lighting, blur, or other visual artifacts throughout the video.",
 ];
 
-const ANALYSIS_STALE_MESSAGE =
-  "Results did not update. Analysis may still be running or may have failed — try again, or use a shorter video.";
+const ANALYSIS_MODEL_ERROR_MESSAGE =
+  "Analysis completed, but one or more models failed. Try Generate Results again, or upload a different video.";
 
 const ANALYSIS_REQUEST_FAILED_MESSAGE =
   "Could not load results. Check that the backend is running on port 5001 and that analysis completed.";
@@ -271,8 +272,8 @@ export default function DashboardApp() {
       setModelLoading(false);
       // clear the lingering timeout() from wait_for_models()
       clearTimeout(progress_timeout);
-      if (temp["models"][0]["DFD"] === 0) {
-        setAnalysisErrorMessage(ANALYSIS_STALE_MESSAGE);
+      if (hasAnyModelError(temp.models)) {
+        setAnalysisErrorMessage(ANALYSIS_MODEL_ERROR_MESSAGE);
         setAnalysisError(true);
       }
       console.log("Successfully loaded model outputs!")
