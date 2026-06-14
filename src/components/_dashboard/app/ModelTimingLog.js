@@ -1,26 +1,7 @@
 import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import { Box, Typography } from "@mui/material";
-import formatRuntime from "../../../utils/formatRuntime.js";
-
-function modelRuntime(model) {
-  return model?.runtime ?? 0;
-}
-
-function buildTimingRows(models) {
-  const baseRuntime = modelRuntime(models[0]);
-  const blinkRuntime = modelRuntime(models[1]);
-  const ageGenderRuntime = modelRuntime(models[2]);
-  const shadesRuntime = modelRuntime(models[3]);
-  const subjectRuntime = ageGenderRuntime + shadesRuntime;
-  const totalRuntime = baseRuntime + blinkRuntime + ageGenderRuntime + shadesRuntime;
-
-  return [
-    { label: "Base Model", duration: formatRuntime(baseRuntime) },
-    { label: "Eye Blink Model", duration: formatRuntime(blinkRuntime) },
-    { label: "Subject", duration: formatRuntime(subjectRuntime) },
-    { label: "Total", duration: formatRuntime(totalRuntime), isTotal: true },
-  ];
-}
+import { buildModelTimingRows } from "../../../utils/modelTimingStatus.js";
 
 function DurationBox({ duration }) {
   return (
@@ -52,7 +33,7 @@ function DurationBox({ duration }) {
   );
 }
 
-function RuntimeValue({ duration, isTotal }) {
+function RuntimeValue({ duration, isTotal, hasError, showStatusIcon }) {
   if (isTotal) {
     return <DurationBox duration={duration} />;
   }
@@ -60,13 +41,19 @@ function RuntimeValue({ duration, isTotal }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
       <DurationBox duration={duration} />
-      <CheckIcon sx={{ fontSize: 12, color: "success.main" }} aria-hidden />
+      {showStatusIcon ? (
+        hasError ? (
+          <CloseIcon sx={{ fontSize: 12, color: "error.main" }} aria-hidden />
+        ) : (
+          <CheckIcon sx={{ fontSize: 12, color: "success.main" }} aria-hidden />
+        )
+      ) : null}
     </Box>
   );
 }
 
-export default function ModelTimingLog({ results }) {
-  const timingRows = buildTimingRows(results?.models ?? []);
+export default function ModelTimingLog({ results, analysisComplete = false }) {
+  const timingRows = buildModelTimingRows(results?.models ?? [], analysisComplete);
 
   return (
     <Box
@@ -121,7 +108,12 @@ export default function ModelTimingLog({ results }) {
           >
             {row.label}
           </Typography>
-          <RuntimeValue duration={row.duration} isTotal={row.isTotal} />
+          <RuntimeValue
+            duration={row.duration}
+            isTotal={row.isTotal}
+            hasError={row.hasError}
+            showStatusIcon={row.showStatusIcon}
+          />
         </Box>
       ))}
     </Box>

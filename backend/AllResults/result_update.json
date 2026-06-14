@@ -1,16 +1,24 @@
-[{
-  "DFD": 16.46
-},{
-  "closed": 19.35,
-  "missing": 0,
-  "open": 72.26,
-  "unknown": 8.39
-},{
-  "age": 32,
-  "beard": true,
-  "gender": "Man",
-  "raw_output": "   Age: 32\nGender: {'Woman': 0.009029897773871198, 'Man': 99.99096393585205}\n"
-},{
-  "raw_output": "ORIGINAL\nTop 5 Object Detection Predictions\nneck_brace (27.85%)\nbow_tie (14.29%)\nWindsor_tie (5.18%)\nsuit (4.75%)\nacademic_gown (2.56%)\n\nCROPPED\nTop 5 Object Detection Predictions\nbow_tie (9.72%)\nBand_Aid (5.90%)\nice_lolly (5.85%)\nseat_belt (5.08%)\nmortarboard (4.47%)\n",
-  "shades": false
-}]
+[
+  {
+    "DFD": 8.7,
+    "runtime": 24.690396291
+  },
+  {
+    "closed": 18.63,
+    "missing": 0.0,
+    "open": 81.37,
+    "unknown": 0.0,
+    "runtime": 43.814328875
+  },
+  {
+    "age": 25,
+    "gender": "Woman",
+    "raw_output": "SUBJECT_REFERENCE\n   Age: 25\n   Gender: Man: 100.0%, Woman: 0.0% (margin: 100.0)\n\nFACE_TIGHT_CROP\n   Age: 25\n   Gender: Man: 0.3%, Woman: 99.7% (margin: 99.4)\n\nFACE_DETECTED\n   Age: 25\n   Gender: Man: 0.0%, Woman: 100.0% (margin: 100.0)\n\nAGGREGATE\n   Age: 25\n   Gender: Woman\n   Gender from 3 high-confidence image(s) (margin > 20%)\n",
+    "runtime": 4.18258383300001
+  },
+  {
+    "raw_output": "SUBJECT_REFERENCE\nTop 5 Object Detection Predictions\nwig (28.04%)\nfur_coat (7.74%)\nfeather_boa (4.61%)\nhair_spray (3.94%)\nbow_tie (3.74%)\n\nFACE_TIGHT_CROP\nTop 5 Object Detection Predictions\nwig (27.67%)\nmask (12.46%)\nsunscreen (8.90%)\nlipstick (8.46%)\nshower_cap (7.76%)\n",
+    "shades": false,
+    "runtime": 4.272872208999999
+  }
+]

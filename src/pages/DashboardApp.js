@@ -454,7 +454,10 @@ export default function DashboardApp() {
                 </Button>
               )}
               </Box>
-              <ModelTimingLog results={results} />
+              <ModelTimingLog
+                results={results}
+                analysisComplete={data_switched % 2 === 1}
+              />
             </Box>
           </Box>
 
