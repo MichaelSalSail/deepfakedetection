@@ -193,6 +193,21 @@ def _aggregate_age_gender_analyses(analyses):
     return age, gender, aggregate_section
 
 
+def _dfd_verdict(score):
+    if score == 0 or score == 50:
+        return "?"
+    if score < 48:
+        return "Likely Authentic"
+    if score <= 68:
+        return "Uncertain"
+    return "Likely deepfake"
+
+
+def _print_dfd_score(score):
+    print(str(score) + "%")
+    print("verdict: " + _dfd_verdict(score))
+
+
 def _blink_result(missing, unknown, open_pct, closed):
     return {
         "closed": closed,
@@ -323,13 +338,13 @@ def predict_on_video(video_path, fps, device, facedet):
                     y_pred = torch.sigmoid(y_pred.squeeze())
                     data_res = y_pred[:n].mean().item()
                     score = round(data_res * 100, 2)
-                    print(str(score) + "%")
+                    _print_dfd_score(score)
                     return {"DFD": score}
 
     except Exception as e:
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
 
-    print("50.0%")
+    _print_dfd_score(50.0)
     return {"DFD": 50.0}
 
 
