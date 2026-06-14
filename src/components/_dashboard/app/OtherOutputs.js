@@ -29,15 +29,9 @@ function formatGender(gender, isPlaceholder) {
   return gender;
 }
 
-function FactRow({ label, value, isLast, centered = false }) {
+function FactRow({ label, value, centered = false }) {
   return (
-    <Box
-      sx={{
-        mb: isLast ? 0 : 1,
-        width: centered ? "100%" : "auto",
-        textAlign: centered ? "center" : "left",
-      }}
-    >
+    <Box sx={{ textAlign: centered ? "center" : "left" }}>
       <Typography variant="caption" color="text.secondary" display="block">
         {label}
       </Typography>
@@ -151,20 +145,19 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
             sx={{
               flex: 1,
               minWidth: 0,
+              width: "100%",
               display: "flex",
-              flexDirection: compact ? "row" : "column",
-              flexWrap: compact ? "wrap" : "nowrap",
-              justifyContent: compact
-                ? (showEyewear ? "space-around" : "center")
-                : "center",
-              alignItems: "center",
-              gap: compact ? 1 : 0,
+              flexDirection: showEyewear ? (compact ? "row" : "column") : "row",
+              flexWrap: showEyewear && compact ? "wrap" : "nowrap",
+              justifyContent: showEyewear && compact ? "space-around" : "center",
+              alignItems: showEyewear && !compact ? "flex-start" : "center",
+              gap: showEyewear ? (compact ? 1 : 1.5) : 4,
             }}
           >
             <FactRow label="Age" value={age} centered={!showEyewear} />
-            <FactRow label="Gender" value={gender} isLast={!showEyewear} centered={!showEyewear} />
+            <FactRow label="Gender" value={gender} centered={!showEyewear} />
             {showEyewear && (
-              <FactRow label="Eyewear" value="Detected" isLast />
+              <FactRow label="Eyewear" value="Detected" />
             )}
           </Box>
         </Box>

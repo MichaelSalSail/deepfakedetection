@@ -214,12 +214,13 @@ def _blink_frame_timestamp(frame_index, total_frames, total_seconds):
     return round(frame_index * (total_seconds / (total_frames - 1)), 2)
 
 
-def _print_blink_frame_log(frame_index, total_frames, total_seconds, label):
+def _print_blink_frame_log(frame_index, total_frames, total_seconds, label, score=None):
     frame_num = frame_index + 1
     timestamp = _blink_frame_timestamp(frame_index, total_frames, total_seconds)
+    score_str = "N/A" if score is None else f"{score:.2f}"
     print(
-        f"blink frame {frame_num:03d}/{total_frames}  "
-        f"t={timestamp:.2f}s  {label}"
+        f"frame {frame_num:03d}/{total_frames}  "
+        f"t={timestamp:.2f}s  score={score_str}  {label}"
     )
 
 
@@ -412,7 +413,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
                         classifications.append(-1)
                         _print_blink_frame_log(frame_index, total_frames, total_seconds, "unknown")
                     else:
-                        current = more_tests(use_model, 'current_upload/temp')
+                        current, blink_score = more_tests(use_model, 'current_upload/temp')
                         if current == 1:
                             all_open += 1
                             classifications.append(1)
@@ -420,14 +421,16 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_open_locked = True
                                 subject_reference_closed_provisional = False
-                            _print_blink_frame_log(frame_index, total_frames, total_seconds, "open")
+                            _print_blink_frame_log(
+                                frame_index, total_frames, total_seconds, "open", blink_score)
                         else:
                             all_closed += 1
                             classifications.append(0)
                             if (not subject_reference_open_locked and not subject_reference_closed_provisional):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_closed_provisional = True
-                            _print_blink_frame_log(frame_index, total_frames, total_seconds, "closed")
+                            _print_blink_frame_log(
+                                frame_index, total_frames, total_seconds, "closed", blink_score)
                     plt.clf()
 
         eyeblink_csv(total_frames, classifications, total_seconds,

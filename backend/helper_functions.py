@@ -105,14 +105,14 @@ def images_ready(all_imgs,folder_name):
 def more_tests(model, folder_dir):
     '''
     Runs a prediction on model.
-    Prints the binary classification of the image in directory folder_dir.
     
     Args:
         model: transfer learn VGG16 model.
         folder_dir: directory of .png files.
         
     Returns:
-        1 if the eyes are open, 0 if the eyes are closed.
+        (label, score) where label is 1 (open) or 0 (closed), and score is the
+        raw sigmoid output in [0, 1].
     '''
     fast_blink_names = ["face_tight_crop.png"]
     fast_blink_names=np.array(fast_blink_names)
@@ -120,11 +120,9 @@ def more_tests(model, folder_dir):
     regular_3=np.array(fast_blink_names)
     good_shape_3=np.squeeze(regular_3, axis=0)
     result_vgg16_2 = model.predict(good_shape_3, verbose=0)
-    count_1=0
-    for i in range(0,len(result_vgg16_2)):
-        if result_vgg16_2[i]>0.5:
-            count_1=1
-    return count_1
+    score = float(result_vgg16_2[0])
+    label = 1 if score > 0.5 else 0
+    return label, score
 
 def get_model():
     '''
