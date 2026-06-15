@@ -589,16 +589,16 @@ export default function DashboardApp() {
             <Box sx={{ width: { xs: "100%", md: "40%" }, minWidth: 0 }}>
               <Grid container spacing={1} alignItems="stretch" sx={{ height: "100%" }}>
                 <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[0]} />
-                </Grid>
-                <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[1]} />
+                  <Eyeblinks results={results} color_card={blink_classes[3]} />
                 </Grid>
                 <Grid item xs={6} sx={{ display: "flex" }}>
                   <Eyeblinks results={results} color_card={blink_classes[2]} />
                 </Grid>
                 <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[3]} />
+                  <Eyeblinks results={results} color_card={blink_classes[0]} />
+                </Grid>
+                <Grid item xs={6} sx={{ display: "flex" }}>
+                  <Eyeblinks results={results} color_card={blink_classes[1]} />
                 </Grid>
               </Grid>
             </Box>
