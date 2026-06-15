@@ -25,6 +25,7 @@ import {
   OtherOutputs,
   DFDscore,
   EyeBlinkTimelineChart,
+  EyeBlinkPointLabelCard,
   GeminiFrameAnalysis,
   ModelTimingLog,
 } from "../components/_dashboard/app/index.js";
@@ -124,6 +125,7 @@ export default function DashboardApp() {
   const [modelLoading, setModelLoading] = useState(false);
   // cache-bust subject face crop after each successful results fetch
   const [subjectImageKey, setSubjectImageKey] = useState(0);
+  const [selectedBlinkPoint, setSelectedBlinkPoint] = useState(null);
 
   useEffect(() => {
     if (!uploadSuccess) {
@@ -152,6 +154,7 @@ export default function DashboardApp() {
 
   const wait_for_models = () => {
     setAnalysisError(false);
+    setSelectedBlinkPoint(null);
     setModelLoading(true);
     console.log("Video has a duration of", fileduration, "seconds.");
     obtainResults();
@@ -207,6 +210,7 @@ export default function DashboardApp() {
 
     // reset results to default
     setResults(default_values)
+    setSelectedBlinkPoint(null);
 
     // obtain the video duration
     var reader = new FileReader();
@@ -586,9 +590,15 @@ export default function DashboardApp() {
             <Box sx={{ flexShrink: 0, display: "flex", minHeight: 0 }}>
               <BlinkCardsStack results={results} />
             </Box>
-            <Box sx={{ flex: 1, minWidth: 0, display: "flex" }}>
-              <EyeBlinkTimelineChart />
+            <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>
+              <EyeBlinkTimelineChart
+                selectedPoint={selectedBlinkPoint}
+                onPointSelect={setSelectedBlinkPoint}
+              />
             </Box>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
+            <EyeBlinkPointLabelCard classification={selectedBlinkPoint?.y ?? null} />
           </Box>
         </Box>
 

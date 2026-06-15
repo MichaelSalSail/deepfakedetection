@@ -11,6 +11,8 @@ import { Box, Card, Typography } from "@mui/material";
 
 // Longest subtext: "of frames have closed eyes" — single-line at caption size
 export const BLINK_CARD_MIN_WIDTH = 176;
+// Shared row height for the 4-card stack and the timeline chart beside it
+export const BLINK_TIMELINE_ROW_HEIGHT = 252;
 
 export const BLINK_CARDS_ORDER = ["open", "closed", "unknown", "missing"];
 
@@ -214,7 +216,8 @@ export function BlinkCardsStack({ results }) {
         display: "flex",
         flexDirection: "column",
         gap: 1,
-        height: "100%",
+        height: BLINK_TIMELINE_ROW_HEIGHT,
+        minHeight: BLINK_TIMELINE_ROW_HEIGHT,
         width: { xs: "100%", md: BLINK_CARD_MIN_WIDTH },
       }}
     >

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 // material
 import { Card, CardContent, Box, Tooltip, useTheme } from "@mui/material";
+import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 
 const DURATION_SECONDS = 10;
-const CHART_HEIGHT = 240;
+const CHART_CONTENT_PADDING_Y = 24;
+const CHART_HEIGHT = BLINK_TIMELINE_ROW_HEIGHT - CHART_CONTENT_PADDING_Y;
 const Y_MIN = -2;
 const Y_MAX = 2;
 const Y_TICKS = [-2, -1, 0, 1, 2];
@@ -11,6 +13,7 @@ const X_TICKS = Array.from({ length: DURATION_SECONDS + 1 }, (_, i) => i);
 
 const MARGIN = { top: 12, right: 20, bottom: 40, left: 52 };
 const POINT_RADIUS = 4;
+const POINT_RADIUS_SELECTED = 6;
 const POINT_HIT_SIZE = 20;
 
 // missing=-2, unknown=-1, closed=1, open=2 — fixed placeholder at each whole second
@@ -99,7 +102,7 @@ function getPointColor(y, positiveColor, negativeColor, neutralColor) {
   return neutralColor;
 }
 
-export default function EyeBlinkTimelineChart() {
+export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSelect }) {
   const theme = useTheme();
   const containerRef = useRef(null);
   const [width, setWidth] = useState(0);
@@ -135,8 +138,18 @@ export default function EyeBlinkTimelineChart() {
   const zeroY = yScale(0);
   const coloredSegments = buildColoredSegments(PLACEHOLDER_DATA);
 
+  const isPointSelected = (x, y) =>
+    selectedPoint !== null && selectedPoint.x === x && selectedPoint.y === y;
+
   return (
-    <Card sx={{ height: "100%", width: "100%", display: "flex", flexDirection: "column" }}>
+    <Card
+      sx={{
+        height: BLINK_TIMELINE_ROW_HEIGHT,
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <CardContent
         sx={{
           flex: 1,
@@ -144,6 +157,7 @@ export default function EyeBlinkTimelineChart() {
           flexDirection: "column",
           py: 1.5,
           px: 1,
+          minHeight: 0,
           "&:last-child": { pb: 1.5 },
         }}
       >
@@ -151,9 +165,9 @@ export default function EyeBlinkTimelineChart() {
           ref={containerRef}
           sx={{
             position: "relative",
-            flex: 1,
-            minHeight: 220,
             height: CHART_HEIGHT,
+            minHeight: 0,
+            flexShrink: 0,
           }}
         >
           {width > 0 && (
@@ -200,15 +214,16 @@ export default function EyeBlinkTimelineChart() {
                   negativeColor,
                   neutralColor
                 );
+                const selected = isPointSelected(x, y);
                 return (
                   <circle
                     key={`point-${x}`}
                     cx={xScale(x)}
                     cy={yScale(y)}
-                    r={POINT_RADIUS}
+                    r={selected ? POINT_RADIUS_SELECTED : POINT_RADIUS}
                     fill={theme.palette.background.paper}
                     stroke={pointColor}
-                    strokeWidth={2}
+                    strokeWidth={selected ? 3 : 2}
                   />
                 );
               })}
@@ -289,7 +304,11 @@ export default function EyeBlinkTimelineChart() {
                 placement="top"
               >
                 <Box
+                  component="button"
+                  type="button"
                   aria-label={`(x, y) = (${x}, ${y})`}
+                  aria-pressed={isPointSelected(x, y)}
+                  onClick={() => onPointSelect?.({ x, y })}
                   sx={{
                     position: "absolute",
                     left: xScale(x),
@@ -298,6 +317,9 @@ export default function EyeBlinkTimelineChart() {
                     height: POINT_HIT_SIZE,
                     transform: "translate(-50%, -50%)",
                     cursor: "pointer",
+                    border: 0,
+                    padding: 0,
+                    background: "transparent",
                   }}
                 />
               </Tooltip>
