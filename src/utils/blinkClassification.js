@@ -8,3 +8,11 @@ export const CLASSIFICATION_TO_LABEL = {
 export function getBlinkLabel(classification) {
   return CLASSIFICATION_TO_LABEL[classification] ?? null;
 }
+
+export function formatBlinkLabelDisplay(classification) {
+  const label = getBlinkLabel(classification);
+  if (!label) {
+    return "—";
+  }
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
