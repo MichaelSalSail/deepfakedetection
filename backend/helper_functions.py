@@ -174,31 +174,54 @@ def save_crop(input_image, file_name, destination):
         pil_image.save(full_1)
     return True
 
-def eyeblink_csv(frames, labels, mp4_duration, dir):
+def _blink_frame_timestamp(frame_index, total_frames, total_seconds):
+    if total_frames <= 1:
+        return 0.0
+    return round(frame_index * (total_seconds / (total_frames - 1)), 2)
+
+
+EYEBLINK_CSV_COLUMNS = [
+    "frame_num",
+    "total_frames",
+    "timestamp_s",
+    "score",
+    "label",
+]
+
+
+def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None):
     '''
-    Saves the labels from blink_on_video() in .csv format.
-    
+    Saves per-frame blink logs from blink_on_video() in .csv format.
+
     Args:
-        frames: the total frames that should be extracted from video.
-        labels: the eyeblink classification of each video frame.
-        mp4_durations: total video duration in seconds.
-        dir: directory to save the .csv
-        
+        frame_rows: list of dicts with keys frame_num, total_frames,
+                    timestamp_s, score, label.
+        output_path: path to save the .csv
+        total_frames: used on error path when frame_rows is empty
+        total_seconds: used on error path when frame_rows is empty
+
     Returns:
         Nothing
     '''
-    # Timestamp of each video frame and classification written to a dataframe.
-    blinks_df= pd.DataFrame(columns=['Timestamp (s)','Classification'])
-    for i in range(0,frames): 
-        blinks_df.loc[i, 'Timestamp (s)'] = round(i*(mp4_duration/(frames-1)),2)
-        # if more than 5% of frames are missing or labels[i] is out of bounds,
-        # don't put a valid classification in the row
-        if((len(labels)<(0.95*frames)) | (i>=(len(labels)))):
-            blinks_df.loc[i, 'Classification'] = math.nan
-        else:
-            blinks_df.loc[i, 'Classification'] = labels[i]
-    # Save the dataframe as a .csv file
-    blinks_df.to_csv(dir, index=False)
+    if frame_rows:
+        blinks_df = pd.DataFrame(frame_rows, columns=EYEBLINK_CSV_COLUMNS)
+    elif total_frames and total_frames > 0:
+        rows = []
+        duration = total_seconds or 0
+        for frame_index in range(total_frames):
+            rows.append({
+                "frame_num": frame_index + 1,
+                "total_frames": total_frames,
+                "timestamp_s": _blink_frame_timestamp(
+                    frame_index, total_frames, duration),
+                "score": math.nan,
+                "label": "missing",
+            })
+        blinks_df = pd.DataFrame(rows, columns=EYEBLINK_CSV_COLUMNS)
+    else:
+        blinks_df = pd.DataFrame(columns=EYEBLINK_CSV_COLUMNS)
+
+    blinks_df.to_csv(output_path, index=False)
 
 def write_result_update_json(results, output_path):
     '''
