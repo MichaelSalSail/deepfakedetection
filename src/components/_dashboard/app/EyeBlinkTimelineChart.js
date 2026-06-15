@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 // material
-import { Card, CardContent, Box, useTheme } from "@mui/material";
+import { Card, CardContent, Box, Tooltip, useTheme } from "@mui/material";
 
 const DURATION_SECONDS = 10;
 const CHART_HEIGHT = 240;
@@ -11,6 +11,7 @@ const X_TICKS = Array.from({ length: DURATION_SECONDS + 1 }, (_, i) => i);
 
 const MARGIN = { top: 12, right: 20, bottom: 40, left: 52 };
 const POINT_RADIUS = 4;
+const POINT_HIT_SIZE = 20;
 
 // missing=-2, unknown=-1, closed=1, open=2 — fixed placeholder at each whole second
 const PLACEHOLDER_DATA = [
@@ -146,8 +147,17 @@ export default function EyeBlinkTimelineChart() {
           "&:last-child": { pb: 1.5 },
         }}
       >
-        <Box ref={containerRef} sx={{ flex: 1, minHeight: 220, height: CHART_HEIGHT }}>
+        <Box
+          ref={containerRef}
+          sx={{
+            position: "relative",
+            flex: 1,
+            minHeight: 220,
+            height: CHART_HEIGHT,
+          }}
+        >
           {width > 0 && (
+            <>
             <svg
               width={width}
               height={CHART_HEIGHT}
@@ -270,6 +280,29 @@ export default function EyeBlinkTimelineChart() {
                 Time (s)
               </text>
             </svg>
+
+            {PLACEHOLDER_DATA.map(([x, y]) => (
+              <Tooltip
+                key={`tooltip-${x}`}
+                title={`(x, y) = (${x}, ${y})`}
+                arrow
+                placement="top"
+              >
+                <Box
+                  aria-label={`(x, y) = (${x}, ${y})`}
+                  sx={{
+                    position: "absolute",
+                    left: xScale(x),
+                    top: yScale(y),
+                    width: POINT_HIT_SIZE,
+                    height: POINT_HIT_SIZE,
+                    transform: "translate(-50%, -50%)",
+                    cursor: "pointer",
+                  }}
+                />
+              </Tooltip>
+            ))}
+            </>
           )}
         </Box>
       </CardContent>
