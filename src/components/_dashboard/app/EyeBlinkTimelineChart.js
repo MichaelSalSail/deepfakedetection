@@ -27,10 +27,75 @@ const PLACEHOLDER_DATA = [
   [10, 1],
 ];
 
-function buildLinePath(data, xScale, yScale) {
-  return data
+function buildLinePath(points, xScale, yScale) {
+  return points
     .map(([x, y], index) => `${index === 0 ? "M" : "L"} ${xScale(x)} ${yScale(y)}`)
     .join(" ");
+}
+
+function getZeroCrossing([x1, y1], [x2, y2]) {
+  if (y1 === 0 || y2 === 0 || y1 * y2 > 0) {
+    return null;
+  }
+
+  const t = (0 - y1) / (y2 - y1);
+  return [x1 + t * (x2 - x1), 0];
+}
+
+function sideForEdge(y1, y2) {
+  const midpoint = (y1 + y2) / 2;
+  return midpoint > 0 ? "positive" : "negative";
+}
+
+function buildColoredSegments(data) {
+  const expanded = [data[0]];
+  for (let i = 1; i < data.length; i += 1) {
+    const crossing = getZeroCrossing(data[i - 1], data[i]);
+    if (crossing) {
+      expanded.push(crossing);
+    }
+    expanded.push(data[i]);
+  }
+
+  if (expanded.length < 2) {
+    return [];
+  }
+
+  const segments = [];
+  let currentSide = sideForEdge(expanded[0][1], expanded[1][1]);
+  let currentPoints = [expanded[0]];
+
+  for (let i = 1; i < expanded.length; i += 1) {
+    const prev = expanded[i - 1];
+    const curr = expanded[i];
+    const edgeSide = sideForEdge(prev[1], curr[1]);
+
+    if (edgeSide === currentSide) {
+      currentPoints.push(curr);
+    } else {
+      if (currentPoints.length >= 2) {
+        segments.push({ points: [...currentPoints], side: currentSide });
+      }
+      currentPoints = [prev, curr];
+      currentSide = edgeSide;
+    }
+  }
+
+  if (currentPoints.length >= 2) {
+    segments.push({ points: currentPoints, side: currentSide });
+  }
+
+  return segments;
+}
+
+function getPointColor(y, positiveColor, negativeColor, neutralColor) {
+  if (y > 0) {
+    return positiveColor;
+  }
+  if (y < 0) {
+    return negativeColor;
+  }
+  return neutralColor;
 }
 
 export default function EyeBlinkTimelineChart() {
@@ -55,7 +120,9 @@ export default function EyeBlinkTimelineChart() {
   const axisColor = theme.palette.text.primary;
   const labelColor = theme.palette.text.secondary;
   const gridColor = theme.palette.divider;
-  const lineColor = theme.palette.grey[500];
+  const positiveColor = theme.palette.success.main;
+  const negativeColor = theme.palette.error.main;
+  const neutralColor = theme.palette.grey[500];
 
   const plotWidth = Math.max(width - MARGIN.left - MARGIN.right, 0);
   const plotHeight = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
@@ -65,7 +132,7 @@ export default function EyeBlinkTimelineChart() {
     MARGIN.top + ((Y_MAX - value) / (Y_MAX - Y_MIN)) * plotHeight;
 
   const zeroY = yScale(0);
-  const linePath = buildLinePath(PLACEHOLDER_DATA, xScale, yScale);
+  const coloredSegments = buildColoredSegments(PLACEHOLDER_DATA);
 
   return (
     <Card sx={{ height: "100%", width: "100%", display: "flex", flexDirection: "column" }}>
@@ -104,26 +171,37 @@ export default function EyeBlinkTimelineChart() {
                 );
               })}
 
-              <path
-                d={linePath}
-                fill="none"
-                stroke={lineColor}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-
-              {PLACEHOLDER_DATA.map(([x, y]) => (
-                <circle
-                  key={`point-${x}`}
-                  cx={xScale(x)}
-                  cy={yScale(y)}
-                  r={POINT_RADIUS}
-                  fill={theme.palette.background.paper}
-                  stroke={lineColor}
+              {coloredSegments.map((segment, index) => (
+                <path
+                  key={`segment-${index}`}
+                  d={buildLinePath(segment.points, xScale, yScale)}
+                  fill="none"
+                  stroke={segment.side === "positive" ? positiveColor : negativeColor}
                   strokeWidth={2}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
                 />
               ))}
+
+              {PLACEHOLDER_DATA.map(([x, y]) => {
+                const pointColor = getPointColor(
+                  y,
+                  positiveColor,
+                  negativeColor,
+                  neutralColor
+                );
+                return (
+                  <circle
+                    key={`point-${x}`}
+                    cx={xScale(x)}
+                    cy={yScale(y)}
+                    r={POINT_RADIUS}
+                    fill={theme.palette.background.paper}
+                    stroke={pointColor}
+                    strokeWidth={2}
+                  />
+                );
+              })}
 
               {Y_TICKS.map((tick) => (
                 <text
