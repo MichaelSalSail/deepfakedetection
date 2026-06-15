@@ -186,7 +186,15 @@ EYEBLINK_CSV_COLUMNS = [
     "timestamp_s",
     "score",
     "label",
+    "classification",
 ]
+
+BLINK_LABEL_TO_CLASSIFICATION = {
+    "missing": -2,
+    "unknown": -1,
+    "closed": 1,
+    "open": 2,
+}
 
 
 def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None):
@@ -195,7 +203,7 @@ def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None)
 
     Args:
         frame_rows: list of dicts with keys frame_num, total_frames,
-                    timestamp_s, score, label.
+                    timestamp_s, score, label, classification.
         output_path: path to save the .csv
         total_frames: used on error path when frame_rows is empty
         total_seconds: used on error path when frame_rows is empty
@@ -216,6 +224,7 @@ def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None)
                     frame_index, total_frames, duration),
                 "score": math.nan,
                 "label": "missing",
+                "classification": BLINK_LABEL_TO_CLASSIFICATION["missing"],
             })
         blinks_df = pd.DataFrame(rows, columns=EYEBLINK_CSV_COLUMNS)
     else:

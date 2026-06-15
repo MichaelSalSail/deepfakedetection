@@ -19,7 +19,7 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
-                             eyeblink_csv
+                             eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_TEMP_FILES = (
@@ -254,6 +254,7 @@ def _blink_frame_row(frame_index, total_frames, total_seconds, label, score=None
         "timestamp_s": _blink_frame_timestamp(frame_index, total_frames, total_seconds),
         "score": round(score, 2) if score is not None else math.nan,
         "label": label,
+        "classification": BLINK_LABEL_TO_CLASSIFICATION[label],
     }
 
 
