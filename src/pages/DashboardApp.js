@@ -23,6 +23,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Page from "../components/Page.js";
 import {
   Eyeblinks,
+  BLINK_CARD_MIN_WIDTH,
   OtherOutputs,
   DFDscore,
   EyeBlinkTimelineChart,
@@ -586,8 +587,21 @@ export default function DashboardApp() {
               alignItems: "stretch",
             }}
           >
-            <Box sx={{ width: { xs: "100%", md: "40%" }, minWidth: 0 }}>
-              <Grid container spacing={1} alignItems="stretch" sx={{ height: "100%" }}>
+            <Box
+              sx={{
+                width: { xs: "100%", md: "auto" },
+                flexShrink: 0,
+              }}
+            >
+              <Grid
+                container
+                spacing={1}
+                alignItems="stretch"
+                sx={{
+                  height: "100%",
+                  width: { md: BLINK_CARD_MIN_WIDTH * 2 + 8 },
+                }}
+              >
                 <Grid item xs={6} sx={{ display: "flex" }}>
                   <Eyeblinks results={results} color_card={blink_classes[3]} />
                 </Grid>
@@ -602,7 +616,7 @@ export default function DashboardApp() {
                 </Grid>
               </Grid>
             </Box>
-            <Box sx={{ width: { xs: "100%", md: "60%" }, minWidth: 0, display: "flex" }}>
+            <Box sx={{ flex: 1, minWidth: 0, display: "flex" }}>
               <EyeBlinkTimelineChart />
             </Box>
           </Box>

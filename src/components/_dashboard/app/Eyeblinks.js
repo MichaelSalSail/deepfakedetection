@@ -9,11 +9,15 @@ import { Card, Typography } from "@mui/material";
 
 // ----------------------------------------------------------------------
 
+export const BLINK_CARD_MIN_WIDTH = 200;
+
 const cardLayout = {
   boxShadow: "none",
   textAlign: "center",
   height: "100%",
   width: "100%",
+  minWidth: BLINK_CARD_MIN_WIDTH,
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
@@ -118,68 +122,40 @@ const IconWrapperStyle4 = styled("div")(({ theme }) => ({
   backgroundImage: `linear-gradient(135deg, ${alpha(BLINK_CLOSED.dark, 0)} 0%, ${alpha(BLINK_CLOSED.dark, 0.24)} 100%)`,
 }));
 
-// ----------------------------------------------------------------------
+const BLINK_CARD_CONFIG = {
+  missing: {
+    Root: RootStyle1,
+    IconWrapper: IconWrapperStyle1,
+    icon: closeSquareOutlined,
+    classification: -2,
+    subtext: "of frames are missing",
+  },
+  unknown: {
+    Root: RootStyle2,
+    IconWrapper: IconWrapperStyle2,
+    icon: questionCircleOutlined,
+    classification: -1,
+    subtext: "of frames are unknown",
+  },
+  open: {
+    Root: RootStyle3,
+    IconWrapper: IconWrapperStyle3,
+    icon: eyeFilled,
+    classification: 2,
+    subtext: "of frames have open eyes",
+  },
+  closed: {
+    Root: RootStyle4,
+    IconWrapper: IconWrapperStyle4,
+    icon: eyeInvisibleFilled,
+    classification: 1,
+    subtext: "of frames have closed eyes",
+  },
+};
 
-export default function Eyeblinks(input) {
-  // 4 possible components to represent 4 different eye blink model classifications.
-  if(input["color_card"]==="missing")
-  {
-    return (
-      <RootStyle1>
-        <IconWrapperStyle1>
-          <Icon icon={closeSquareOutlined} width={24} height={24} />
-        </IconWrapperStyle1>
-        <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-        <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
-          of frames are missing
-        </Typography>
-      </RootStyle1>
-    );
-  }
-  else if(input["color_card"]==="unknown")
-  {
-    return (
-      <RootStyle2>
-      <IconWrapperStyle2>
-        <Icon icon={questionCircleOutlined} width={24} height={24} />
-      </IconWrapperStyle2>
-      <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-      <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
-        of frames are unknown
-      </Typography>
-    </RootStyle2>
-    );
-  }
-  else if(input["color_card"]==="open")
-  {
-    return (
-      <RootStyle3>
-        <IconWrapperStyle3>
-          <Icon icon={eyeFilled} width={24} height={24} />
-        </IconWrapperStyle3>
-        <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-        <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
-          of frames have open eyes
-        </Typography>
-      </RootStyle3>
-    );
-  }
-  else if(input["color_card"]==="closed")
-  {
-    return (
-      <RootStyle4>
-        <IconWrapperStyle4>
-          <Icon icon={eyeInvisibleFilled} width={24} height={24} />
-        </IconWrapperStyle4>
-        <Typography variant="h5">{input["results"]["models"][1][input["color_card"]]} %</Typography>
-        <Typography variant="caption" sx={{ opacity: 0.72, display: "block" }}>
-          of frames have closed eyes
-        </Typography>
-      </RootStyle4>
-    );
-  }
-  else
-  {
+function BlinkCard({ results, colorCard }) {
+  const config = BLINK_CARD_CONFIG[colorCard];
+  if (!config) {
     return (
       <RootStyle1>
         <IconWrapperStyle1>
@@ -192,4 +168,44 @@ export default function Eyeblinks(input) {
       </RootStyle1>
     );
   }
+
+  const { Root, IconWrapper, icon, classification, subtext } = config;
+  const percent = results["models"][1][colorCard];
+
+  return (
+    <Root>
+      <Typography
+        variant="caption"
+        sx={{
+          position: "absolute",
+          top: 8,
+          right: 10,
+          fontWeight: 700,
+          fontFamily: "Monospace",
+          opacity: 0.75,
+          lineHeight: 1,
+        }}
+      >
+        {classification}
+      </Typography>
+      <IconWrapper>
+        <Icon icon={icon} width={24} height={24} />
+      </IconWrapper>
+      <Typography variant="h5">{percent} %</Typography>
+      <Typography
+        variant="caption"
+        sx={{ opacity: 0.72, display: "block", whiteSpace: "nowrap", px: 0.5 }}
+      >
+        {subtext}
+      </Typography>
+    </Root>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+export default function Eyeblinks(input) {
+  return (
+    <BlinkCard results={input["results"]} colorCard={input["color_card"]} />
+  );
 }
