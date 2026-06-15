@@ -10,6 +10,7 @@ const Y_TICKS = [-2, -1, 0, 1, 2];
 const X_TICKS = Array.from({ length: DURATION_SECONDS + 1 }, (_, i) => i);
 
 const MARGIN = { top: 12, right: 20, bottom: 40, left: 52 };
+const POINT_RADIUS = 4;
 
 // missing=-2, unknown=-1, closed=1, open=2 — fixed placeholder at each whole second
 const PLACEHOLDER_DATA = [
@@ -111,6 +112,18 @@ export default function EyeBlinkTimelineChart() {
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
+
+              {PLACEHOLDER_DATA.map(([x, y]) => (
+                <circle
+                  key={`point-${x}`}
+                  cx={xScale(x)}
+                  cy={yScale(y)}
+                  r={POINT_RADIUS}
+                  fill={theme.palette.background.paper}
+                  stroke={lineColor}
+                  strokeWidth={2}
+                />
+              ))}
 
               {Y_TICKS.map((tick) => (
                 <text
