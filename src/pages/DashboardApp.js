@@ -25,12 +25,10 @@ import {
   Eyeblinks,
   OtherOutputs,
   DFDscore,
-  Display_Wait,
   EyeBlinkTimelineChart,
   GeminiFrameAnalysis,
   ModelTimingLog,
 } from "../components/_dashboard/app/index.js";
-import estimate_runtime from "../utils/Wait.js";
 import { hasAnyModelError } from "../utils/modelTimingStatus.js";
 import FileSaver from 'file-saver';
 
@@ -102,8 +100,6 @@ const default_values={"models": require('../utils/result_default.json')}
 let data_switched = 0;
 // current file duration (sec).
 let fileduration = 1;
-// contain the settimeout() for progress bar
-var progress_timeout;
 
 export default function DashboardApp() {
   // current uploaded file preview URL
@@ -129,8 +125,6 @@ export default function DashboardApp() {
 
   // the model starts loading when a user clicks 'Generate Results' and finishes once the GET request is received.
   const [modelLoading, setModelLoading] = useState(false);
-  // has the progress bar w/ value finished?
-  const [progressBarDone, setProgressBarDone] = useState(false);
   // cache-bust subject face crop after each successful results fetch
   const [subjectImageKey, setSubjectImageKey] = useState(0);
 
@@ -163,13 +157,7 @@ export default function DashboardApp() {
     setAnalysisError(false);
     setModelLoading(true);
     console.log("Video has a duration of", fileduration, "seconds.");
-    console.log("Will this have a first video runtime delay?", data_switched===0);
-    console.log("Each progress bar tick will take", estimate_runtime(fileduration, data_switched===0), "milliseconds");
     obtainResults();
-    // once the time is up for progress bar w/ value, the progress bar is done
-    progress_timeout=setTimeout(() => {
-      setProgressBarDone(true);
-    }, estimate_runtime(fileduration, data_switched===0)*100);
   };
 
   const saveVideoToBackend = (fileToSave) => {
@@ -267,11 +255,7 @@ export default function DashboardApp() {
       setSubjectImageKey(Date.now())
       // the process attached w/ 'Generate Results' has ended, update the count
       switched();
-      // the request is complete, remove all loading icons and progress bars
-      setProgressBarDone(false);
       setModelLoading(false);
-      // clear the lingering timeout() from wait_for_models()
-      clearTimeout(progress_timeout);
       if (hasAnyModelError(temp.models)) {
         setAnalysisErrorMessage(ANALYSIS_MODEL_ERROR_MESSAGE);
         setAnalysisError(true);
@@ -279,9 +263,7 @@ export default function DashboardApp() {
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
       switched();
-      setProgressBarDone(false);
       setModelLoading(false);
-      clearTimeout(progress_timeout);
       setAnalysisErrorMessage(ANALYSIS_REQUEST_FAILED_MESSAGE);
       setAnalysisError(true);
       console.log(error)
@@ -504,13 +486,7 @@ export default function DashboardApp() {
                 <Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mb: 1.5 }}>
                   Analysis runs locally. For fastest results, use a 10 to 20 second video.
                 </Typography>
-                {(progressBarDone && results["models"][0]["DFD"] === 0) ? (
-                  <Box sx={{ width: "100%" }}>
-                    <LinearProgress />
-                  </Box>
-                ) : (
-                  <Display_Wait per_increment={estimate_runtime(fileduration, data_switched === 0)} />
-                )}
+                <LinearProgress />
               </Box>
             ) : null}
           </Box>
