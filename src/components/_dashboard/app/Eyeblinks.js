@@ -5,15 +5,17 @@ import eyeFilled from "@iconify/icons-ant-design/eye-filled.js";
 import eyeInvisibleFilled from "@iconify/icons-ant-design/eye-invisible-filled.js";
 // material
 import { alpha, styled } from "@mui/material/styles/index.js";
-import { Card, Typography } from "@mui/material";
+import { Box, Card, Typography } from "@mui/material";
 
 // ----------------------------------------------------------------------
 
-export const BLINK_CARD_MIN_WIDTH = 200;
+// Longest subtext: "of frames have closed eyes" — single-line at caption size
+export const BLINK_CARD_MIN_WIDTH = 176;
+
+export const BLINK_CARDS_ORDER = ["open", "closed", "unknown", "missing"];
 
 const cardLayout = {
   boxShadow: "none",
-  textAlign: "center",
   height: "100%",
   width: "100%",
   minWidth: BLINK_CARD_MIN_WIDTH,
@@ -38,86 +40,76 @@ const BLINK_CLOSED = {
 
 const RootStyle1 = styled(Card)(({ theme }) => ({
   ...cardLayout,
-  padding: theme.spacing(2, 1),
+  padding: theme.spacing(0.75, 1),
   color: theme.palette.error.darker,
   backgroundColor: theme.palette.error.lighter,
 }));
 
 const RootStyle2 = styled(Card)(({ theme }) => ({
   ...cardLayout,
-  padding: theme.spacing(2, 1),
+  padding: theme.spacing(0.75, 1),
   color: theme.palette.error.dark,
   backgroundColor: alpha(theme.palette.error.light, 0.35),
 }));
 
 const RootStyle3 = styled(Card)(({ theme }) => ({
   ...cardLayout,
-  padding: theme.spacing(2, 1),
+  padding: theme.spacing(0.75, 1),
   color: BLINK_OPEN.darker,
   backgroundColor: BLINK_OPEN.lighter,
 }));
 
 const RootStyle4 = styled(Card)(({ theme }) => ({
   ...cardLayout,
-  padding: theme.spacing(2, 1),
+  padding: theme.spacing(0.75, 1),
   color: BLINK_CLOSED.darker,
   backgroundColor: BLINK_CLOSED.lighter,
 }));
 
 const IconWrapperStyle1 = styled("div")(({ theme }) => ({
-  margin: "auto",
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(5),
-  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(1),
+  flexShrink: 0,
+  width: theme.spacing(4),
+  height: theme.spacing(4),
   color: theme.palette.error.dark,
-  backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.error.dark,
-    0
-  )} 0%, ${alpha(theme.palette.error.dark, 0.24)} 100%)`,
+  backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.error.dark, 0)} 0%, ${alpha(theme.palette.error.dark, 0.24)} 100%)`,
 }));
 
 const IconWrapperStyle2 = styled("div")(({ theme }) => ({
-  margin: "auto",
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(5),
-  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(1),
+  flexShrink: 0,
+  width: theme.spacing(4),
+  height: theme.spacing(4),
   color: theme.palette.error.main,
-  backgroundImage: `linear-gradient(135deg, ${alpha(
-    theme.palette.error.main,
-    0
-  )} 0%, ${alpha(theme.palette.error.main, 0.2)} 100%)`,
+  backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0)} 0%, ${alpha(theme.palette.error.main, 0.2)} 100%)`,
 }));
 
 const IconWrapperStyle3 = styled("div")(({ theme }) => ({
-  margin: "auto",
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(5),
-  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(1),
+  flexShrink: 0,
+  width: theme.spacing(4),
+  height: theme.spacing(4),
   color: BLINK_OPEN.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(BLINK_OPEN.dark, 0)} 0%, ${alpha(BLINK_OPEN.dark, 0.24)} 100%)`,
 }));
 
 const IconWrapperStyle4 = styled("div")(({ theme }) => ({
-  margin: "auto",
   display: "flex",
   borderRadius: "50%",
   alignItems: "center",
-  width: theme.spacing(5),
-  height: theme.spacing(5),
   justifyContent: "center",
-  marginBottom: theme.spacing(1),
+  flexShrink: 0,
+  width: theme.spacing(4),
+  height: theme.spacing(4),
   color: BLINK_CLOSED.dark,
   backgroundImage: `linear-gradient(135deg, ${alpha(BLINK_CLOSED.dark, 0)} 0%, ${alpha(BLINK_CLOSED.dark, 0.24)} 100%)`,
 }));
@@ -159,9 +151,8 @@ function BlinkCard({ results, colorCard }) {
     return (
       <RootStyle1>
         <IconWrapperStyle1>
-          <Icon icon={eyeInvisibleFilled} width={24} height={24} />
+          <Icon icon={eyeInvisibleFilled} width={20} height={20} />
         </IconWrapperStyle1>
-        <Typography variant="h3">{1000} %</Typography>
         <Typography variant="subtitle2" sx={{ opacity: 0.99 }}>
           this is an error
         </Typography>
@@ -178,8 +169,8 @@ function BlinkCard({ results, colorCard }) {
         variant="caption"
         sx={{
           position: "absolute",
-          top: 8,
-          right: 10,
+          top: 6,
+          right: 8,
           fontWeight: 700,
           fontFamily: "Monospace",
           opacity: 0.75,
@@ -188,13 +179,25 @@ function BlinkCard({ results, colorCard }) {
       >
         {classification}
       </Typography>
-      <IconWrapper>
-        <Icon icon={icon} width={24} height={24} />
-      </IconWrapper>
-      <Typography variant="h5">{percent} %</Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 0.75,
+          mb: 0.25,
+        }}
+      >
+        <IconWrapper>
+          <Icon icon={icon} width={20} height={20} />
+        </IconWrapper>
+        <Typography variant="h6" sx={{ lineHeight: 1 }}>
+          {percent} %
+        </Typography>
+      </Box>
       <Typography
         variant="caption"
-        sx={{ opacity: 0.72, display: "block", whiteSpace: "nowrap", px: 0.5 }}
+        sx={{ opacity: 0.72, display: "block", whiteSpace: "nowrap", px: 0.25 }}
       >
         {subtext}
       </Typography>
@@ -203,6 +206,26 @@ function BlinkCard({ results, colorCard }) {
 }
 
 // ----------------------------------------------------------------------
+
+export function BlinkCardsStack({ results }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        height: "100%",
+        width: { xs: "100%", md: BLINK_CARD_MIN_WIDTH },
+      }}
+    >
+      {BLINK_CARDS_ORDER.map((colorCard) => (
+        <Box key={colorCard} sx={{ flex: 1, display: "flex", minHeight: 0 }}>
+          <BlinkCard results={results} colorCard={colorCard} />
+        </Box>
+      ))}
+    </Box>
+  );
+}
 
 export default function Eyeblinks(input) {
   return (

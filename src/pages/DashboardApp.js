@@ -2,7 +2,6 @@ import {useState, useEffect} from "react";
 // material
 import {
   Box,
-  Grid,
   Container,
   Typography,
   Button,
@@ -22,8 +21,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 // components
 import Page from "../components/Page.js";
 import {
-  Eyeblinks,
-  BLINK_CARD_MIN_WIDTH,
+  BlinkCardsStack,
   OtherOutputs,
   DFDscore,
   EyeBlinkTimelineChart,
@@ -93,8 +91,6 @@ const alertWithProgressSx = {
   overflow: "hidden",
 };
 
-// all major classifications for eye blink model
-const blink_classes=["missing","unknown","open","closed"];
 // default values for model outputs
 const default_values={"models": require('../utils/result_default.json')}
 // cumulative total of file uploads and 'Generate Results' clicks
@@ -587,34 +583,8 @@ export default function DashboardApp() {
               alignItems: "stretch",
             }}
           >
-            <Box
-              sx={{
-                width: { xs: "100%", md: "auto" },
-                flexShrink: 0,
-              }}
-            >
-              <Grid
-                container
-                spacing={1}
-                alignItems="stretch"
-                sx={{
-                  height: "100%",
-                  width: { md: BLINK_CARD_MIN_WIDTH * 2 + 8 },
-                }}
-              >
-                <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[3]} />
-                </Grid>
-                <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[2]} />
-                </Grid>
-                <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[0]} />
-                </Grid>
-                <Grid item xs={6} sx={{ display: "flex" }}>
-                  <Eyeblinks results={results} color_card={blink_classes[1]} />
-                </Grid>
-              </Grid>
+            <Box sx={{ flexShrink: 0, display: "flex", minHeight: 0 }}>
+              <BlinkCardsStack results={results} />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex" }}>
               <EyeBlinkTimelineChart />
