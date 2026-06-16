@@ -1,5 +1,6 @@
 import { Box, Card, Typography } from "@mui/material";
 import { formatBlinkLabelDisplay } from "../../../utils/blinkClassification.js";
+import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 
 const PLACEHOLDER_FRAME = "001/155";
 const PLACEHOLDER_TIMESTAMP = "0.27s";
@@ -7,14 +8,20 @@ const PLACEHOLDER_SCORE = "0.99";
 
 function DetailRow({ label, value, emphasized = false }) {
   return (
-    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
-      <Typography variant="body2" color="text.secondary">
+    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ fontSize: "0.8125rem", lineHeight: 1.25 }}
+      >
         {label}:
       </Typography>
       <Typography
-        variant="body2"
+        variant="caption"
         color={emphasized ? "text.primary" : "text.secondary"}
         sx={{
+          fontSize: "0.8125rem",
+          lineHeight: 1.25,
           fontWeight: emphasized ? 600 : 400,
           textTransform: emphasized ? "capitalize" : "none",
         }}
@@ -57,42 +64,58 @@ export default function EyeBlinkPointLabelCard({ selectedRow = null }) {
       variant="outlined"
       sx={{
         px: 2,
-        py: 1.5,
+        py: 1,
         width: "100%",
         maxWidth: 200,
+        height: BLINK_TIMELINE_ROW_HEIGHT,
         boxShadow: "none",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
       <Box
         sx={{
-          width: "100%",
-          aspectRatio: "1",
-          borderRadius: 2,
-          overflow: "hidden",
-          bgcolor: "grey.100",
-          border: "1px dashed",
-          borderColor: "grey.300",
+          flex: 1,
+          minHeight: 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          align="center"
-          sx={{ px: 1.5, lineHeight: 1.35 }}
+        <Box
+          sx={{
+            height: "100%",
+            maxWidth: "100%",
+            aspectRatio: "1",
+            borderRadius: 2,
+            overflow: "hidden",
+            bgcolor: "grey.100",
+            border: "1px dashed",
+            borderColor: "grey.300",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          Frame
-        </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            align="center"
+            sx={{ px: 1.5, lineHeight: 1.35 }}
+          >
+            Frame
+          </Typography>
+        </Box>
       </Box>
 
       <Box
         sx={{
-          mt: 1.5,
+          mt: 0.75,
+          flexShrink: 0,
           display: "flex",
           flexDirection: "column",
-          gap: 0.75,
+          gap: 0.375,
         }}
       >
         <DetailRow label="Frame" value={frameDisplay} />
