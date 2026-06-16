@@ -30,6 +30,7 @@ import {
   ModelTimingLog,
 } from "../components/_dashboard/app/index.js";
 import { hasAnyModelError } from "../utils/modelTimingStatus.js";
+import { parseEyeblinkCsv } from "../utils/parseEyeblinkCsv.js";
 import FileSaver from 'file-saver';
 
 import axios from "axios";
@@ -126,6 +127,7 @@ export default function DashboardApp() {
   // cache-bust subject face crop after each successful results fetch
   const [subjectImageKey, setSubjectImageKey] = useState(0);
   const [selectedBlinkPoint, setSelectedBlinkPoint] = useState(null);
+  const [blinkTimelineRows, setBlinkTimelineRows] = useState(null);
 
   useEffect(() => {
     if (!uploadSuccess) {
@@ -155,6 +157,7 @@ export default function DashboardApp() {
   const wait_for_models = () => {
     setAnalysisError(false);
     setSelectedBlinkPoint(null);
+    setBlinkTimelineRows(null);
     setModelLoading(true);
     console.log("Video has a duration of", fileduration, "seconds.");
     obtainResults();
@@ -211,6 +214,7 @@ export default function DashboardApp() {
     // reset results to default
     setResults(default_values)
     setSelectedBlinkPoint(null);
+    setBlinkTimelineRows(null);
 
     // obtain the video duration
     var reader = new FileReader();
@@ -261,6 +265,14 @@ export default function DashboardApp() {
         setAnalysisErrorMessage(ANALYSIS_MODEL_ERROR_MESSAGE);
         setAnalysisError(true);
       }
+      axios.get('http://localhost:5001/home/eyeblink_csv', { responseType: 'text' })
+        .then((csvResponse) => {
+          setBlinkTimelineRows(parseEyeblinkCsv(csvResponse.data));
+        })
+        .catch((csvError) => {
+          console.log(csvError);
+          setBlinkTimelineRows([]);
+        });
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
       switched();
@@ -592,6 +604,8 @@ export default function DashboardApp() {
             </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>
               <EyeBlinkTimelineChart
+                data={blinkTimelineRows}
+                analysisComplete={data_switched % 2 === 1}
                 selectedPoint={selectedBlinkPoint}
                 onPointSelect={setSelectedBlinkPoint}
               />

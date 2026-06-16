@@ -3,13 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, Box, Tooltip, useTheme } from "@mui/material";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 
-const DURATION_SECONDS = 10;
+const PLACEHOLDER_DURATION_SECONDS = 10;
 const CHART_CONTENT_PADDING_Y = 24;
 const CHART_HEIGHT = BLINK_TIMELINE_ROW_HEIGHT - CHART_CONTENT_PADDING_Y;
 const Y_MIN = -2;
 const Y_MAX = 2;
 const Y_TICKS = [-2, -1, 0, 1, 2];
-const X_TICKS = Array.from({ length: DURATION_SECONDS + 1 }, (_, i) => i);
+const PLACEHOLDER_X_TICKS = Array.from(
+  { length: PLACEHOLDER_DURATION_SECONDS + 1 },
+  (_, i) => i
+);
 
 const MARGIN = { top: 12, right: 20, bottom: 40, left: 52 };
 const POINT_RADIUS = 4;
@@ -102,7 +105,33 @@ function getPointColor(y, positiveColor, negativeColor, neutralColor) {
   return neutralColor;
 }
 
-export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSelect }) {
+function getDurationSeconds(chartData) {
+  if (!chartData.length) {
+    return 1;
+  }
+  const maxTimestamp = Math.max(...chartData.map(([x]) => x));
+  return Math.max(maxTimestamp, 1);
+}
+
+function getXTicks(durationSeconds) {
+  const tickStep = durationSeconds <= 15 ? 1 : 5;
+  const ticks = [];
+  for (let tick = 0; tick <= durationSeconds; tick += tickStep) {
+    ticks.push(tick);
+  }
+  const lastTick = ticks[ticks.length - 1];
+  if (lastTick < durationSeconds) {
+    ticks.push(Math.ceil(durationSeconds));
+  }
+  return ticks;
+}
+
+export default function EyeBlinkTimelineChart({
+  data = null,
+  analysisComplete = false,
+  selectedPoint = null,
+  onPointSelect,
+}) {
   const theme = useTheme();
   const containerRef = useRef(null);
   const [width, setWidth] = useState(0);
@@ -121,6 +150,15 @@ export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSel
     return () => observer.disconnect();
   }, []);
 
+  const useLiveData = analysisComplete && data?.length > 0;
+  const chartData = useLiveData
+    ? data.map((row) => [row.timestamp_s, row.classification])
+    : PLACEHOLDER_DATA;
+  const durationSeconds = useLiveData
+    ? getDurationSeconds(chartData)
+    : PLACEHOLDER_DURATION_SECONDS;
+  const xTicks = useLiveData ? getXTicks(durationSeconds) : PLACEHOLDER_X_TICKS;
+
   const axisColor = theme.palette.text.primary;
   const labelColor = theme.palette.text.secondary;
   const gridColor = theme.palette.divider;
@@ -131,12 +169,12 @@ export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSel
   const plotWidth = Math.max(width - MARGIN.left - MARGIN.right, 0);
   const plotHeight = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 
-  const xScale = (value) => MARGIN.left + (value / DURATION_SECONDS) * plotWidth;
+  const xScale = (value) => MARGIN.left + (value / durationSeconds) * plotWidth;
   const yScale = (value) =>
     MARGIN.top + ((Y_MAX - value) / (Y_MAX - Y_MIN)) * plotHeight;
 
   const zeroY = yScale(0);
-  const coloredSegments = buildColoredSegments(PLACEHOLDER_DATA);
+  const coloredSegments = buildColoredSegments(chartData);
 
   const isPointSelected = (x, y) =>
     selectedPoint !== null && selectedPoint.x === x && selectedPoint.y === y;
@@ -207,7 +245,7 @@ export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSel
                 />
               ))}
 
-              {PLACEHOLDER_DATA.map(([x, y]) => {
+              {chartData.map(([x, y], index) => {
                 const pointColor = getPointColor(
                   y,
                   positiveColor,
@@ -217,7 +255,7 @@ export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSel
                 const selected = isPointSelected(x, y);
                 return (
                   <circle
-                    key={`point-${x}`}
+                    key={`point-${index}`}
                     cx={xScale(x)}
                     cy={yScale(y)}
                     r={selected ? POINT_RADIUS_SELECTED : POINT_RADIUS}
@@ -257,7 +295,7 @@ export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSel
                 Classification
               </text>
 
-              {X_TICKS.map((tick) => {
+              {xTicks.map((tick) => {
                 const x = xScale(tick);
                 return (
                   <g key={`x-${tick}`}>
@@ -296,9 +334,9 @@ export default function EyeBlinkTimelineChart({ selectedPoint = null, onPointSel
               </text>
             </svg>
 
-            {PLACEHOLDER_DATA.map(([x, y]) => (
+            {chartData.map(([x, y], index) => (
               <Tooltip
-                key={`tooltip-${x}`}
+                key={`tooltip-${index}`}
                 title={`(x, y) = (${x}, ${y})`}
                 arrow
                 placement="top"
