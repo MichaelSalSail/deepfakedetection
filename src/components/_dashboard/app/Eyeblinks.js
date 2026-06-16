@@ -10,8 +10,8 @@ import { BLINK_OPEN, BLINK_CLOSED } from "../../../utils/blinkClassification.js"
 
 // ----------------------------------------------------------------------
 
-// Longest subtext: "of frames have closed eyes" — single-line at caption size
-export const BLINK_CARD_MIN_WIDTH = 176;
+// Longest subtext: "closed eyes" — single-line at caption size; row 1 fits icon + "100.00 %"
+export const BLINK_CARD_MIN_WIDTH = 144;
 // Shared row height for the 4-card stack and the timeline chart beside it
 export const BLINK_TIMELINE_ROW_HEIGHT = 252;
 
@@ -111,28 +111,28 @@ const BLINK_CARD_CONFIG = {
     IconWrapper: IconWrapperStyle1,
     icon: closeSquareOutlined,
     classification: -2,
-    subtext: "of frames are missing",
+    subtext: "missing",
   },
   unknown: {
     Root: RootStyle2,
     IconWrapper: IconWrapperStyle2,
     icon: questionCircleOutlined,
     classification: -1,
-    subtext: "of frames are unknown",
+    subtext: "unknown",
   },
   open: {
     Root: RootStyle3,
     IconWrapper: IconWrapperStyle3,
     icon: eyeFilled,
     classification: 2,
-    subtext: "of frames have open eyes",
+    subtext: "open eyes",
   },
   closed: {
     Root: RootStyle4,
     IconWrapper: IconWrapperStyle4,
     icon: eyeInvisibleFilled,
     classification: 1,
-    subtext: "of frames have closed eyes",
+    subtext: "closed eyes",
   },
 };
 
@@ -177,12 +177,13 @@ function BlinkCard({ results, colorCard }) {
           justifyContent: "center",
           gap: 0.75,
           mb: 0.25,
+          whiteSpace: "nowrap",
         }}
       >
         <IconWrapper>
           <Icon icon={icon} width={20} height={20} />
         </IconWrapper>
-        <Typography variant="h6" sx={{ lineHeight: 1 }}>
+        <Typography variant="h6" sx={{ lineHeight: 1, whiteSpace: "nowrap" }}>
           {percent} %
         </Typography>
       </Box>
