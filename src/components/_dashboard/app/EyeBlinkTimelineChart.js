@@ -166,8 +166,15 @@ export default function EyeBlinkTimelineChart({
   const zeroY = yScale(0);
   const coloredSegments = buildColoredSegments(chartData);
 
-  const isPointSelected = (x, y) =>
-    selectedPoint !== null && selectedPoint.x === x && selectedPoint.y === y;
+  const isPointSelected = (x, y, index) => {
+    if (!selectedPoint) {
+      return false;
+    }
+    if (useLiveData) {
+      return selectedPoint.frame_num === data[index]?.frame_num;
+    }
+    return selectedPoint.x === x && selectedPoint.y === y;
+  };
 
   return (
     <Card
@@ -237,7 +244,7 @@ export default function EyeBlinkTimelineChart({
 
               {chartData.map(([x, y], index) => {
                 const pointColor = getClassificationStrokeColor(y, theme);
-                const selected = isPointSelected(x, y);
+                const selected = isPointSelected(x, y, index);
                 return (
                   <circle
                     key={`point-${index}`}
@@ -330,8 +337,8 @@ export default function EyeBlinkTimelineChart({
                   component="button"
                   type="button"
                   aria-label={`(x, y) = (${x}, ${y})`}
-                  aria-pressed={isPointSelected(x, y)}
-                  onClick={() => onPointSelect?.({ x, y })}
+                  aria-pressed={isPointSelected(x, y, index)}
+                  onClick={() => onPointSelect?.(useLiveData ? data[index] : { x, y })}
                   sx={{
                     position: "absolute",
                     left: xScale(x),

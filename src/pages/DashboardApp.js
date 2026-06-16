@@ -612,10 +612,7 @@ export default function DashboardApp() {
             </Box>
           </Box>
           <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
-            <EyeBlinkPointLabelCard
-              classification={selectedBlinkPoint?.y ?? null}
-              timestamp={selectedBlinkPoint?.x ?? null}
-            />
+            <EyeBlinkPointLabelCard selectedRow={selectedBlinkPoint} />
           </Box>
         </Box>
 
