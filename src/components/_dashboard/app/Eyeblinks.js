@@ -12,6 +12,8 @@ import { BLINK_OPEN, BLINK_CLOSED } from "../../../utils/blinkClassification.js"
 
 // Longest subtext: "closed eyes" — single-line at caption size; row 1 fits icon + "100.00 %"
 export const BLINK_CARD_MIN_WIDTH = 144;
+// Point label card: fits icon row + detail text with minimal horizontal padding
+export const BLINK_POINT_CARD_WIDTH = 152;
 // Shared row height for the 4-card stack and the timeline chart beside it
 export const BLINK_TIMELINE_ROW_HEIGHT = 252;
 
@@ -205,17 +207,34 @@ export function BlinkCardsStack({ results }) {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: 1,
         height: BLINK_TIMELINE_ROW_HEIGHT,
         minHeight: BLINK_TIMELINE_ROW_HEIGHT,
         width: { xs: "100%", md: BLINK_CARD_MIN_WIDTH },
       }}
     >
-      {BLINK_CARDS_ORDER.map((colorCard) => (
-        <Box key={colorCard} sx={{ flex: 1, display: "flex", minHeight: 0 }}>
-          <BlinkCard results={results} colorCard={colorCard} />
-        </Box>
-      ))}
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        align="center"
+        sx={{ display: "block", mb: 0.5, lineHeight: 1.2, flexShrink: 0 }}
+      >
+        (% of total frames)
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          flex: 1,
+          minHeight: 0,
+        }}
+      >
+        {BLINK_CARDS_ORDER.map((colorCard) => (
+          <Box key={colorCard} sx={{ flex: 1, display: "flex", minHeight: 0 }}>
+            <BlinkCard results={results} colorCard={colorCard} />
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 }

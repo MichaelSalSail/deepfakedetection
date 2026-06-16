@@ -22,6 +22,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Page from "../components/Page.js";
 import {
   BlinkCardsStack,
+  BLINK_POINT_CARD_WIDTH,
   OtherOutputs,
   DFDscore,
   EyeBlinkTimelineChart,
@@ -553,11 +554,11 @@ export default function DashboardApp() {
           </Box>
         </Box>
 
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 1.5 }}>
           <GeminiFrameAnalysis />
         </Box>
 
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 1 }}>
           <Box
             sx={{
               display: "flex",
@@ -602,6 +603,17 @@ export default function DashboardApp() {
             <Box sx={{ flexShrink: 0, display: "flex", minHeight: 0 }}>
               <BlinkCardsStack results={results} />
             </Box>
+            <Box
+              sx={{
+                flexShrink: 0,
+                width: { xs: "100%", md: BLINK_POINT_CARD_WIDTH },
+                maxWidth: BLINK_POINT_CARD_WIDTH,
+                display: "flex",
+                minHeight: 0,
+              }}
+            >
+              <EyeBlinkPointLabelCard selectedRow={selectedBlinkPoint} />
+            </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>
               <EyeBlinkTimelineChart
                 data={blinkTimelineRows}
@@ -610,9 +622,6 @@ export default function DashboardApp() {
                 onPointSelect={setSelectedBlinkPoint}
               />
             </Box>
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
-            <EyeBlinkPointLabelCard selectedRow={selectedBlinkPoint} />
           </Box>
         </Box>
 

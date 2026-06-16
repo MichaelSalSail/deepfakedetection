@@ -8,7 +8,7 @@ const PLACEHOLDER_SCORE = "0.99";
 
 function DetailRow({ label, value, emphasized = false }) {
   return (
-    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 0.5 }}>
       <Typography
         variant="caption"
         color="text.secondary"
@@ -63,10 +63,9 @@ export default function EyeBlinkPointLabelCard({ selectedRow = null }) {
     <Card
       variant="outlined"
       sx={{
-        px: 2,
+        px: 1,
         py: 1,
         width: "100%",
-        maxWidth: 200,
         height: BLINK_TIMELINE_ROW_HEIGHT,
         boxShadow: "none",
         display: "flex",
