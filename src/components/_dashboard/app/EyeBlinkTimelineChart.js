@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 // material
 import { Card, CardContent, Box, Tooltip, useTheme } from "@mui/material";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
+import { getClassificationStrokeColor } from "../../../utils/blinkClassification.js";
 
 const PLACEHOLDER_DURATION_SECONDS = 10;
 const CHART_CONTENT_PADDING_Y = 24;
@@ -95,16 +96,6 @@ function buildColoredSegments(data) {
   return segments;
 }
 
-function getPointColor(y, positiveColor, negativeColor, neutralColor) {
-  if (y > 0) {
-    return positiveColor;
-  }
-  if (y < 0) {
-    return negativeColor;
-  }
-  return neutralColor;
-}
-
 function getDurationSeconds(chartData) {
   if (!chartData.length) {
     return 1;
@@ -164,7 +155,6 @@ export default function EyeBlinkTimelineChart({
   const gridColor = theme.palette.divider;
   const positiveColor = theme.palette.success.main;
   const negativeColor = theme.palette.error.main;
-  const neutralColor = theme.palette.grey[500];
 
   const plotWidth = Math.max(width - MARGIN.left - MARGIN.right, 0);
   const plotHeight = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
@@ -246,12 +236,7 @@ export default function EyeBlinkTimelineChart({
               ))}
 
               {chartData.map(([x, y], index) => {
-                const pointColor = getPointColor(
-                  y,
-                  positiveColor,
-                  negativeColor,
-                  neutralColor
-                );
+                const pointColor = getClassificationStrokeColor(y, theme);
                 const selected = isPointSelected(x, y);
                 return (
                   <circle

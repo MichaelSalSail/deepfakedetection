@@ -6,6 +6,7 @@ import eyeInvisibleFilled from "@iconify/icons-ant-design/eye-invisible-filled.j
 // material
 import { alpha, styled } from "@mui/material/styles/index.js";
 import { Box, Card, Typography } from "@mui/material";
+import { BLINK_OPEN, BLINK_CLOSED } from "../../../utils/blinkClassification.js";
 
 // ----------------------------------------------------------------------
 
@@ -26,18 +27,6 @@ const cardLayout = {
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-};
-
-const BLINK_OPEN = {
-  lighter: "#F3E8FF",
-  dark: "#6D28D9",
-  darker: "#5B21B6",
-};
-
-const BLINK_CLOSED = {
-  lighter: "#EEF2FF",
-  dark: "#4338CA",
-  darker: "#312E81",
 };
 
 const RootStyle1 = styled(Card)(({ theme }) => ({
