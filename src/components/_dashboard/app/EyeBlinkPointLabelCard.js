@@ -2,9 +2,7 @@ import { Box, Card, Typography } from "@mui/material";
 import { formatBlinkLabelDisplay } from "../../../utils/blinkClassification.js";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 
-const PLACEHOLDER_FRAME = "001/155";
-const PLACEHOLDER_TIMESTAMP = "0.27s";
-const PLACEHOLDER_SCORE = "0.99";
+const EMPTY_VALUE = "—";
 
 function DetailRow({ label, value, emphasized = false }) {
   return (
@@ -38,24 +36,19 @@ export default function EyeBlinkPointLabelCard({ selectedRow = null }) {
 
   const frameDisplay = hasCsvRow
     ? `${String(selectedRow.frame_num).padStart(3, "0")}/${selectedRow.total_frames}`
-    : PLACEHOLDER_FRAME;
+    : EMPTY_VALUE;
 
   const timestampDisplay = hasCsvRow
     ? `${Number(selectedRow.timestamp_s).toFixed(2)}s`
-    : selectedRow?.x != null
-      ? `${Number(selectedRow.x).toFixed(2)}s`
-      : PLACEHOLDER_TIMESTAMP;
+    : EMPTY_VALUE;
 
   const scoreDisplay = hasCsvRow
     ? selectedRow.score != null
       ? selectedRow.score.toFixed(2)
-      : "—"
-    : PLACEHOLDER_SCORE;
+      : EMPTY_VALUE
+    : EMPTY_VALUE;
 
-  const classification = hasCsvRow
-    ? selectedRow.classification
-    : selectedRow?.y ?? null;
-
+  const classification = hasCsvRow ? selectedRow.classification : null;
   const labelDisplay = formatBlinkLabelDisplay(classification);
   const hasSelection = classification !== null && classification !== undefined;
 

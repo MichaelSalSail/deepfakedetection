@@ -4,14 +4,9 @@ import { Card, CardContent, Box, Tooltip, useTheme } from "@mui/material";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 import { getClassificationStrokeColor } from "../../../utils/blinkClassification.js";
 
-const PLACEHOLDER_DURATION_SECONDS = 10;
-const CHART_CONTENT_PADDING_Y = 24;
-const CHART_HEIGHT = BLINK_TIMELINE_ROW_HEIGHT - CHART_CONTENT_PADDING_Y;
-const Y_MIN = -2;
-const Y_MAX = 2;
-const Y_TICKS = [-2, -1, 0, 1, 2];
-const PLACEHOLDER_X_TICKS = Array.from(
-  { length: PLACEHOLDER_DURATION_SECONDS + 1 },
+const EMPTY_CHART_DURATION_SECONDS = 10;
+const EMPTY_CHART_X_TICKS = Array.from(
+  { length: EMPTY_CHART_DURATION_SECONDS + 1 },
   (_, i) => i
 );
 
@@ -20,20 +15,11 @@ const POINT_RADIUS = 4;
 const POINT_RADIUS_SELECTED = 6;
 const POINT_HIT_SIZE = 20;
 
-// missing=-2, unknown=-1, closed=1, open=2 — fixed placeholder at each whole second
-const PLACEHOLDER_DATA = [
-  [0, 2],
-  [1, 2],
-  [2, 1],
-  [3, -1],
-  [4, -2],
-  [5, -2],
-  [6, -1],
-  [7, 1],
-  [8, 2],
-  [9, 2],
-  [10, 1],
-];
+const CHART_CONTENT_PADDING_Y = 24;
+const CHART_HEIGHT = BLINK_TIMELINE_ROW_HEIGHT - CHART_CONTENT_PADDING_Y;
+const Y_MIN = -2;
+const Y_MAX = 2;
+const Y_TICKS = [-2, -1, 0, 1, 2];
 
 function buildLinePath(points, xScale, yScale) {
   return points
@@ -56,6 +42,10 @@ function sideForEdge(y1, y2) {
 }
 
 function buildColoredSegments(data) {
+  if (!data.length) {
+    return [];
+  }
+
   const expanded = [data[0]];
   for (let i = 1; i < data.length; i += 1) {
     const crossing = getZeroCrossing(data[i - 1], data[i]);
@@ -144,11 +134,11 @@ export default function EyeBlinkTimelineChart({
   const useLiveData = analysisComplete && data?.length > 0;
   const chartData = useLiveData
     ? data.map((row) => [row.timestamp_s, row.classification])
-    : PLACEHOLDER_DATA;
+    : [];
   const durationSeconds = useLiveData
     ? getDurationSeconds(chartData)
-    : PLACEHOLDER_DURATION_SECONDS;
-  const xTicks = useLiveData ? getXTicks(durationSeconds) : PLACEHOLDER_X_TICKS;
+    : EMPTY_CHART_DURATION_SECONDS;
+  const xTicks = useLiveData ? getXTicks(durationSeconds) : EMPTY_CHART_X_TICKS;
 
   const axisColor = theme.palette.text.primary;
   const labelColor = theme.palette.text.secondary;
