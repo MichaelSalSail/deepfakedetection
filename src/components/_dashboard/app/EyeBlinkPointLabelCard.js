@@ -25,9 +25,13 @@ function DetailRow({ label, value, emphasized = false }) {
   );
 }
 
-export default function EyeBlinkPointLabelCard({ classification }) {
+export default function EyeBlinkPointLabelCard({ classification, timestamp = null }) {
   const labelDisplay = formatBlinkLabelDisplay(classification);
   const hasSelection = classification !== null && classification !== undefined;
+  const timestampDisplay =
+    timestamp !== null && timestamp !== undefined
+      ? `${Number(timestamp).toFixed(2)}s`
+      : PLACEHOLDER_TIMESTAMP;
 
   return (
     <Card
@@ -73,7 +77,7 @@ export default function EyeBlinkPointLabelCard({ classification }) {
         }}
       >
         <DetailRow label="Frame" value={PLACEHOLDER_FRAME} />
-        <DetailRow label="Timestamp" value={PLACEHOLDER_TIMESTAMP} />
+        <DetailRow label="Timestamp" value={timestampDisplay} />
         <DetailRow label="Score" value={PLACEHOLDER_SCORE} />
         <DetailRow label="Label" value={labelDisplay} emphasized={hasSelection} />
       </Box>
