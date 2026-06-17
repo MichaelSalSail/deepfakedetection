@@ -1,6 +1,7 @@
 import cv2
 import os, sys
 import re
+import shutil
 import statistics
 import time
 import numpy as np
@@ -281,6 +282,11 @@ def _save_blink_full_frame(frame_rgb, frame_num, output_dir):
     cv2.imwrite(os.path.join(output_dir, f"{frame_num}.png"), frame_bgr)
 
 
+def _copy_blink_frame_file(source_path, frame_num, output_dir):
+    dest = os.path.join(output_dir, f"{frame_num}.png")
+    shutil.copy2(source_path, dest)
+
+
 def _top5_prediction_lines(image_path):
     image = load_img(image_path, target_size=(224, 224))
     image = img_to_array(image)
@@ -458,11 +464,10 @@ def blink_on_video(video_path, fps, facedet, use_model):
 
         if len(faces) > 0:
             for frame_index, frame_data in enumerate(faces):
-                if full_frames is not None and frame_index < len(full_frames):
-                    _save_blink_full_frame(
-                        full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
-
                 if len(frame_data["faces"]) == 0:
+                    if full_frames is not None and frame_index < len(full_frames):
+                        _save_blink_full_frame(
+                            full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
                     all_missing += 1
                     blink_frame_rows.append(
                         _print_blink_frame_log(
@@ -487,6 +492,11 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     crop_result = save_crop('face_detected.png', 'face_tight_crop.png', 'current_upload/temp/')
                     if crop_result is False:
                         all_unknown += 1
+                        _copy_blink_frame_file(
+                            os.path.join(BLINK_TEMP_DIR, "face_detected.png"),
+                            frame_index + 1,
+                            BLINK_ALL_FRAMES_DIR,
+                        )
                         blink_frame_rows.append(
                             _print_blink_frame_log(
                                 frame_index, total_frames, total_seconds, "unknown")
@@ -503,6 +513,11 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 _print_blink_frame_log(
                                     frame_index, total_frames, total_seconds, "open", blink_score)
                             )
+                            _copy_blink_frame_file(
+                                os.path.join(BLINK_TEMP_DIR, "face_tight_crop.png"),
+                                frame_index + 1,
+                                BLINK_ALL_FRAMES_DIR,
+                            )
                         else:
                             all_closed += 1
                             if (not subject_reference_open_locked and not subject_reference_closed_provisional):
@@ -511,6 +526,11 @@ def blink_on_video(video_path, fps, facedet, use_model):
                             blink_frame_rows.append(
                                 _print_blink_frame_log(
                                     frame_index, total_frames, total_seconds, "closed", blink_score)
+                            )
+                            _copy_blink_frame_file(
+                                os.path.join(BLINK_TEMP_DIR, "face_tight_crop.png"),
+                                frame_index + 1,
+                                BLINK_ALL_FRAMES_DIR,
                             )
                     plt.clf()
 
