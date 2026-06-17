@@ -22,6 +22,7 @@ from helper_functions import isotropically_resize_image, make_square_image, more
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
+BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
 BLINK_TEMP_FILES = (
     "face_detected.png",
     "face_tight_crop.png",
@@ -268,6 +269,18 @@ def _print_blink_frame_log(frame_index, total_frames, total_seconds, label, scor
     return row
 
 
+def _prepare_blink_all_frames_dir():
+    os.makedirs(BLINK_ALL_FRAMES_DIR, exist_ok=True)
+    for filename in os.listdir(BLINK_ALL_FRAMES_DIR):
+        if filename.endswith(".png"):
+            os.remove(os.path.join(BLINK_ALL_FRAMES_DIR, filename))
+
+
+def _save_blink_full_frame(frame_rgb, frame_num, output_dir):
+    frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.join(output_dir, f"{frame_num}.png"), frame_bgr)
+
+
 def _top5_prediction_lines(image_path):
     image = load_img(image_path, target_size=(224, 224))
     image = img_to_array(image)
@@ -406,12 +419,21 @@ def blink_on_video(video_path, fps, facedet, use_model):
     total_seconds = round(
         (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
     total_frames = math.floor(fps * total_seconds)
+    _prepare_blink_all_frames_dir()
 
     all_open, all_closed, all_unknown, all_missing = 0, 0, 0, 0
     blink_frame_rows = []
 
     try:
         video_reader = VideoReader()
+        full_frames_result = video_reader.read_frames(video_path, num_frames=total_frames)
+        full_frames = full_frames_result[0] if full_frames_result else None
+        if full_frames is None:
+            print(
+                "blink_on_video() warning: could not read full video frames for PNG export; "
+                "skipping all_video_frames saves."
+            )
+
         frames_per_video = total_frames
         video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
         face_extractor = FaceExtractor(video_read_fn, facedet)
@@ -436,6 +458,10 @@ def blink_on_video(video_path, fps, facedet, use_model):
 
         if len(faces) > 0:
             for frame_index, frame_data in enumerate(faces):
+                if full_frames is not None and frame_index < len(full_frames):
+                    _save_blink_full_frame(
+                        full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
+
                 if len(frame_data["faces"]) == 0:
                     all_missing += 1
                     blink_frame_rows.append(
@@ -489,6 +515,9 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     plt.clf()
 
             for frame_index in range(len(faces), total_frames):
+                if full_frames is not None and frame_index < len(full_frames):
+                    _save_blink_full_frame(
+                        full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
                 blink_frame_rows.append(
                     _blink_frame_row(frame_index, total_frames, total_seconds, "missing")
                 )
