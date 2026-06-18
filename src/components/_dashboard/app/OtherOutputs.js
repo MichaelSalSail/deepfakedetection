@@ -10,6 +10,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import { isNoFaceScenario } from "../../../utils/modelTimingStatus.js";
+
 const FACE_CROP_URL = "http://localhost:5001/home/face_crop";
 const SUBJECT_HELP =
   "These models focus on one person only—the cropped face shown here. " +
@@ -46,13 +48,14 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const person = results["models"][2];
   const shades = results["models"][3];
+  const noFace = analysisComplete && isNoFaceScenario(results.models);
   const isPlaceholder = !analysisComplete || (person["age"] === 0 && person["gender"] === "??");
 
   const age = formatAge(person["age"], isPlaceholder);
   const gender = formatGender(person["gender"], isPlaceholder);
   const showEyewear = !isPlaceholder && shades["shades"];
 
-  const imageUrl = analysisComplete && !imageLoadFailed
+  const imageUrl = analysisComplete && !noFace && !imageLoadFailed
     ? `${FACE_CROP_URL}?t=${subjectImageKey}`
     : null;
 
@@ -134,9 +137,11 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
                 align="center"
                 sx={{ px: 1.5, lineHeight: 1.35 }}
               >
-                {analysisComplete
-                  ? "Crop unavailable"
-                  : "Crop appears after analysis"}
+                {!analysisComplete
+                  ? "Crop appears after analysis"
+                  : noFace
+                    ? "No face detected"
+                    : "Crop unavailable"}
               </Typography>
             )}
           </Box>

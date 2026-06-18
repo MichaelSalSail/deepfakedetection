@@ -1,9 +1,17 @@
 // material
 import { Card, CardContent, Typography } from "@mui/material";
+import { isNoFaceScenario } from "../../../utils/modelTimingStatus.js";
 
 // ----------------------------------------------------------------------
 
-function getDfdDisplay(dfdScore) {
+function getDfdDisplay(dfdScore, noFace = false) {
+  if (noFace) {
+    return {
+      color: "grey",
+      verdict: "No reliable score — no face detected.",
+      failureHint: null,
+    };
+  }
   if (dfdScore === 0) {
     return {
       color: "grey",
@@ -35,7 +43,8 @@ function getDfdDisplay(dfdScore) {
 
 export default function DFDscore({ results, prominent = false }) {
   const dfdScore = results["models"][0]["DFD"];
-  const { color, verdict, failureHint } = getDfdDisplay(dfdScore);
+  const noFace = isNoFaceScenario(results.models);
+  const { color, verdict, failureHint } = getDfdDisplay(dfdScore, noFace);
 
   return (
     <Card
@@ -77,7 +86,7 @@ export default function DFDscore({ results, prominent = false }) {
           color={color}
           sx={{
             maxWidth: 320,
-            opacity: dfdScore === 0 || dfdScore === 50 ? 0.9 : 1,
+            opacity: dfdScore === 0 || dfdScore === 50 || noFace ? 0.9 : 1,
           }}
         >
           {verdict}
