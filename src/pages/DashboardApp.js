@@ -283,7 +283,6 @@ export default function DashboardApp() {
         });
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
-      switched();
       setModelLoading(false);
       setAnalysisErrorMessage(ANALYSIS_REQUEST_FAILED_MESSAGE);
       setAnalysisError(true);

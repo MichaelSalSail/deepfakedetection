@@ -1,6 +1,7 @@
 import cv2
 import json
 import math
+import os
 import numpy as np
 import pandas as pd
 import face_recognition
@@ -241,5 +242,9 @@ def write_result_update_json(results, output_path):
                  Each dict may include a "runtime" field (seconds, float).
         output_path: path to result_update.json.
     '''
-    with open(output_path, 'w') as outfile:
+    temp_path = output_path + ".tmp"
+    with open(temp_path, "w") as outfile:
         json.dump(results, outfile, indent=2)
+        outfile.flush()
+        os.fsync(outfile.fileno())
+    os.replace(temp_path, output_path)

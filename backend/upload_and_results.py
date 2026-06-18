@@ -18,6 +18,17 @@ def add_cors_headers(response):
 # appropriate local directory and update the user on any
 # changes to result_update.json
 
+def _load_results_json(file_dir, max_attempts=20, retry_delay=0.05):
+    last_error = None
+    for _ in range(max_attempts):
+        try:
+            with open(file_dir) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, ValueError) as exc:
+            last_error = exc
+            time.sleep(retry_delay)
+    raise last_error
+
 @app.route('/home/results', methods = ['GET', 'OPTIONS'])
 def success():
     # Since we are looking for a file modification in the last 2 seconds,
@@ -30,7 +41,7 @@ def success():
     while(abs(curr_time-file_mod_time)>2):
         curr_time=time.time()
         file_mod_time=os.path.getmtime(file_dir)
-    all_data=json.load(open(file_dir))
+    all_data=_load_results_json(file_dir)
     # true->True, false->False... uppercase keywords undefined in JS.
     all_data[3]["shades"]=int(all_data[3]["shades"])
     return {"models" : all_data}
