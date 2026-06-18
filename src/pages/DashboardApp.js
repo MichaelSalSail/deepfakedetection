@@ -619,6 +619,8 @@ export default function DashboardApp() {
                 selectedRow={selectedBlinkPoint}
                 analysisComplete={data_switched % 2 === 1}
                 frameImageKey={subjectImageKey}
+                timelineRows={blinkTimelineRows}
+                onSelectRow={setSelectedBlinkPoint}
               />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>

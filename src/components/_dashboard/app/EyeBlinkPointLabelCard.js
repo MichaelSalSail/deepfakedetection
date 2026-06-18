@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Card, Typography } from "@mui/material";
+import { Box, Card, IconButton, Typography } from "@mui/material";
 import { formatBlinkLabelDisplay } from "../../../utils/blinkClassification.js";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 
@@ -36,6 +36,8 @@ export default function EyeBlinkPointLabelCard({
   selectedRow = null,
   analysisComplete = false,
   frameImageKey = 0,
+  timelineRows = null,
+  onSelectRow,
 }) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
@@ -64,6 +66,29 @@ export default function EyeBlinkPointLabelCard({
     analysisComplete && hasCsvRow && !imageLoadFailed
       ? `${BLINK_FRAME_URL}/${selectedRow.frame_num}?t=${frameImageKey}`
       : null;
+
+  const showNavOverlay =
+    analysisComplete && timelineRows?.length > 0 && hasCsvRow;
+
+  const currentIndex = showNavOverlay
+    ? timelineRows.findIndex((row) => row.frame_num === selectedRow.frame_num)
+    : -1;
+
+  const canGoPrev = currentIndex > 0;
+  const canGoNext =
+    currentIndex >= 0 && currentIndex < timelineRows.length - 1;
+
+  const handlePrev = () => {
+    if (canGoPrev) {
+      onSelectRow?.(timelineRows[currentIndex - 1]);
+    }
+  };
+
+  const handleNext = () => {
+    if (canGoNext) {
+      onSelectRow?.(timelineRows[currentIndex + 1]);
+    }
+  };
 
   useEffect(() => {
     setImageLoadFailed(false);
@@ -94,6 +119,7 @@ export default function EyeBlinkPointLabelCard({
       >
         <Box
           sx={{
+            position: "relative",
             height: "100%",
             maxWidth: "100%",
             aspectRatio: "1",
@@ -130,6 +156,59 @@ export default function EyeBlinkPointLabelCard({
                 ? "Frame unavailable"
                 : "Frame"}
             </Typography>
+          )}
+
+          {showNavOverlay && (
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.25,
+                px: 0.5,
+                py: 0.25,
+                borderRadius: "8px 8px 0 0",
+                bgcolor: "rgba(0, 0, 0, 0.45)",
+              }}
+            >
+              <IconButton
+                size="small"
+                aria-label="Previous frame"
+                disabled={!canGoPrev}
+                onClick={handlePrev}
+                sx={{
+                  color: "common.white",
+                  p: 0.25,
+                  minWidth: 24,
+                  minHeight: 24,
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  "&.Mui-disabled": { color: "rgba(255, 255, 255, 0.35)" },
+                }}
+              >
+                {"<"}
+              </IconButton>
+              <IconButton
+                size="small"
+                aria-label="Next frame"
+                disabled={!canGoNext}
+                onClick={handleNext}
+                sx={{
+                  color: "common.white",
+                  p: 0.25,
+                  minWidth: 24,
+                  minHeight: 24,
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  "&.Mui-disabled": { color: "rgba(255, 255, 255, 0.35)" },
+                }}
+              >
+                {">"}
+              </IconButton>
+            </Box>
           )}
         </Box>
       </Box>
