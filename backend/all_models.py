@@ -277,6 +277,14 @@ def _prepare_blink_all_frames_dir():
             os.remove(os.path.join(BLINK_ALL_FRAMES_DIR, filename))
 
 
+def _clear_deepface_scratch_files():
+    if not os.path.isdir(BLINK_TEMP_DIR):
+        return
+    for filename in os.listdir(BLINK_TEMP_DIR):
+        if filename.startswith("_deepface_") and filename.endswith(".png"):
+            os.remove(os.path.join(BLINK_TEMP_DIR, filename))
+
+
 def _save_blink_full_frame(frame_rgb, frame_num, output_dir):
     frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
     cv2.imwrite(os.path.join(output_dir, f"{frame_num}.png"), frame_bgr)
@@ -420,6 +428,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
         path = os.path.join(BLINK_TEMP_DIR, filename)
         if os.path.isfile(path):
             os.remove(path)
+
+    _clear_deepface_scratch_files()
 
     video_data = cv2.VideoCapture(video_path)
     total_seconds = round(
