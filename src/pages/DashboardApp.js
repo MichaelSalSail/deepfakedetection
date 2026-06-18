@@ -268,11 +268,14 @@ export default function DashboardApp() {
       }
       axios.get('http://localhost:5001/home/eyeblink_csv', { responseType: 'text' })
         .then((csvResponse) => {
-          setBlinkTimelineRows(parseEyeblinkCsv(csvResponse.data));
+          const rows = parseEyeblinkCsv(csvResponse.data);
+          setBlinkTimelineRows(rows);
+          setSelectedBlinkPoint(rows.length > 0 ? rows[0] : null);
         })
         .catch((csvError) => {
           console.log(csvError);
           setBlinkTimelineRows([]);
+          setSelectedBlinkPoint(null);
         });
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
