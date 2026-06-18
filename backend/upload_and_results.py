@@ -48,6 +48,19 @@ def get_face_crop():
         return "Face crop not found", 404
     return send_file(file_dir, mimetype='image/png')
 
+@app.route('/home/blink_frame/<int:frame_num>', methods=['GET', 'OPTIONS'])
+def get_blink_frame(frame_num):
+    if frame_num < 1:
+        return "Invalid frame number", 400
+    file_dir = os.path.join(
+        APP_PATH,
+        'backend/current_upload/temp/all_video_frames',
+        f'{frame_num}.png',
+    )
+    if not os.path.exists(file_dir):
+        return "Blink frame not found", 404
+    return send_file(file_dir, mimetype='image/png')
+
 @app.route('/home/upload', methods = ['POST', 'OPTIONS'])
 def upload_video():
     if request.method == 'POST':

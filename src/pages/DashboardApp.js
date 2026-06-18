@@ -612,7 +612,11 @@ export default function DashboardApp() {
                 minHeight: 0,
               }}
             >
-              <EyeBlinkPointLabelCard selectedRow={selectedBlinkPoint} />
+              <EyeBlinkPointLabelCard
+                selectedRow={selectedBlinkPoint}
+                analysisComplete={data_switched % 2 === 1}
+                frameImageKey={subjectImageKey}
+              />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>
               <EyeBlinkTimelineChart

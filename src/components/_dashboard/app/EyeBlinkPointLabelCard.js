@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { Box, Card, Typography } from "@mui/material";
 import { formatBlinkLabelDisplay } from "../../../utils/blinkClassification.js";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
 
+const BLINK_FRAME_URL = "http://localhost:5001/home/blink_frame";
 const EMPTY_VALUE = "—";
 
 function DetailRow({ label, value, emphasized = false }) {
@@ -30,7 +32,13 @@ function DetailRow({ label, value, emphasized = false }) {
   );
 }
 
-export default function EyeBlinkPointLabelCard({ selectedRow = null }) {
+export default function EyeBlinkPointLabelCard({
+  selectedRow = null,
+  analysisComplete = false,
+  frameImageKey = 0,
+}) {
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+
   const hasCsvRow =
     selectedRow?.frame_num != null && selectedRow?.total_frames != null;
 
@@ -51,6 +59,15 @@ export default function EyeBlinkPointLabelCard({ selectedRow = null }) {
   const classification = hasCsvRow ? selectedRow.classification : null;
   const labelDisplay = formatBlinkLabelDisplay(classification);
   const hasSelection = classification !== null && classification !== undefined;
+
+  const frameImageUrl =
+    analysisComplete && hasCsvRow && !imageLoadFailed
+      ? `${BLINK_FRAME_URL}/${selectedRow.frame_num}?t=${frameImageKey}`
+      : null;
+
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [frameImageKey, analysisComplete, selectedRow?.frame_num]);
 
   return (
     <Card
@@ -90,14 +107,30 @@ export default function EyeBlinkPointLabelCard({ selectedRow = null }) {
             justifyContent: "center",
           }}
         >
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            align="center"
-            sx={{ px: 1.5, lineHeight: 1.35 }}
-          >
-            Frame
-          </Typography>
+          {frameImageUrl ? (
+            <Box
+              component="img"
+              src={frameImageUrl}
+              alt={`Blink frame ${selectedRow.frame_num}`}
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              onError={() => setImageLoadFailed(true)}
+            />
+          ) : (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              align="center"
+              sx={{ px: 1.5, lineHeight: 1.35 }}
+            >
+              {analysisComplete && hasCsvRow && imageLoadFailed
+                ? "Frame unavailable"
+                : "Frame"}
+            </Typography>
+          )}
         </Box>
       </Box>
 
