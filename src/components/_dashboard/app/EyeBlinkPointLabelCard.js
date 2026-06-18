@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box, Card, IconButton, Typography } from "@mui/material";
 import { formatBlinkLabelDisplay } from "../../../utils/blinkClassification.js";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
@@ -38,8 +38,10 @@ export default function EyeBlinkPointLabelCard({
   frameImageKey = 0,
   timelineRows = null,
   onSelectRow,
+  onFrameImageLoadingChange,
 }) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [frameImageLoading, setFrameImageLoading] = useState(false);
 
   const hasCsvRow =
     selectedRow?.frame_num != null && selectedRow?.total_frames != null;
@@ -78,21 +80,61 @@ export default function EyeBlinkPointLabelCard({
   const canGoNext =
     currentIndex >= 0 && currentIndex < timelineRows.length - 1;
 
+  const finishImageLoading = useCallback(() => {
+    setFrameImageLoading(false);
+  }, []);
+
+  const handleImageLoad = useCallback(() => {
+    finishImageLoading();
+  }, [finishImageLoading]);
+
+  const handleImageError = useCallback(() => {
+    setImageLoadFailed(true);
+    finishImageLoading();
+  }, [finishImageLoading]);
+
+  const handleImageRef = useCallback(
+    (img) => {
+      if (img?.complete) {
+        if (img.naturalWidth > 0) {
+          finishImageLoading();
+        } else {
+          handleImageError();
+        }
+      }
+    },
+    [finishImageLoading, handleImageError]
+  );
+
   const handlePrev = () => {
-    if (canGoPrev) {
-      onSelectRow?.(timelineRows[currentIndex - 1]);
+    if (frameImageLoading || !canGoPrev) {
+      return;
     }
+    onSelectRow?.(timelineRows[currentIndex - 1]);
   };
 
   const handleNext = () => {
-    if (canGoNext) {
-      onSelectRow?.(timelineRows[currentIndex + 1]);
+    if (frameImageLoading || !canGoNext) {
+      return;
     }
+    onSelectRow?.(timelineRows[currentIndex + 1]);
   };
 
   useEffect(() => {
     setImageLoadFailed(false);
   }, [frameImageKey, analysisComplete, selectedRow?.frame_num]);
+
+  useEffect(() => {
+    if (analysisComplete && hasCsvRow && !imageLoadFailed) {
+      setFrameImageLoading(true);
+    } else {
+      setFrameImageLoading(false);
+    }
+  }, [frameImageKey, analysisComplete, selectedRow?.frame_num, imageLoadFailed, hasCsvRow]);
+
+  useEffect(() => {
+    onFrameImageLoadingChange?.(frameImageLoading);
+  }, [frameImageLoading, onFrameImageLoadingChange]);
 
   return (
     <Card
@@ -136,6 +178,8 @@ export default function EyeBlinkPointLabelCard({
           {frameImageUrl ? (
             <Box
               component="img"
+              key={`${selectedRow.frame_num}-${frameImageKey}`}
+              ref={handleImageRef}
               src={frameImageUrl}
               alt={`Blink frame ${selectedRow.frame_num}`}
               sx={{
@@ -143,7 +187,8 @@ export default function EyeBlinkPointLabelCard({
                 height: "100%",
                 objectFit: "cover",
               }}
-              onError={() => setImageLoadFailed(true)}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
           ) : (
             <Typography
@@ -177,7 +222,7 @@ export default function EyeBlinkPointLabelCard({
               <IconButton
                 size="small"
                 aria-label="Previous frame"
-                disabled={!canGoPrev}
+                disabled={!canGoPrev || frameImageLoading}
                 onClick={handlePrev}
                 sx={{
                   color: "common.white",
@@ -194,7 +239,7 @@ export default function EyeBlinkPointLabelCard({
               <IconButton
                 size="small"
                 aria-label="Next frame"
-                disabled={!canGoNext}
+                disabled={!canGoNext || frameImageLoading}
                 onClick={handleNext}
                 sx={{
                   color: "common.white",

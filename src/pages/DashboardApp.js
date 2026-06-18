@@ -129,6 +129,7 @@ export default function DashboardApp() {
   const [subjectImageKey, setSubjectImageKey] = useState(0);
   const [selectedBlinkPoint, setSelectedBlinkPoint] = useState(null);
   const [blinkTimelineRows, setBlinkTimelineRows] = useState(null);
+  const [frameImageLoading, setFrameImageLoading] = useState(false);
 
   useEffect(() => {
     if (!uploadSuccess) {
@@ -159,6 +160,7 @@ export default function DashboardApp() {
     setAnalysisError(false);
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
+    setFrameImageLoading(false);
     setModelLoading(true);
     console.log("Video has a duration of", fileduration, "seconds.");
     obtainResults();
@@ -216,6 +218,7 @@ export default function DashboardApp() {
     setResults(default_values)
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
+    setFrameImageLoading(false);
 
     // obtain the video duration
     var reader = new FileReader();
@@ -276,6 +279,7 @@ export default function DashboardApp() {
           console.log(csvError);
           setBlinkTimelineRows([]);
           setSelectedBlinkPoint(null);
+          setFrameImageLoading(false);
         });
       console.log("Successfully loaded model outputs!")
     }).catch(error => {
@@ -621,6 +625,7 @@ export default function DashboardApp() {
                 frameImageKey={subjectImageKey}
                 timelineRows={blinkTimelineRows}
                 onSelectRow={setSelectedBlinkPoint}
+                onFrameImageLoadingChange={setFrameImageLoading}
               />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>
@@ -629,6 +634,7 @@ export default function DashboardApp() {
                 analysisComplete={data_switched % 2 === 1}
                 selectedPoint={selectedBlinkPoint}
                 onPointSelect={setSelectedBlinkPoint}
+                selectionDisabled={frameImageLoading}
               />
             </Box>
           </Box>

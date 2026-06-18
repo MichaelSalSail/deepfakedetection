@@ -112,6 +112,7 @@ export default function EyeBlinkTimelineChart({
   analysisComplete = false,
   selectedPoint = null,
   onPointSelect,
+  selectionDisabled = false,
 }) {
   const theme = useTheme();
   const containerRef = useRef(null);
@@ -328,7 +329,12 @@ export default function EyeBlinkTimelineChart({
                   type="button"
                   aria-label={`(x, y) = (${x}, ${y})`}
                   aria-pressed={isPointSelected(x, y, index)}
-                  onClick={() => onPointSelect?.(useLiveData ? data[index] : { x, y })}
+                  onClick={() => {
+                    if (selectionDisabled) {
+                      return;
+                    }
+                    onPointSelect?.(useLiveData ? data[index] : { x, y });
+                  }}
                   sx={{
                     position: "absolute",
                     left: xScale(x),
@@ -336,7 +342,8 @@ export default function EyeBlinkTimelineChart({
                     width: POINT_HIT_SIZE,
                     height: POINT_HIT_SIZE,
                     transform: "translate(-50%, -50%)",
-                    cursor: "pointer",
+                    cursor: selectionDisabled ? "default" : "pointer",
+                    pointerEvents: selectionDisabled ? "none" : "auto",
                     border: 0,
                     padding: 0,
                     background: "transparent",
