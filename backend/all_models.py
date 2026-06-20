@@ -319,17 +319,30 @@ def _top5_prediction_lines(image_path):
     return lines
 
 
-def _vgg16_raw_output_indicates_eyewear(raw_output):
-    '''
-    True when any VGG16 top-5 line uses an ImageNet eyewear label.
+def _top5_lines_have_eyewear(lines):
+    for line in lines:
+        match = _TOP5_LABEL_RE.match(line.strip())
+        if match and match.group(1) in EYEWEAR_IMAGENET_LABELS:
+            return True
+    return False
 
-    ImageNet exposes only sunglass (n04355933) and sunglasses (n04356056).
-    Checking "sunglasses" alone misses top-5 rows that list only "sunglass".
-    '''
-    return any(
-        label in EYEWEAR_IMAGENET_LABELS
-        for label in _TOP5_LABEL_RE.findall(raw_output)
+
+def _eyewear_verdict(subject_lines, crop_lines):
+    subject_ok = _top5_lines_have_eyewear(subject_lines)
+    crop_ok = _top5_lines_have_eyewear(crop_lines)
+    shades = subject_ok and crop_ok
+    if shades:
+        note = "Eyewear label in both top-5 lists (subject_reference and face_tight_crop)"
+    elif subject_ok or crop_ok:
+        note = "Eyewear label in one top-5 list only (requires both)"
+    else:
+        note = "No eyewear label in either top-5 list"
+    section = (
+        "VERDICT\n"
+        + "   Eyewear: " + ("detected" if shades else "not detected") + "\n"
+        + "   " + note + "\n"
     )
+    return shades, section
 
 
 def predict_on_video(video_path, fps, device, facedet):
@@ -665,11 +678,14 @@ def detect_shades(image_dir1, image_dir2=""):
     start_time = time.perf_counter()
 
     result = list()
+    subject_lines = []
+    crop_lines = []
 
     try:
         if os.path.exists(image_dir1):
             result.append('SUBJECT_REFERENCE\nTop 5 Object Detection Predictions\n')
-            result.extend(_top5_prediction_lines(image_dir1))
+            subject_lines = _top5_prediction_lines(image_dir1)
+            result.extend(subject_lines)
         else:
             result.append('SUBJECT_REFERENCE (file not found)\nTop 5 Object Detection Predictions\n')
             result.append(PREDICT_TEMPLATE + '\n')
@@ -677,7 +693,8 @@ def detect_shades(image_dir1, image_dir2=""):
         if image_dir2 != "":
             if os.path.exists(image_dir2):
                 result.append('\nFACE_TIGHT_CROP\nTop 5 Object Detection Predictions\n')
-                result.extend(_top5_prediction_lines(image_dir2))
+                crop_lines = _top5_prediction_lines(image_dir2)
+                result.extend(crop_lines)
             else:
                 result.append("\nFACE_TIGHT_CROP (file not found)\nTop 5 Object Detection Predictions\n")
                 result.append(PREDICT_TEMPLATE)
@@ -686,16 +703,20 @@ def detect_shades(image_dir1, image_dir2=""):
             result.append(PREDICT_TEMPLATE)
     except Exception as e:
         print("Error:" + str(e) + "\n")
+        _, verdict_section = _eyewear_verdict([], [])
         shades_result = dict(DEFAULT_SHADES_RESULT)
+        shades_result["raw_output"] = shades_result["raw_output"] + verdict_section
         shades_result["runtime"] = _elapsed_seconds(start_time)
         print(shades_result["raw_output"])
         _print_runtime(start_time)
         return shades_result
 
     raw_output = ''.join(result)
+    shades, verdict_section = _eyewear_verdict(subject_lines, crop_lines)
+    raw_output += verdict_section
     shades_result = {
         "raw_output": raw_output,
-        "shades": _vgg16_raw_output_indicates_eyewear(raw_output),
+        "shades": shades,
         "runtime": _elapsed_seconds(start_time),
     }
     print(raw_output)
