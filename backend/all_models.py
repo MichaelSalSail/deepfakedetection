@@ -37,7 +37,8 @@ _TOP5_LABEL_RE = re.compile(r"^([a-zA-Z0-9_]+) \([\d.]+%\)", re.MULTILINE)
 # ImageNet has only these eyewear classes in VGG16 decode_predictions output.
 EYEWEAR_IMAGENET_LABELS = frozenset({"sunglasses", "sunglass"})
 DEFAULT_AGE_GENDER_RESULT = {
-    "age": 0,
+    "age_min": 0,
+    "age_max": 0,
     "gender_man_score": None,
     "gender_woman_score": None,
     "raw_output": "   Age: ??\nGender: ??\n",
@@ -52,9 +53,10 @@ DEFAULT_SHADES_RESULT = {
 }
 
 
-def _age_gender_result(age, gender_man_score, gender_woman_score, raw_output):
+def _age_gender_result(age_min, age_max, gender_man_score, gender_woman_score, raw_output):
     return {
-        "age": int(age),
+        "age_min": int(age_min),
+        "age_max": int(age_max),
         "gender_man_score": round(gender_man_score, 1) if gender_man_score is not None else None,
         "gender_woman_score": round(gender_woman_score, 1) if gender_woman_score is not None else None,
         "raw_output": raw_output,
@@ -70,6 +72,19 @@ def _gender_scores(gender_value):
     if "Woman" in gender_text:
         return 0.0, 100.0
     return None, None
+
+
+def _format_aggregate_age_line(age_min, age_max):
+    if age_min == 0 and age_max == 0:
+        return "Age: ??"
+    return "Age: {} - {}".format(age_min, age_max)
+
+
+def _aggregate_age_bounds(successful):
+    if not successful:
+        return 0, 0
+    ages = [item["age"] for item in successful]
+    return min(ages), max(ages)
 
 
 def _format_aggregate_gender_line(man, woman):
@@ -158,7 +173,6 @@ def _aggregate_age_gender_analyses(analyses):
     if high_confidence:
         aggregate_man = statistics.mean(item["man"] for item in high_confidence)
         aggregate_woman = statistics.mean(item["woman"] for item in high_confidence)
-        age = int(round(statistics.median(item["age"] for item in high_confidence)))
         source_note = (
             "Gender from {} high-confidence image(s) "
             "(margin > {}%)".format(len(high_confidence), GENDER_CONFIDENCE_MARGIN)
@@ -169,8 +183,6 @@ def _aggregate_age_gender_analyses(analyses):
             None,
         )
         if subject is None:
-            successful_ages = [item["age"] for item in successful]
-            age = int(round(statistics.median(successful_ages))) if successful_ages else 0
             source_note = (
                 "Gender unavailable (no image met margin threshold; "
                 "subject_reference missing or failed)"
@@ -178,19 +190,20 @@ def _aggregate_age_gender_analyses(analyses):
         else:
             aggregate_man = subject["man"]
             aggregate_woman = subject["woman"]
-            age = subject["age"]
             source_note = (
                 "Gender from subject_reference fallback "
                 "(no image met margin threshold of {}%)".format(GENDER_CONFIDENCE_MARGIN)
             )
 
+    age_min, age_max = _aggregate_age_bounds(successful)
+
     aggregate_section = (
         "AGGREGATE\n"
-        + "   Age: " + str(age) + "\n"
+        + "   " + _format_aggregate_age_line(age_min, age_max) + "\n"
         + "   " + _format_aggregate_gender_line(aggregate_man, aggregate_woman) + "\n"
         + "   " + source_note + "\n"
     )
-    return age, aggregate_man, aggregate_woman, aggregate_section
+    return age_min, age_max, aggregate_man, aggregate_woman, aggregate_section
 
 
 def _format_runtime(elapsed_seconds):
@@ -592,11 +605,11 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
     Predict age and gender from subject_reference, face_tight_crop, and face_detected.
 
     Gender uses high-confidence images only (|Man - Woman| > GENDER_CONFIDENCE_MARGIN).
-    Falls back to subject_reference when none qualify. Age is the median across the
-    images used for the gender decision.
+    Falls back to subject_reference when none qualify. Age is the min-max range across
+    all successful crop analyses.
 
     Returns:
-        {"age", "gender_man_score", "gender_woman_score", "raw_output"} dict.
+        {"age_min", "age_max", "gender_man_score", "gender_woman_score", "raw_output"} dict.
     '''
 
     print('\ndetect_age_gender()')
@@ -620,9 +633,13 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
             result["runtime"] = _elapsed_seconds(start_time)
             return result
 
-        age, gender_man_score, gender_woman_score, aggregate_section = _aggregate_age_gender_analyses(analyses)
+        age_min, age_max, gender_man_score, gender_woman_score, aggregate_section = (
+            _aggregate_age_gender_analyses(analyses)
+        )
         raw_output += aggregate_section
-        result = _age_gender_result(age, gender_man_score, gender_woman_score, raw_output)
+        result = _age_gender_result(
+            age_min, age_max, gender_man_score, gender_woman_score, raw_output
+        )
         result["runtime"] = _elapsed_seconds(start_time)
         print(raw_output)
         _print_runtime(start_time)

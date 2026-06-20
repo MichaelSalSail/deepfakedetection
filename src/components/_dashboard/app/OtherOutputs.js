@@ -17,11 +17,14 @@ const SUBJECT_HELP =
   "These models focus on one person only—the cropped face shown here. " +
   "If your video has multiple people, the results describe just this subject.";
 
-function formatAge(age, isPlaceholder) {
-  if (isPlaceholder || age === 0) {
+function formatAgeRange(ageMin, ageMax, isPlaceholder) {
+  if (isPlaceholder || (ageMin === 0 && ageMax === 0)) {
     return "?";
   }
-  return String(age);
+  if (ageMin === ageMax) {
+    return String(ageMin);
+  }
+  return `${ageMin} – ${ageMax}`;
 }
 
 function formatGenderScore(score, isPlaceholder) {
@@ -151,11 +154,12 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
   const noFace = analysisComplete && isNoFaceScenario(results.models);
   const isPlaceholder =
     !analysisComplete ||
-    (person["age"] === 0 &&
+    (person.age_min === 0 &&
+      person.age_max === 0 &&
       person.gender_man_score == null &&
       person.gender_woman_score == null);
 
-  const age = formatAge(person["age"], isPlaceholder);
+  const ageDisplay = formatAgeRange(person.age_min, person.age_max, isPlaceholder);
   const manScore = person.gender_man_score;
   const womanScore = person.gender_woman_score;
   const showEyewear = !isPlaceholder && shades["shades"];
@@ -264,7 +268,7 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
               gap: showEyewear ? (compact ? 1 : 1.5) : 4,
             }}
           >
-            <FactRow label="Age" value={age} centered={!showEyewear} />
+            <FactRow label="Age" value={ageDisplay} centered={!showEyewear} />
             <GenderScoresBox
               manScore={manScore}
               womanScore={womanScore}

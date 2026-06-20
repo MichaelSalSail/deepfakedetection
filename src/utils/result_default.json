@@ -11,7 +11,8 @@
       "runtime": 0
     }, 
     {
-      "age": 0, 
+      "age_min": 0,
+      "age_max": 0,
       "gender_man_score": null,
       "gender_woman_score": null,
       "raw_output": "   Age: ??\nGender: ??\n",
