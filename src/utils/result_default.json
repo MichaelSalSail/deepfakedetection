@@ -12,7 +12,8 @@
     }, 
     {
       "age": 0, 
-      "gender": "??", 
+      "gender_man_score": null,
+      "gender_woman_score": null,
       "raw_output": "   Age: ??\nGender: ??\n",
       "runtime": 0
     }, 

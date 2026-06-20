@@ -38,7 +38,8 @@ _TOP5_LABEL_RE = re.compile(r"^([a-zA-Z0-9_]+) \([\d.]+%\)", re.MULTILINE)
 EYEWEAR_IMAGENET_LABELS = frozenset({"sunglasses", "sunglass"})
 DEFAULT_AGE_GENDER_RESULT = {
     "age": 0,
-    "gender": "??",
+    "gender_man_score": None,
+    "gender_woman_score": None,
     "raw_output": "   Age: ??\nGender: ??\n",
 }
 DEFAULT_SHADES_RESULT = {
@@ -51,23 +52,11 @@ DEFAULT_SHADES_RESULT = {
 }
 
 
-def _normalize_gender(gender_value):
-    if isinstance(gender_value, dict):
-        if gender_value.get("Man", 0) >= gender_value.get("Woman", 0):
-            return "Man"
-        return "Woman"
-    gender_text = str(gender_value)
-    if "Man" in gender_text:
-        return "Man"
-    if "Woman" in gender_text:
-        return "Woman"
-    return "??"
-
-
-def _age_gender_result(age, gender, raw_output):
+def _age_gender_result(age, gender_man_score, gender_woman_score, raw_output):
     return {
         "age": int(age),
-        "gender": gender,
+        "gender_man_score": round(gender_man_score, 1) if gender_man_score is not None else None,
+        "gender_woman_score": round(gender_woman_score, 1) if gender_woman_score is not None else None,
         "raw_output": raw_output,
     }
 
@@ -169,7 +158,6 @@ def _aggregate_age_gender_analyses(analyses):
     if high_confidence:
         aggregate_man = statistics.mean(item["man"] for item in high_confidence)
         aggregate_woman = statistics.mean(item["woman"] for item in high_confidence)
-        gender = "Man" if aggregate_man >= aggregate_woman else "Woman"
         age = int(round(statistics.median(item["age"] for item in high_confidence)))
         source_note = (
             "Gender from {} high-confidence image(s) "
@@ -183,7 +171,6 @@ def _aggregate_age_gender_analyses(analyses):
         if subject is None:
             successful_ages = [item["age"] for item in successful]
             age = int(round(statistics.median(successful_ages))) if successful_ages else 0
-            gender = "??"
             source_note = (
                 "Gender unavailable (no image met margin threshold; "
                 "subject_reference missing or failed)"
@@ -191,7 +178,6 @@ def _aggregate_age_gender_analyses(analyses):
         else:
             aggregate_man = subject["man"]
             aggregate_woman = subject["woman"]
-            gender = _normalize_gender(subject["gender_raw"])
             age = subject["age"]
             source_note = (
                 "Gender from subject_reference fallback "
@@ -204,7 +190,7 @@ def _aggregate_age_gender_analyses(analyses):
         + "   " + _format_aggregate_gender_line(aggregate_man, aggregate_woman) + "\n"
         + "   " + source_note + "\n"
     )
-    return age, gender, aggregate_section
+    return age, aggregate_man, aggregate_woman, aggregate_section
 
 
 def _format_runtime(elapsed_seconds):
@@ -610,7 +596,7 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
     images used for the gender decision.
 
     Returns:
-        {"age", "gender", "raw_output"} dict.
+        {"age", "gender_man_score", "gender_woman_score", "raw_output"} dict.
     '''
 
     print('\ndetect_age_gender()')
@@ -634,9 +620,9 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
             result["runtime"] = _elapsed_seconds(start_time)
             return result
 
-        age, gender, aggregate_section = _aggregate_age_gender_analyses(analyses)
+        age, gender_man_score, gender_woman_score, aggregate_section = _aggregate_age_gender_analyses(analyses)
         raw_output += aggregate_section
-        result = _age_gender_result(age, gender, raw_output)
+        result = _age_gender_result(age, gender_man_score, gender_woman_score, raw_output)
         result["runtime"] = _elapsed_seconds(start_time)
         print(raw_output)
         _print_runtime(start_time)

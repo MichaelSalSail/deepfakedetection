@@ -24,17 +24,23 @@ function formatAge(age, isPlaceholder) {
   return String(age);
 }
 
-function formatGender(gender, isPlaceholder) {
-  if (isPlaceholder || gender === "??") {
+function formatGenderScore(score, isPlaceholder) {
+  if (isPlaceholder || score == null) {
     return "?";
   }
-  return gender;
+  return `${Number(score).toFixed(1)}%`;
 }
+
+const STAT_LABEL_SX = {
+  display: "block",
+  mb: 0.75,
+  lineHeight: 1.2,
+};
 
 function FactRow({ label, value, centered = false }) {
   return (
     <Box sx={{ textAlign: centered ? "center" : "left" }}>
-      <Typography variant="caption" color="text.secondary" display="block">
+      <Typography variant="caption" color="text.secondary" sx={STAT_LABEL_SX}>
         {label}
       </Typography>
       <Typography variant="h6" fontWeight="medium" lineHeight={1.2}>
@@ -44,15 +50,76 @@ function FactRow({ label, value, centered = false }) {
   );
 }
 
+function GenderScoresTable({ manScore, womanScore, isPlaceholder }) {
+  return (
+    <Box
+      sx={{
+        display: "inline-block",
+        border: "1px solid",
+        borderColor: "grey.300",
+        borderRadius: 1,
+        overflow: "hidden",
+        minWidth: 120,
+      }}
+    >
+      {[
+        { label: "Man", score: manScore },
+        { label: "Woman", score: womanScore },
+      ].map(({ label, score }, index) => (
+        <Box
+          key={label}
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: 1.5,
+            px: 1.25,
+            py: 0.5,
+            borderTop: index > 0 ? "1px solid" : "none",
+            borderColor: "grey.300",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="body2" fontWeight="medium" lineHeight={1.2}>
+            {label}
+          </Typography>
+          <Typography variant="body2" fontWeight="medium" lineHeight={1.2}>
+            {formatGenderScore(score, isPlaceholder)}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function GenderScoresBox({ manScore, womanScore, isPlaceholder, centered = false }) {
+  return (
+    <Box sx={{ textAlign: centered ? "center" : "left" }}>
+      <Typography variant="caption" color="text.secondary" sx={STAT_LABEL_SX}>
+        Gender
+      </Typography>
+      <GenderScoresTable
+        manScore={manScore}
+        womanScore={womanScore}
+        isPlaceholder={isPlaceholder}
+      />
+    </Box>
+  );
+}
+
 export default function OtherOutputs({ results, analysisComplete, subjectImageKey, compact = false }) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const person = results["models"][2];
   const shades = results["models"][3];
   const noFace = analysisComplete && isNoFaceScenario(results.models);
-  const isPlaceholder = !analysisComplete || (person["age"] === 0 && person["gender"] === "??");
+  const isPlaceholder =
+    !analysisComplete ||
+    (person["age"] === 0 &&
+      person.gender_man_score == null &&
+      person.gender_woman_score == null);
 
   const age = formatAge(person["age"], isPlaceholder);
-  const gender = formatGender(person["gender"], isPlaceholder);
+  const manScore = person.gender_man_score;
+  const womanScore = person.gender_woman_score;
   const showEyewear = !isPlaceholder && shades["shades"];
 
   const imageUrl = analysisComplete && !noFace && !imageLoadFailed
@@ -155,12 +222,17 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
               flexDirection: showEyewear ? (compact ? "row" : "column") : "row",
               flexWrap: showEyewear && compact ? "wrap" : "nowrap",
               justifyContent: showEyewear && compact ? "space-around" : "center",
-              alignItems: showEyewear && !compact ? "flex-start" : "center",
+              alignItems: "flex-start",
               gap: showEyewear ? (compact ? 1 : 1.5) : 4,
             }}
           >
             <FactRow label="Age" value={age} centered={!showEyewear} />
-            <FactRow label="Gender" value={gender} centered={!showEyewear} />
+            <GenderScoresBox
+              manScore={manScore}
+              womanScore={womanScore}
+              isPlaceholder={isPlaceholder}
+              centered={!showEyewear}
+            />
             {showEyewear && (
               <FactRow label="Eyewear" value="Detected" />
             )}
