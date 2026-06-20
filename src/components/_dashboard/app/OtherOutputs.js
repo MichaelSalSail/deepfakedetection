@@ -31,6 +31,12 @@ function formatGenderScore(score, isPlaceholder) {
   return `${Number(score).toFixed(1)}%`;
 }
 
+function genderScoreColor(score) {
+  if (score >= 60) return "green";
+  if (score <= 40) return "red";
+  return "warning.dark";
+}
+
 const STAT_LABEL_SX = {
   display: "block",
   mb: 0.75,
@@ -82,7 +88,16 @@ function GenderScoresTable({ manScore, womanScore, isPlaceholder }) {
           <Typography variant="body2" fontWeight="medium" lineHeight={1.2}>
             {label}
           </Typography>
-          <Typography variant="body2" fontWeight="medium" lineHeight={1.2}>
+          <Typography
+            variant="body2"
+            fontWeight="medium"
+            lineHeight={1.2}
+            color={
+              isPlaceholder || score == null
+                ? undefined
+                : genderScoreColor(Number(score))
+            }
+          >
             {formatGenderScore(score, isPlaceholder)}
           </Typography>
         </Box>
