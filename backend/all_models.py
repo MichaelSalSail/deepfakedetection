@@ -83,6 +83,12 @@ def _gender_scores(gender_value):
     return None, None
 
 
+def _format_aggregate_gender_line(man, woman):
+    if man is None or woman is None:
+        return "Gender: ??"
+    return "Gender: | Man: {:.2f}% | Woman: {:.2f}% |".format(man, woman)
+
+
 def _deepface_analyze_still(image_path):
     img = cv2.imread(image_path)
     if img is None:
@@ -157,10 +163,13 @@ def _aggregate_age_gender_analyses(analyses):
         and item.get("margin", 0) > GENDER_CONFIDENCE_MARGIN
     ]
 
+    aggregate_man = None
+    aggregate_woman = None
+
     if high_confidence:
-        avg_man = statistics.mean(item["man"] for item in high_confidence)
-        avg_woman = statistics.mean(item["woman"] for item in high_confidence)
-        gender = "Man" if avg_man >= avg_woman else "Woman"
+        aggregate_man = statistics.mean(item["man"] for item in high_confidence)
+        aggregate_woman = statistics.mean(item["woman"] for item in high_confidence)
+        gender = "Man" if aggregate_man >= aggregate_woman else "Woman"
         age = int(round(statistics.median(item["age"] for item in high_confidence)))
         source_note = (
             "Gender from {} high-confidence image(s) "
@@ -180,6 +189,8 @@ def _aggregate_age_gender_analyses(analyses):
                 "subject_reference missing or failed)"
             )
         else:
+            aggregate_man = subject["man"]
+            aggregate_woman = subject["woman"]
             gender = _normalize_gender(subject["gender_raw"])
             age = subject["age"]
             source_note = (
@@ -190,7 +201,7 @@ def _aggregate_age_gender_analyses(analyses):
     aggregate_section = (
         "AGGREGATE\n"
         + "   Age: " + str(age) + "\n"
-        + "   Gender: " + gender + "\n"
+        + "   " + _format_aggregate_gender_line(aggregate_man, aggregate_woman) + "\n"
         + "   " + source_note + "\n"
     )
     return age, gender, aggregate_section
