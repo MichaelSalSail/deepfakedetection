@@ -37,6 +37,30 @@ function genderScoreColor(score) {
   return "warning.dark";
 }
 
+function orderGenderScoreRows(manScore, womanScore, isPlaceholder) {
+  const rows = [
+    { label: "Man", score: manScore },
+    { label: "Woman", score: womanScore },
+  ];
+  if (isPlaceholder || manScore == null || womanScore == null) {
+    return rows;
+  }
+  const colors = rows.map((row) => genderScoreColor(Number(row.score)));
+  if (colors.every((color) => color === "warning.dark")) {
+    return rows;
+  }
+  const rank = (color) => {
+    if (color === "green") return 0;
+    if (color === "warning.dark") return 1;
+    return 2;
+  };
+  return [...rows].sort(
+    (a, b) =>
+      rank(genderScoreColor(Number(a.score))) -
+      rank(genderScoreColor(Number(b.score)))
+  );
+}
+
 const STAT_LABEL_SX = {
   display: "block",
   mb: 0.75,
@@ -57,6 +81,8 @@ function FactRow({ label, value, centered = false }) {
 }
 
 function GenderScoresTable({ manScore, womanScore, isPlaceholder }) {
+  const rows = orderGenderScoreRows(manScore, womanScore, isPlaceholder);
+
   return (
     <Box
       sx={{
@@ -68,10 +94,7 @@ function GenderScoresTable({ manScore, womanScore, isPlaceholder }) {
         minWidth: 120,
       }}
     >
-      {[
-        { label: "Man", score: manScore },
-        { label: "Woman", score: womanScore },
-      ].map(({ label, score }, index) => (
+      {rows.map(({ label, score }, index) => (
         <Box
           key={label}
           sx={{
