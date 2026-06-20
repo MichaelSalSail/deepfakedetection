@@ -33,7 +33,7 @@ function getDfdDisplay(dfdScore, noFace = false) {
   }
   if (dfdScore <= 68) {
     return {
-      color: "yellow",
+      color: "warning.dark",
       verdict: "Uncertain",
       failureHint: "Use the Subject and Eye Blink results to help reach a conclusion.",
     };
