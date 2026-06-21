@@ -166,15 +166,30 @@ export default function DashboardApp() {
     const pollBlinkProgress = () => {
       axios.get('http://localhost:5001/home/blink_progress')
         .then((response) => {
+          const status = response.data?.status;
           const latestFrame = response.data?.latest_frame;
-          if (latestFrame?.frame_num > 0) {
-            setLiveBlinkRow((prev) => {
-              if (prev?.frame_num === latestFrame.frame_num) {
-                return prev;
-              }
-              setLiveBlinkFrameKey(Date.now());
-              return latestFrame;
-            });
+
+          if (status === "pending") {
+            setLiveBlinkRow(null);
+            return;
+          }
+
+          if (status === "running") {
+            if (latestFrame?.frame_num > 0) {
+              setLiveBlinkRow((prev) => {
+                if (prev?.frame_num === latestFrame.frame_num) {
+                  return prev;
+                }
+                setLiveBlinkFrameKey(Date.now());
+                return latestFrame;
+              });
+            }
+            return;
+          }
+
+          if (status === "complete" || status === "error") {
+            // Keep in-session liveBlinkRow; never seed from disk when null.
+            return;
           }
         })
         .catch((error) => {

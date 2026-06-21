@@ -263,3 +263,33 @@ def write_blink_progress_json(payload, output_path):
         outfile.flush()
         os.fsync(outfile.fileno())
     os.replace(temp_path, output_path)
+
+def clear_blink_frame_pngs(frames_dir):
+    '''
+    Remove saved per-frame blink preview PNGs.
+
+    Args:
+        frames_dir: path to all_video_frames directory.
+    '''
+    os.makedirs(frames_dir, exist_ok=True)
+    for filename in os.listdir(frames_dir):
+        if filename.endswith(".png"):
+            os.remove(os.path.join(frames_dir, filename))
+
+def reset_blink_live_preview_state(progress_path, frames_dir):
+    '''
+    Reset blink live-preview artifacts for a new upload or inference run.
+
+    Args:
+        progress_path: path to blink_progress.json.
+        frames_dir: path to all_video_frames directory.
+    '''
+    write_blink_progress_json(
+        {
+            "status": "pending",
+            "latest_frame_num": 0,
+            "total_frames": 0,
+        },
+        progress_path,
+    )
+    clear_blink_frame_pngs(frames_dir)

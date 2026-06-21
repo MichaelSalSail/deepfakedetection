@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import os
 import json
 import time
+from helper_functions import reset_blink_live_preview_state
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_PATH = os.path.join(APP_PATH, 'src/pages/')
 app = Flask(__name__, template_folder=TEMPLATE_PATH)
@@ -87,6 +88,10 @@ def get_blink_frame(frame_num):
 def upload_video():
     if request.method == 'POST':
         (request.files["file"]).save(os.path.join(APP_PATH,'backend/current_upload/target.mp4'))
+        reset_blink_live_preview_state(
+            os.path.join(APP_PATH, 'backend/AllResults/blink_progress.json'),
+            os.path.join(APP_PATH, 'backend/current_upload/temp/all_video_frames'),
+        )
         return "Successfully saved!"
 
 if __name__ == '__main__':

@@ -20,7 +20,8 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
-                             eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json
+                             eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
+                             clear_blink_frame_pngs
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
@@ -290,10 +291,7 @@ def _print_blink_frame_row(row):
 
 
 def _prepare_blink_all_frames_dir():
-    os.makedirs(BLINK_ALL_FRAMES_DIR, exist_ok=True)
-    for filename in os.listdir(BLINK_ALL_FRAMES_DIR):
-        if filename.endswith(".png"):
-            os.remove(os.path.join(BLINK_ALL_FRAMES_DIR, filename))
+    clear_blink_frame_pngs(BLINK_ALL_FRAMES_DIR)
 
 
 def _clear_deepface_scratch_files():
