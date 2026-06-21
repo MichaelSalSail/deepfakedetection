@@ -22,6 +22,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Page from "../components/Page.js";
 import {
   BlinkCardsStack,
+  BLINK_CARD_MIN_WIDTH,
   BLINK_POINT_CARD_WIDTH,
   OtherOutputs,
   DFDscore,
@@ -42,12 +43,6 @@ const BASE_MODEL_HELP =
   "In our testing, the base model is most likely to yield incorrect predictions in the yellow range. " +
   "Use the other model outputs to draw any final conclusions. " +
   "A green score indicates a genuine video; a red score indicates a deepfake.";
-
-const EYE_BLINK_HELP =
-  "The eye blink model returns two classifications (open and closed eyes). " +
-  "For clarity, we show four categories: Missing (no face detected), Unknown (face detected but only partially visible), Open, and Closed. " +
-  "All other frames are sent to the model and classified as open or closed eyes. " +
-  "Per-frame classifications are in the downloadable CSV.";
 
 const SUBJECT_INTERPRETATION_POINTS = [
   "Eyewear and facial hair are often harder to fake, so they can be signs of a genuine video.",
@@ -568,15 +563,49 @@ export default function DashboardApp() {
           <Box
             sx={{
               display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 2,
+              alignItems: { xs: "stretch", md: "center" },
               mb: 1,
             }}
           >
-            <Typography variant="overline" color="text.secondary">
-              Eye Blink Model
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Box
+              sx={{
+                flexShrink: 0,
+                width: { xs: "100%", md: BLINK_CARD_MIN_WIDTH },
+              }}
+            >
+              <Typography variant="overline" color="text.secondary">
+                Eye Blink Model
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                flexShrink: 0,
+                width: { xs: 0, md: BLINK_POINT_CARD_WIDTH },
+                maxWidth: { xs: 0, md: BLINK_POINT_CARD_WIDTH },
+                display: { xs: "none", md: "block" },
+              }}
+            />
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                (
+                <Box component="span" sx={{ fontWeight: 600 }}>Missing (-2):</Box>
+                {" no face detected, "}
+                <Box component="span" sx={{ fontWeight: 600 }}>Unknown (-1):</Box>
+                {" face detected but not fully visible"}
+                )
+              </Typography>
               <Button
                 disabled={data_switched%2===0}
                 component="span"
@@ -591,11 +620,6 @@ export default function DashboardApp() {
               >
                 Download frame data (CSV)
               </Button>
-              <Tooltip title={EYE_BLINK_HELP} arrow placement="left">
-                <IconButton size="small" aria-label="About eye blink model" sx={{ mt: -0.5 }}>
-                  <InfoOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
             </Box>
           </Box>
           <Box
