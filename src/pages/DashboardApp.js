@@ -603,10 +603,6 @@ export default function DashboardApp() {
         </Box>
 
         <Box sx={{ mt: 1.5 }}>
-          <GeminiFrameAnalysis />
-        </Box>
-
-        <Box sx={{ mt: 1 }}>
           <Box
             sx={{
               display: "flex",
@@ -711,6 +707,10 @@ export default function DashboardApp() {
               />
             </Box>
           </Box>
+        </Box>
+
+        <Box sx={{ mt: 1.5 }}>
+          <GeminiFrameAnalysis />
         </Box>
 
         <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
