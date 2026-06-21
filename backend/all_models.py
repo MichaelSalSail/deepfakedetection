@@ -520,12 +520,15 @@ def blink_on_video(video_path, fps, facedet, use_model):
 
     estimated_frame_ram = _estimate_blink_frame_ram_bytes(
         total_frames, frame_width, frame_height)
+    estimated_gib = estimated_frame_ram / (1024 ** 3)
+    print(
+        "blink_on_video() estimated frame RAM: "
+        f"{estimated_gib:.2f} GiB ({total_frames} sampled frames at "
+        f"{frame_width}x{frame_height}, limit 2.00 GiB)"
+    )
     if estimated_frame_ram > MAX_BLINK_FRAME_RAM_BYTES:
-        estimated_gib = estimated_frame_ram / (1024 ** 3)
         print(
-            "blink_on_video() error: estimated frame RAM "
-            f"{estimated_gib:.2f} GiB exceeds limit of 2.00 GiB "
-            f"({total_frames} sampled frames at {frame_width}x{frame_height}). "
+            "blink_on_video() error: estimated frame RAM exceeds limit of 2.00 GiB. "
             "Try a shorter video or lower resolution."
         )
         return _blink_ram_limit_error_result(start_time, total_frames, total_seconds)
