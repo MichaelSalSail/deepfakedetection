@@ -38,6 +38,7 @@ import FileSaver from 'file-saver';
 import axios from "axios";
 
 const MAX_VIDEO_BYTES = 50000000;
+const BLINK_PROGRESS_POLL_MS = 400;
 
 const BASE_MODEL_HELP =
   "In our testing, the base model is most likely to yield incorrect predictions in the yellow range. " +
@@ -125,6 +126,17 @@ export default function DashboardApp() {
   const [selectedBlinkPoint, setSelectedBlinkPoint] = useState(null);
   const [blinkTimelineRows, setBlinkTimelineRows] = useState(null);
   const [frameImageLoading, setFrameImageLoading] = useState(false);
+  const [liveBlinkFrameNum, setLiveBlinkFrameNum] = useState(null);
+  const [liveBlinkFrameKey, setLiveBlinkFrameKey] = useState(0);
+  const [blinkPreviewLocked, setBlinkPreviewLocked] = useState(false);
+
+  const liveBlinkPreviewActive =
+    modelLoading && !blinkPreviewLocked && liveBlinkFrameNum != null;
+
+  const handleBlinkPointSelect = (point) => {
+    setBlinkPreviewLocked(true);
+    setSelectedBlinkPoint(point);
+  };
 
   useEffect(() => {
     if (!uploadSuccess) {
@@ -146,6 +158,35 @@ export default function DashboardApp() {
     return () => clearTimeout(timer);
   }, [info, infoKey]);
 
+  useEffect(() => {
+    if (!modelLoading || blinkPreviewLocked) {
+      return undefined;
+    }
+
+    const pollBlinkProgress = () => {
+      axios.get('http://localhost:5001/home/blink_progress')
+        .then((response) => {
+          const latestFrameNum = response.data?.latest_frame_num ?? 0;
+          if (latestFrameNum > 0) {
+            setLiveBlinkFrameNum((prev) => {
+              if (prev === latestFrameNum) {
+                return prev;
+              }
+              setLiveBlinkFrameKey(Date.now());
+              return latestFrameNum;
+            });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
+
+    pollBlinkProgress();
+    const intervalId = setInterval(pollBlinkProgress, BLINK_PROGRESS_POLL_MS);
+    return () => clearInterval(intervalId);
+  }, [modelLoading, blinkPreviewLocked]);
+
   // increment data_switched each time a new file is uploaded or 'Generate Results' completes a GET request
   const switched = () => {
     data_switched+=1;
@@ -156,6 +197,9 @@ export default function DashboardApp() {
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
     setFrameImageLoading(false);
+    setLiveBlinkFrameNum(null);
+    setLiveBlinkFrameKey(0);
+    setBlinkPreviewLocked(false);
     setModelLoading(true);
     console.log("Video has a duration of", fileduration, "seconds.");
     obtainResults();
@@ -214,6 +258,9 @@ export default function DashboardApp() {
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
     setFrameImageLoading(false);
+    setLiveBlinkFrameNum(null);
+    setLiveBlinkFrameKey(0);
+    setBlinkPreviewLocked(false);
 
     // obtain the video duration
     var reader = new FileReader();
@@ -647,8 +694,11 @@ export default function DashboardApp() {
                 analysisComplete={data_switched % 2 === 1}
                 frameImageKey={subjectImageKey}
                 timelineRows={blinkTimelineRows}
-                onSelectRow={setSelectedBlinkPoint}
+                onSelectRow={handleBlinkPointSelect}
                 onFrameImageLoadingChange={setFrameImageLoading}
+                livePreviewActive={liveBlinkPreviewActive}
+                livePreviewFrameNum={liveBlinkFrameNum}
+                livePreviewFrameKey={liveBlinkFrameKey}
               />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0, display: "flex", minHeight: 0 }}>
@@ -656,7 +706,7 @@ export default function DashboardApp() {
                 data={blinkTimelineRows}
                 analysisComplete={data_switched % 2 === 1}
                 selectedPoint={selectedBlinkPoint}
-                onPointSelect={setSelectedBlinkPoint}
+                onPointSelect={handleBlinkPointSelect}
                 selectionDisabled={frameImageLoading}
               />
             </Box>

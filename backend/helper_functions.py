@@ -248,3 +248,18 @@ def write_result_update_json(results, output_path):
         outfile.flush()
         os.fsync(outfile.fileno())
     os.replace(temp_path, output_path)
+
+def write_blink_progress_json(payload, output_path):
+    '''
+    Write blink inference progress for live frame preview polling.
+
+    Args:
+        payload: dict with status, latest_frame_num, total_frames.
+        output_path: path to blink_progress.json.
+    '''
+    temp_path = output_path + ".tmp"
+    with open(temp_path, "w") as outfile:
+        json.dump(payload, outfile, indent=2)
+        outfile.flush()
+        os.fsync(outfile.fileno())
+    os.replace(temp_path, output_path)

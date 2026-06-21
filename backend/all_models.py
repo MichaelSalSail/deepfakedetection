@@ -20,10 +20,11 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
-                             eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION
+                             eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
+BLINK_PROGRESS_PATH = "AllResults/blink_progress.json"
 BLINK_TEMP_FILES = (
     "face_detected.png",
     "face_tight_crop.png",
@@ -305,6 +306,17 @@ def _copy_blink_frame_file(source_path, frame_num, output_dir):
     shutil.copy2(source_path, dest)
 
 
+def _update_blink_progress(latest_frame_num, total_frames, status="running"):
+    write_blink_progress_json(
+        {
+            "status": status,
+            "latest_frame_num": latest_frame_num,
+            "total_frames": total_frames,
+        },
+        BLINK_PROGRESS_PATH,
+    )
+
+
 def _top5_prediction_lines(image_path):
     image = load_img(image_path, target_size=(224, 224))
     image = img_to_array(image)
@@ -459,6 +471,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
         (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
     total_frames = math.floor(fps * total_seconds)
     _prepare_blink_all_frames_dir()
+    _update_blink_progress(0, total_frames, status="running")
+    latest_progress_frame = 0
 
     all_open, all_closed, all_unknown, all_missing = 0, 0, 0, 0
     blink_frame_rows = []
@@ -501,6 +515,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     if full_frames is not None and frame_index < len(full_frames):
                         _save_blink_full_frame(
                             full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
+                        latest_progress_frame = frame_index + 1
+                        _update_blink_progress(latest_progress_frame, total_frames)
                     all_missing += 1
                     blink_frame_rows.append(
                         _print_blink_frame_log(
@@ -530,6 +546,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
                             frame_index + 1,
                             BLINK_ALL_FRAMES_DIR,
                         )
+                        latest_progress_frame = frame_index + 1
+                        _update_blink_progress(latest_progress_frame, total_frames)
                         blink_frame_rows.append(
                             _print_blink_frame_log(
                                 frame_index, total_frames, total_seconds, "unknown")
@@ -551,6 +569,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 frame_index + 1,
                                 BLINK_ALL_FRAMES_DIR,
                             )
+                            latest_progress_frame = frame_index + 1
+                            _update_blink_progress(latest_progress_frame, total_frames)
                         else:
                             all_closed += 1
                             if (not subject_reference_open_locked and not subject_reference_closed_provisional):
@@ -565,12 +585,16 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 frame_index + 1,
                                 BLINK_ALL_FRAMES_DIR,
                             )
+                            latest_progress_frame = frame_index + 1
+                            _update_blink_progress(latest_progress_frame, total_frames)
                     plt.clf()
 
             for frame_index in range(len(faces), total_frames):
                 if full_frames is not None and frame_index < len(full_frames):
                     _save_blink_full_frame(
                         full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
+                    latest_progress_frame = frame_index + 1
+                    _update_blink_progress(latest_progress_frame, total_frames)
                 blink_frame_rows.append(
                     _blink_frame_row(frame_index, total_frames, total_seconds, "missing")
                 )
@@ -591,6 +615,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         )
         result = _blink_result(0.0, 0.0, 0.0, 0.0)
         result["runtime"] = _elapsed_seconds(start_time)
+        _update_blink_progress(latest_progress_frame, total_frames, status="error")
         print(result)
         _print_runtime(start_time)
         return result
@@ -608,6 +633,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         _percent_of(all_closed, total),
     )
     result["runtime"] = _elapsed_seconds(start_time)
+    _update_blink_progress(latest_progress_frame, total_frames, status="complete")
     print(result)
     _print_runtime(start_time)
     return result

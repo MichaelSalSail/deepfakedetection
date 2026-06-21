@@ -59,6 +59,17 @@ def get_face_crop():
         return "Face crop not found", 404
     return send_file(file_dir, mimetype='image/png')
 
+@app.route('/home/blink_progress', methods=['GET', 'OPTIONS'])
+def get_blink_progress():
+    file_dir = os.path.join(APP_PATH, 'backend/AllResults/blink_progress.json')
+    if not os.path.exists(file_dir):
+        return {
+            "status": "pending",
+            "latest_frame_num": 0,
+            "total_frames": 0,
+        }
+    return _load_results_json(file_dir)
+
 @app.route('/home/blink_frame/<int:frame_num>', methods=['GET', 'OPTIONS'])
 def get_blink_frame(frame_num):
     if frame_num < 1:

@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 import torch
 from all_models import predict_on_video, blink_on_video, detect_age_gender, detect_shades, _format_runtime
-from helper_functions import get_model, write_result_update_json
+from helper_functions import get_model, write_result_update_json, write_blink_progress_json
 
 # -----------------------------------------Look here-----------------------------------------
 # Change the directories as you see fit.
@@ -13,6 +13,7 @@ pre2 = "/current_upload"
 video_path = cwd+pre2+"/target.mp4"
 
 results_path = "AllResults/result_update.json"
+blink_progress_path = "AllResults/blink_progress.json"
 
 # Frame crops from blink_on_video()
 temp_img_tight_crop = cwd + "/current_upload/temp/" + "face_tight_crop.png"
@@ -43,6 +44,10 @@ start_perf = time.perf_counter()
 print("start time: " + datetime.now().strftime("%H:%M:%S"))
 
 # Run all models
+write_blink_progress_json(
+    {"status": "pending", "latest_frame_num": 0, "total_frames": 0},
+    blink_progress_path,
+)
 dfd_result = predict_on_video(video_path, 15, device, facedet)
 blink_result = blink_on_video(video_path, 15, facedet, model_for_tests)
 age_gender_result = detect_age_gender(
