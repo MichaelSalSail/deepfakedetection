@@ -126,12 +126,12 @@ export default function DashboardApp() {
   const [selectedBlinkPoint, setSelectedBlinkPoint] = useState(null);
   const [blinkTimelineRows, setBlinkTimelineRows] = useState(null);
   const [frameImageLoading, setFrameImageLoading] = useState(false);
-  const [liveBlinkFrameNum, setLiveBlinkFrameNum] = useState(null);
+  const [liveBlinkRow, setLiveBlinkRow] = useState(null);
   const [liveBlinkFrameKey, setLiveBlinkFrameKey] = useState(0);
   const [blinkPreviewLocked, setBlinkPreviewLocked] = useState(false);
 
   const liveBlinkPreviewActive =
-    modelLoading && !blinkPreviewLocked && liveBlinkFrameNum != null;
+    modelLoading && !blinkPreviewLocked && liveBlinkRow != null;
 
   const handleBlinkPointSelect = (point) => {
     setBlinkPreviewLocked(true);
@@ -166,14 +166,14 @@ export default function DashboardApp() {
     const pollBlinkProgress = () => {
       axios.get('http://localhost:5001/home/blink_progress')
         .then((response) => {
-          const latestFrameNum = response.data?.latest_frame_num ?? 0;
-          if (latestFrameNum > 0) {
-            setLiveBlinkFrameNum((prev) => {
-              if (prev === latestFrameNum) {
+          const latestFrame = response.data?.latest_frame;
+          if (latestFrame?.frame_num > 0) {
+            setLiveBlinkRow((prev) => {
+              if (prev?.frame_num === latestFrame.frame_num) {
                 return prev;
               }
               setLiveBlinkFrameKey(Date.now());
-              return latestFrameNum;
+              return latestFrame;
             });
           }
         })
@@ -197,7 +197,7 @@ export default function DashboardApp() {
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
     setFrameImageLoading(false);
-    setLiveBlinkFrameNum(null);
+    setLiveBlinkRow(null);
     setLiveBlinkFrameKey(0);
     setBlinkPreviewLocked(false);
     setModelLoading(true);
@@ -258,7 +258,7 @@ export default function DashboardApp() {
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
     setFrameImageLoading(false);
-    setLiveBlinkFrameNum(null);
+    setLiveBlinkRow(null);
     setLiveBlinkFrameKey(0);
     setBlinkPreviewLocked(false);
 
@@ -693,7 +693,7 @@ export default function DashboardApp() {
                 onSelectRow={handleBlinkPointSelect}
                 onFrameImageLoadingChange={setFrameImageLoading}
                 livePreviewActive={liveBlinkPreviewActive}
-                livePreviewFrameNum={liveBlinkFrameNum}
+                livePreviewRow={liveBlinkRow}
                 livePreviewFrameKey={liveBlinkFrameKey}
               />
             </Box>

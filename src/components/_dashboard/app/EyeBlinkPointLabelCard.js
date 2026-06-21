@@ -32,6 +32,13 @@ function DetailRow({ label, value, emphasized = false }) {
   );
 }
 
+function formatBlinkScoreDisplay(score) {
+  if (score == null || Number.isNaN(Number(score))) {
+    return EMPTY_VALUE;
+  }
+  return Number(score).toFixed(2);
+}
+
 export default function EyeBlinkPointLabelCard({
   selectedRow = null,
   analysisComplete = false,
@@ -40,47 +47,45 @@ export default function EyeBlinkPointLabelCard({
   onSelectRow,
   onFrameImageLoadingChange,
   livePreviewActive = false,
-  livePreviewFrameNum = null,
+  livePreviewRow = null,
   livePreviewFrameKey = 0,
 }) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [frameImageLoading, setFrameImageLoading] = useState(false);
 
-  const isLivePreview = livePreviewActive && livePreviewFrameNum != null;
+  const isLivePreview = livePreviewActive && livePreviewRow != null;
+  const displayRow = isLivePreview ? livePreviewRow : selectedRow;
+  const hasRow =
+    displayRow?.frame_num != null && displayRow?.total_frames != null;
 
-  const hasCsvRow =
-    !isLivePreview &&
-    selectedRow?.frame_num != null &&
-    selectedRow?.total_frames != null;
-
-  const frameDisplay = isLivePreview
-    ? String(livePreviewFrameNum)
-    : hasCsvRow
-      ? `${String(selectedRow.frame_num).padStart(3, "0")}/${selectedRow.total_frames}`
-      : EMPTY_VALUE;
-
-  const timestampDisplay = hasCsvRow
-    ? `${Number(selectedRow.timestamp_s).toFixed(2)}s`
+  const frameDisplay = hasRow
+    ? `${String(displayRow.frame_num).padStart(3, "0")}/${displayRow.total_frames}`
     : EMPTY_VALUE;
 
-  const scoreDisplay = hasCsvRow
-    ? selectedRow.score != null
-      ? selectedRow.score.toFixed(2)
-      : EMPTY_VALUE
+  const timestampDisplay = hasRow
+    ? `${Number(displayRow.timestamp_s).toFixed(2)}s`
     : EMPTY_VALUE;
 
-  const classification = hasCsvRow ? selectedRow.classification : null;
+  const scoreDisplay = hasRow
+    ? formatBlinkScoreDisplay(displayRow.score)
+    : EMPTY_VALUE;
+
+  const classification = hasRow ? displayRow.classification : null;
   const labelDisplay = formatBlinkLabelDisplay(classification);
   const hasSelection = classification !== null && classification !== undefined;
 
-  const frameImageUrl = isLivePreview && !imageLoadFailed
-    ? `${BLINK_FRAME_URL}/${livePreviewFrameNum}?t=${livePreviewFrameKey}`
-    : analysisComplete && hasCsvRow && !imageLoadFailed
-      ? `${BLINK_FRAME_URL}/${selectedRow.frame_num}?t=${frameImageKey}`
-      : null;
+  const frameImageUrl = hasRow && !imageLoadFailed
+    ? `${BLINK_FRAME_URL}/${displayRow.frame_num}?t=${
+        isLivePreview ? livePreviewFrameKey : frameImageKey
+      }`
+    : null;
 
   const showNavOverlay =
-    analysisComplete && timelineRows?.length > 0 && hasCsvRow;
+    !isLivePreview &&
+    analysisComplete &&
+    timelineRows?.length > 0 &&
+    selectedRow?.frame_num != null &&
+    selectedRow?.total_frames != null;
 
   const currentIndex = showNavOverlay
     ? timelineRows.findIndex((row) => row.frame_num === selectedRow.frame_num)
@@ -136,12 +141,12 @@ export default function EyeBlinkPointLabelCard({
     frameImageKey,
     analysisComplete,
     selectedRow?.frame_num,
-    livePreviewFrameNum,
+    livePreviewRow?.frame_num,
     livePreviewFrameKey,
   ]);
 
   useEffect(() => {
-    if ((isLivePreview || (analysisComplete && hasCsvRow)) && !imageLoadFailed) {
+    if (hasRow && !imageLoadFailed) {
       setFrameImageLoading(true);
     } else {
       setFrameImageLoading(false);
@@ -151,9 +156,9 @@ export default function EyeBlinkPointLabelCard({
     analysisComplete,
     selectedRow?.frame_num,
     imageLoadFailed,
-    hasCsvRow,
+    hasRow,
     isLivePreview,
-    livePreviewFrameNum,
+    livePreviewRow?.frame_num,
     livePreviewFrameKey,
   ]);
 
@@ -205,16 +210,12 @@ export default function EyeBlinkPointLabelCard({
               component="img"
               key={
                 isLivePreview
-                  ? `live-${livePreviewFrameNum}-${livePreviewFrameKey}`
-                  : `${selectedRow.frame_num}-${frameImageKey}`
+                  ? `live-${displayRow.frame_num}-${livePreviewFrameKey}`
+                  : `${displayRow.frame_num}-${frameImageKey}`
               }
               ref={handleImageRef}
               src={frameImageUrl}
-              alt={
-                isLivePreview
-                  ? `Blink frame ${livePreviewFrameNum}`
-                  : `Blink frame ${selectedRow.frame_num}`
-              }
+              alt={`Blink frame ${displayRow.frame_num}`}
               sx={{
                 width: "100%",
                 height: "100%",
@@ -230,7 +231,7 @@ export default function EyeBlinkPointLabelCard({
               align="center"
               sx={{ px: 1.5, lineHeight: 1.35 }}
             >
-              {analysisComplete && hasCsvRow && imageLoadFailed
+              {!isLivePreview && analysisComplete && hasRow && imageLoadFailed
                 ? "Frame unavailable"
                 : "Frame"}
             </Typography>

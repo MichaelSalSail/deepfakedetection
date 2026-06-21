@@ -273,12 +273,20 @@ def _blink_frame_row(frame_index, total_frames, total_seconds, label, score=None
 
 def _print_blink_frame_log(frame_index, total_frames, total_seconds, label, score=None):
     row = _blink_frame_row(frame_index, total_frames, total_seconds, label, score)
-    score_str = "N/A" if score is None else f"{row['score']:.2f}"
+    _print_blink_frame_row(row)
+    return row
+
+
+def _print_blink_frame_row(row):
+    score = row["score"]
+    if score is None or (isinstance(score, float) and math.isnan(score)):
+        score_str = "N/A"
+    else:
+        score_str = f"{score:.2f}"
     print(
         f"frame {row['frame_num']:03d}/{row['total_frames']}  "
         f"t={row['timestamp_s']:.2f}s  score={score_str}  {row['label']}"
     )
-    return row
 
 
 def _prepare_blink_all_frames_dir():
@@ -306,15 +314,29 @@ def _copy_blink_frame_file(source_path, frame_num, output_dir):
     shutil.copy2(source_path, dest)
 
 
-def _update_blink_progress(latest_frame_num, total_frames, status="running"):
-    write_blink_progress_json(
-        {
-            "status": status,
-            "latest_frame_num": latest_frame_num,
-            "total_frames": total_frames,
-        },
-        BLINK_PROGRESS_PATH,
-    )
+def _serialize_blink_frame_for_json(row):
+    score = row["score"]
+    if score is None or (isinstance(score, float) and math.isnan(score)):
+        score = None
+    return {
+        "frame_num": row["frame_num"],
+        "total_frames": row["total_frames"],
+        "timestamp_s": row["timestamp_s"],
+        "score": score,
+        "label": row["label"],
+        "classification": row["classification"],
+    }
+
+
+def _update_blink_progress(total_frames, status="running", frame_row=None):
+    payload = {
+        "status": status,
+        "latest_frame_num": frame_row["frame_num"] if frame_row else 0,
+        "total_frames": total_frames,
+    }
+    if frame_row:
+        payload["latest_frame"] = _serialize_blink_frame_for_json(frame_row)
+    write_blink_progress_json(payload, BLINK_PROGRESS_PATH)
 
 
 def _top5_prediction_lines(image_path):
@@ -471,8 +493,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
         (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
     total_frames = math.floor(fps * total_seconds)
     _prepare_blink_all_frames_dir()
-    _update_blink_progress(0, total_frames, status="running")
-    latest_progress_frame = 0
+    _update_blink_progress(total_frames, status="running")
+    latest_progress_row = None
 
     all_open, all_closed, all_unknown, all_missing = 0, 0, 0, 0
     blink_frame_rows = []
@@ -512,16 +534,16 @@ def blink_on_video(video_path, fps, facedet, use_model):
         if len(faces) > 0:
             for frame_index, frame_data in enumerate(faces):
                 if len(frame_data["faces"]) == 0:
+                    row = _blink_frame_row(
+                        frame_index, total_frames, total_seconds, "missing")
                     if full_frames is not None and frame_index < len(full_frames):
                         _save_blink_full_frame(
                             full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
-                        latest_progress_frame = frame_index + 1
-                        _update_blink_progress(latest_progress_frame, total_frames)
+                        latest_progress_row = row
+                        _update_blink_progress(total_frames, frame_row=row)
+                    _print_blink_frame_row(row)
                     all_missing += 1
-                    blink_frame_rows.append(
-                        _print_blink_frame_log(
-                            frame_index, total_frames, total_seconds, "missing")
-                    )
+                    blink_frame_rows.append(row)
                     continue
 
                 for face in frame_data["faces"]:
@@ -541,17 +563,17 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     crop_result = save_crop('face_detected.png', 'face_tight_crop.png', 'current_upload/temp/')
                     if crop_result is False:
                         all_unknown += 1
+                        row = _blink_frame_row(
+                            frame_index, total_frames, total_seconds, "unknown")
                         _copy_blink_frame_file(
                             os.path.join(BLINK_TEMP_DIR, "face_detected.png"),
                             frame_index + 1,
                             BLINK_ALL_FRAMES_DIR,
                         )
-                        latest_progress_frame = frame_index + 1
-                        _update_blink_progress(latest_progress_frame, total_frames)
-                        blink_frame_rows.append(
-                            _print_blink_frame_log(
-                                frame_index, total_frames, total_seconds, "unknown")
-                        )
+                        latest_progress_row = row
+                        _update_blink_progress(total_frames, frame_row=row)
+                        _print_blink_frame_row(row)
+                        blink_frame_rows.append(row)
                     else:
                         current, blink_score = more_tests(use_model, 'current_upload/temp')
                         if current == 1:
@@ -560,44 +582,45 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_open_locked = True
                                 subject_reference_closed_provisional = False
-                            blink_frame_rows.append(
-                                _print_blink_frame_log(
-                                    frame_index, total_frames, total_seconds, "open", blink_score)
-                            )
+                            row = _blink_frame_row(
+                                frame_index, total_frames, total_seconds, "open", blink_score)
                             _copy_blink_frame_file(
                                 os.path.join(BLINK_TEMP_DIR, "face_tight_crop.png"),
                                 frame_index + 1,
                                 BLINK_ALL_FRAMES_DIR,
                             )
-                            latest_progress_frame = frame_index + 1
-                            _update_blink_progress(latest_progress_frame, total_frames)
+                            latest_progress_row = row
+                            _update_blink_progress(total_frames, frame_row=row)
+                            _print_blink_frame_row(row)
+                            blink_frame_rows.append(row)
                         else:
                             all_closed += 1
                             if (not subject_reference_open_locked and not subject_reference_closed_provisional):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_closed_provisional = True
-                            blink_frame_rows.append(
-                                _print_blink_frame_log(
-                                    frame_index, total_frames, total_seconds, "closed", blink_score)
-                            )
+                            row = _blink_frame_row(
+                                frame_index, total_frames, total_seconds, "closed", blink_score)
                             _copy_blink_frame_file(
                                 os.path.join(BLINK_TEMP_DIR, "face_tight_crop.png"),
                                 frame_index + 1,
                                 BLINK_ALL_FRAMES_DIR,
                             )
-                            latest_progress_frame = frame_index + 1
-                            _update_blink_progress(latest_progress_frame, total_frames)
+                            latest_progress_row = row
+                            _update_blink_progress(total_frames, frame_row=row)
+                            _print_blink_frame_row(row)
+                            blink_frame_rows.append(row)
                     plt.clf()
 
             for frame_index in range(len(faces), total_frames):
+                row = _blink_frame_row(
+                    frame_index, total_frames, total_seconds, "missing")
                 if full_frames is not None and frame_index < len(full_frames):
                     _save_blink_full_frame(
                         full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
-                    latest_progress_frame = frame_index + 1
-                    _update_blink_progress(latest_progress_frame, total_frames)
-                blink_frame_rows.append(
-                    _blink_frame_row(frame_index, total_frames, total_seconds, "missing")
-                )
+                    latest_progress_row = row
+                    _update_blink_progress(total_frames, frame_row=row)
+                _print_blink_frame_row(row)
+                blink_frame_rows.append(row)
 
         eyeblink_csv(
             blink_frame_rows,
@@ -615,7 +638,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         )
         result = _blink_result(0.0, 0.0, 0.0, 0.0)
         result["runtime"] = _elapsed_seconds(start_time)
-        _update_blink_progress(latest_progress_frame, total_frames, status="error")
+        _update_blink_progress(total_frames, status="error", frame_row=latest_progress_row)
         print(result)
         _print_runtime(start_time)
         return result
@@ -633,7 +656,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
         _percent_of(all_closed, total),
     )
     result["runtime"] = _elapsed_seconds(start_time)
-    _update_blink_progress(latest_progress_frame, total_frames, status="complete")
+    _update_blink_progress(total_frames, status="complete", frame_row=latest_progress_row)
     print(result)
     _print_runtime(start_time)
     return result
