@@ -26,6 +26,8 @@ from helper_functions import isotropically_resize_image, make_square_image, more
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
 BLINK_PROGRESS_PATH = "AllResults/blink_progress.json"
+MAX_BLINK_FRAME_RAM_BYTES = 2 * 1024 ** 3
+BLINK_FRAME_RAM_COPIES = 2
 BLINK_TEMP_FILES = (
     "face_detected.png",
     "face_tight_crop.png",
@@ -337,6 +339,28 @@ def _update_blink_progress(total_frames, status="running", frame_row=None):
     write_blink_progress_json(payload, BLINK_PROGRESS_PATH)
 
 
+def _estimate_blink_frame_ram_bytes(total_frames, width, height):
+    if total_frames <= 0 or width <= 0 or height <= 0:
+        return 0
+    return total_frames * int(width) * int(height) * 3 * BLINK_FRAME_RAM_COPIES
+
+
+def _blink_ram_limit_error_result(start_time, total_frames, total_seconds):
+    _prepare_blink_all_frames_dir()
+    _update_blink_progress(total_frames, status="error")
+    eyeblink_csv(
+        [],
+        "AllResults/eyeblink_data.csv",
+        total_frames=total_frames,
+        total_seconds=total_seconds,
+    )
+    result = _blink_result(0.0, 0.0, 0.0, 0.0)
+    result["runtime"] = 0
+    print(result)
+    _print_runtime(start_time)
+    return result
+
+
 def _top5_prediction_lines(image_path):
     image = load_img(image_path, target_size=(224, 224))
     image = img_to_array(image)
@@ -490,6 +514,22 @@ def blink_on_video(video_path, fps, facedet, use_model):
     total_seconds = round(
         (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
     total_frames = math.floor(fps * total_seconds)
+    frame_width = int(video_data.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(video_data.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    video_data.release()
+
+    estimated_frame_ram = _estimate_blink_frame_ram_bytes(
+        total_frames, frame_width, frame_height)
+    if estimated_frame_ram > MAX_BLINK_FRAME_RAM_BYTES:
+        estimated_gib = estimated_frame_ram / (1024 ** 3)
+        print(
+            "blink_on_video() error: estimated frame RAM "
+            f"{estimated_gib:.2f} GiB exceeds limit of 2.00 GiB "
+            f"({total_frames} sampled frames at {frame_width}x{frame_height}). "
+            "Try a shorter video or lower resolution."
+        )
+        return _blink_ram_limit_error_result(start_time, total_frames, total_seconds)
+
     _prepare_blink_all_frames_dir()
     _update_blink_progress(total_frames, status="running")
     latest_progress_row = None
