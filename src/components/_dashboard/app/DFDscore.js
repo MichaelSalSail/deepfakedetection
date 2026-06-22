@@ -63,10 +63,10 @@ export default function DFDscore({ results, prominent = false }) {
           justifyContent: prominent ? "center" : "flex-start",
           alignItems: "center",
           textAlign: "center",
-          pt: prominent ? 4 : 2,
-          pb: prominent ? 3 : 1.5,
+          pt: prominent ? 2.5 : 2,
+          pb: prominent ? 2 : 1.5,
           px: 2,
-          "&:last-child": { pb: prominent ? 3 : 1.5 },
+          "&:last-child": { pb: prominent ? 2 : 1.5 },
         }}
       >
         <Typography
@@ -76,7 +76,7 @@ export default function DFDscore({ results, prominent = false }) {
           sx={{
             fontSize: prominent ? { xs: "2.25rem", md: "2.75rem" } : "h6.fontSize",
             lineHeight: 1.1,
-            mb: prominent ? 3 : 1,
+            mb: prominent ? 1.5 : 1,
           }}
         >
           SCORE: {dfdScore}%

@@ -429,8 +429,8 @@ export default function DashboardApp() {
             {analysisErrorMessage}
           </Alert>
         </Collapse>
-        <Box sx={{ pb: 2 }}>
-          <Typography variant="h3" align="center">
+        <Box sx={{ pb: 0.5 }}>
+          <Typography variant="h4" align="center" sx={{ lineHeight: 1.2 }}>
             Deepfake Video Analysis
           </Typography>
         </Box>
@@ -439,9 +439,9 @@ export default function DashboardApp() {
           sx={{
             display: { xs: "flex", md: "grid" },
             gridTemplateColumns: { md: "70% 30%" },
-            columnGap: 2,
-            rowGap: 1.5,
-            alignItems: "stretch",
+            columnGap: 1.5,
+            rowGap: 1,
+            alignItems: { xs: "stretch", md: "stretch" },
             flexDirection: "column",
           }}
         >
@@ -452,15 +452,17 @@ export default function DashboardApp() {
               minWidth: 0,
               display: "flex",
               flexDirection: "column",
-              gap: 1.5,
+              gap: 0.5,
             }}
           >
-            <Typography variant="h6">Results</Typography>
+            <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+              Results
+            </Typography>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                flexWrap: "nowrap",
+                flexWrap: "wrap",
                 gap: 1.5,
                 width: "100%",
                 minWidth: 0,
@@ -526,22 +528,42 @@ export default function DashboardApp() {
               gridColumn: { md: "1" },
               gridRow: { md: "2" },
               minWidth: 0,
+              minHeight: 0,
               display: "flex",
               flexDirection: "column",
-              gap: 2,
+              gap: 1,
             }}
           >
-            <Card sx={{ height: "100%" }}>
+            <Card
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <CardHeader
                 title={<Typography variant="overline" align="center">Video File</Typography>}
-                sx={{ py: 1.5 }}
+                sx={{ py: 1, flexShrink: 0 }}
               />
-              <Box sx={{ px: 2, pb: 2 }} dir="ltr">
+              <Box
+                sx={{
+                  px: 2,
+                  pb: 1.5,
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                dir="ltr"
+              >
                 <Box
                   sx={{
                     position: "relative",
                     width: "100%",
-                    pt: "56.25%",
+                    flex: { md: 1 },
+                    minHeight: { md: 220 },
+                    pt: { xs: "56.25%", md: 0 },
                     bgcolor: "grey.900",
                     borderRadius: 1,
                     overflow: "hidden",
@@ -556,16 +578,21 @@ export default function DashboardApp() {
                   />
                 </Box>
               </Box>
+              {modelLoading ? (
+                <Box sx={{ flexShrink: 0, px: 2, pb: 1.5 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    align="center"
+                    display="block"
+                    sx={{ mb: 0.75 }}
+                  >
+                    Analysis runs locally. For fastest results, use a 10 to 20 second video.
+                  </Typography>
+                  <LinearProgress />
+                </Box>
+              ) : null}
             </Card>
-
-            {modelLoading ? (
-              <Box sx={{ width: "100%" }}>
-                <Typography variant="caption" color="text.secondary" align="center" display="block" sx={{ mb: 1.5 }}>
-                  Analysis runs locally. For fastest results, use a 10 to 20 second video.
-                </Typography>
-                <LinearProgress />
-              </Box>
-            ) : null}
           </Box>
 
           <Box
@@ -573,19 +600,19 @@ export default function DashboardApp() {
               gridColumn: { md: "2" },
               gridRow: { md: "2" },
               minWidth: 0,
+              minHeight: 0,
               display: "flex",
               flexDirection: "column",
-              gap: 2,
-              alignSelf: "stretch",
+              gap: 1,
             }}
           >
-            <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <Box sx={{ flexShrink: 0, display: "flex", flexDirection: "column" }}>
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  mb: 1,
+                  mb: 0.5,
                   flexShrink: 0,
                 }}
               >
@@ -598,13 +625,11 @@ export default function DashboardApp() {
                   </IconButton>
                 </Tooltip>
               </Box>
-              <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
-                <DFDscore results={results} prominent />
-              </Box>
+              <DFDscore results={results} prominent />
             </Box>
 
             <Box sx={{ flexShrink: 0 }}>
-              <Typography variant="overline" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+              <Typography variant="overline" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
                 Subject
               </Typography>
               <OtherOutputs
@@ -615,16 +640,21 @@ export default function DashboardApp() {
               />
             </Box>
           </Box>
-        </Box>
 
-        <Box sx={{ mt: 1.5 }}>
+          <Box
+            sx={{
+              gridColumn: { md: "1 / -1" },
+              gridRow: { md: "3" },
+              minWidth: 0,
+            }}
+          >
           <Box
             sx={{
               display: "flex",
               flexDirection: { xs: "column", md: "row" },
               gap: 2,
               alignItems: { xs: "stretch", md: "center" },
-              mb: 1,
+              mb: 0.5,
             }}
           >
             <Box
@@ -722,9 +752,10 @@ export default function DashboardApp() {
               />
             </Box>
           </Box>
+          </Box>
         </Box>
 
-        <Box sx={{ mt: 1.5 }}>
+        <Box sx={{ mt: 1 }}>
           <GeminiFrameAnalysis />
         </Box>
 
