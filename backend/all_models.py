@@ -21,7 +21,7 @@ from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
-                             clear_blink_frame_pngs
+                             clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
@@ -258,25 +258,19 @@ def _percent_of(count, total):
     return round((count / total) * 100, 2)
 
 
-def _blink_frame_timestamp(frame_index, total_frames, total_seconds):
-    if total_frames <= 1:
-        return 0.0
-    return round(frame_index * (total_seconds / (total_frames - 1)), 2)
-
-
-def _blink_frame_row(frame_index, total_frames, total_seconds, label, score=None):
+def _blink_frame_row(frame_index, total_frames, source_frame_idx, native_fps, label, score=None):
     return {
         "frame_num": frame_index + 1,
         "total_frames": total_frames,
-        "timestamp_s": _blink_frame_timestamp(frame_index, total_frames, total_seconds),
+        "timestamp_s": _blink_frame_timestamp(source_frame_idx, native_fps),
         "score": round(score, 2) if score is not None else math.nan,
         "label": label,
         "classification": BLINK_LABEL_TO_CLASSIFICATION[label],
     }
 
 
-def _print_blink_frame_log(frame_index, total_frames, total_seconds, label, score=None):
-    row = _blink_frame_row(frame_index, total_frames, total_seconds, label, score)
+def _print_blink_frame_log(frame_index, total_frames, source_frame_idx, native_fps, label, score=None):
+    row = _blink_frame_row(frame_index, total_frames, source_frame_idx, native_fps, label, score)
     _print_blink_frame_row(row)
     return row
 
@@ -383,14 +377,15 @@ def _estimate_blink_frame_ram_bytes(total_frames, width, height):
     return total_frames * int(width) * int(height) * 3 * BLINK_FRAME_RAM_COPIES
 
 
-def _blink_ram_limit_error_result(start_time, total_frames, total_seconds):
+def _blink_ram_limit_error_result(start_time, total_frames, native_fps, sample_frame_indices):
     _prepare_blink_all_frames_dir()
     _update_blink_progress(total_frames, status="error")
     eyeblink_csv(
         [],
         "AllResults/eyeblink_data.csv",
         total_frames=total_frames,
-        total_seconds=total_seconds,
+        native_fps=native_fps,
+        sample_frame_indices=sample_frame_indices,
     )
     result = _blink_result(0.0, 0.0, 0.0, 0.0)
     result["runtime"] = 0
@@ -549,9 +544,11 @@ def blink_on_video(video_path, fps, facedet, use_model):
     _clear_deepface_scratch_files()
 
     video_data = cv2.VideoCapture(video_path)
-    total_seconds = round(
-        (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
+    frame_count = int(video_data.get(cv2.CAP_PROP_FRAME_COUNT))
+    native_fps = float(video_data.get(cv2.CAP_PROP_FPS)) or 0.0
+    total_seconds = round(frame_count / native_fps, 2) if native_fps > 0 else 0.0
     total_frames = math.floor(fps * total_seconds)
+    sample_frame_indices = _blink_sample_frame_indices(frame_count, total_frames)
     frame_width = int(video_data.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video_data.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video_data.release()
@@ -569,7 +566,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
             "blink_on_video() error: estimated frame RAM exceeds limit of 2.00 GiB. "
             "Try a shorter video or lower resolution."
         )
-        return _blink_ram_limit_error_result(start_time, total_frames, total_seconds)
+        return _blink_ram_limit_error_result(
+            start_time, total_frames, native_fps, sample_frame_indices)
 
     _prepare_blink_all_frames_dir()
     _update_blink_progress(total_frames, status="running")
@@ -609,7 +607,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
             for frame_index, frame_data in enumerate(faces):
                 if len(frame_data["faces"]) == 0:
                     row = _blink_frame_row(
-                        frame_index, total_frames, total_seconds, "missing")
+                        frame_index, total_frames, frame_data["frame_idx"], native_fps, "missing")
                     if _try_save_missing_blink_png(
                         video_reader,
                         video_path,
@@ -642,7 +640,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
                     if crop_result is False:
                         all_unknown += 1
                         row = _blink_frame_row(
-                            frame_index, total_frames, total_seconds, "unknown")
+                            frame_index, total_frames, frame_data["frame_idx"], native_fps, "unknown")
                         _copy_blink_frame_file(
                             os.path.join(BLINK_TEMP_DIR, "face_detected.png"),
                             frame_index + 1,
@@ -661,7 +659,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 subject_reference_open_locked = True
                                 subject_reference_closed_provisional = False
                             row = _blink_frame_row(
-                                frame_index, total_frames, total_seconds, "open", blink_score)
+                                frame_index, total_frames, frame_data["frame_idx"], native_fps, "open", blink_score)
                             _copy_blink_frame_file(
                                 os.path.join(BLINK_TEMP_DIR, "face_tight_crop.png"),
                                 frame_index + 1,
@@ -677,7 +675,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
                                 plt.savefig(file_name_save_subject_reference, bbox_inches='tight', pad_inches=0)
                                 subject_reference_closed_provisional = True
                             row = _blink_frame_row(
-                                frame_index, total_frames, total_seconds, "closed", blink_score)
+                                frame_index, total_frames, frame_data["frame_idx"], native_fps, "closed", blink_score)
                             _copy_blink_frame_file(
                                 os.path.join(BLINK_TEMP_DIR, "face_tight_crop.png"),
                                 frame_index + 1,
@@ -691,7 +689,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
 
             for frame_index in range(len(faces), total_frames):
                 row = _blink_frame_row(
-                    frame_index, total_frames, total_seconds, "missing")
+                    frame_index, total_frames, int(sample_frame_indices[frame_index]), native_fps, "missing")
                 if _try_save_missing_blink_png(
                     video_reader,
                     video_path,
@@ -707,8 +705,6 @@ def blink_on_video(video_path, fps, facedet, use_model):
         eyeblink_csv(
             blink_frame_rows,
             "AllResults/eyeblink_data.csv",
-            total_frames=total_frames,
-            total_seconds=total_seconds,
         )
     except Exception as e:
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
@@ -716,7 +712,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
             [],
             "AllResults/eyeblink_data.csv",
             total_frames=total_frames,
-            total_seconds=total_seconds,
+            native_fps=native_fps,
+            sample_frame_indices=sample_frame_indices,
         )
         result = _blink_result(0.0, 0.0, 0.0, 0.0)
         result["runtime"] = _elapsed_seconds(start_time)

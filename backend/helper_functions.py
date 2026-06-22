@@ -175,10 +175,16 @@ def save_crop(input_image, file_name, destination):
         pil_image.save(full_1)
     return True
 
-def _blink_frame_timestamp(frame_index, total_frames, total_seconds):
-    if total_frames <= 1:
+def _blink_frame_timestamp(source_frame_idx, native_fps):
+    if native_fps <= 0:
         return 0.0
-    return round(frame_index * (total_seconds / (total_frames - 1)), 2)
+    return round(source_frame_idx / native_fps, 2)
+
+
+def _blink_sample_frame_indices(frame_count, num_frames):
+    if frame_count <= 0 or num_frames <= 0:
+        return None
+    return np.linspace(0, frame_count - 1, num_frames, endpoint=True, dtype=int)
 
 
 EYEBLINK_CSV_COLUMNS = [
@@ -198,7 +204,8 @@ BLINK_LABEL_TO_CLASSIFICATION = {
 }
 
 
-def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None):
+def eyeblink_csv(frame_rows, output_path, total_frames=None,
+                 native_fps=None, sample_frame_indices=None):
     '''
     Saves per-frame blink logs from blink_on_video() in .csv format.
 
@@ -207,7 +214,8 @@ def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None)
                     timestamp_s, score, label, classification.
         output_path: path to save the .csv
         total_frames: used on error path when frame_rows is empty
-        total_seconds: used on error path when frame_rows is empty
+        native_fps: used on error path when frame_rows is empty
+        sample_frame_indices: native frame indices per sample; used on error path
 
     Returns:
         Nothing
@@ -216,13 +224,16 @@ def eyeblink_csv(frame_rows, output_path, total_frames=None, total_seconds=None)
         blinks_df = pd.DataFrame(frame_rows, columns=EYEBLINK_CSV_COLUMNS)
     elif total_frames and total_frames > 0:
         rows = []
-        duration = total_seconds or 0
+        fps = native_fps or 0
         for frame_index in range(total_frames):
+            if sample_frame_indices is not None:
+                source_idx = int(sample_frame_indices[frame_index])
+            else:
+                source_idx = frame_index
             rows.append({
                 "frame_num": frame_index + 1,
                 "total_frames": total_frames,
-                "timestamp_s": _blink_frame_timestamp(
-                    frame_index, total_frames, duration),
+                "timestamp_s": _blink_frame_timestamp(source_idx, fps),
                 "score": math.nan,
                 "label": "missing",
                 "classification": BLINK_LABEL_TO_CLASSIFICATION["missing"],
