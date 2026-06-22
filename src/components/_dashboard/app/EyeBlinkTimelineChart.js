@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 // material
 import { Card, CardContent, Box, Tooltip, useTheme } from "@mui/material";
 import { BLINK_TIMELINE_ROW_HEIGHT } from "./Eyeblinks.js";
-import { getClassificationStrokeColor } from "../../../utils/blinkClassification.js";
+import { getClassificationStrokeColor, formatBlinkLabelDisplay } from "../../../utils/blinkClassification.js";
 
 const EMPTY_CHART_DURATION_SECONDS = 10;
 const EMPTY_CHART_X_TICKS = Array.from(
@@ -317,17 +317,19 @@ export default function EyeBlinkTimelineChart({
               </text>
             </svg>
 
-            {chartData.map(([x, y], index) => (
+            {chartData.map(([x, y], index) => {
+              const tooltipText = `${Number(x).toFixed(2)}s — ${formatBlinkLabelDisplay(y)}`;
+              return (
               <Tooltip
                 key={`tooltip-${index}`}
-                title={`(x, y) = (${x}, ${y})`}
+                title={tooltipText}
                 arrow
                 placement="top"
               >
                 <Box
                   component="button"
                   type="button"
-                  aria-label={`(x, y) = (${x}, ${y})`}
+                  aria-label={tooltipText}
                   aria-pressed={isPointSelected(x, y, index)}
                   onClick={() => {
                     if (selectionDisabled) {
@@ -350,7 +352,8 @@ export default function EyeBlinkTimelineChart({
                   }}
                 />
               </Tooltip>
-            ))}
+              );
+            })}
             </>
           )}
         </Box>
