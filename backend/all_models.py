@@ -28,6 +28,7 @@ BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
 BLINK_PROGRESS_PATH = "AllResults/blink_progress.json"
 MAX_BLINK_FRAME_RAM_BYTES = 2 * 1024 ** 3
 BLINK_FRAME_RAM_COPIES = 1
+BLINK_MISSING_FRAME_MAX_DIMENSION = 640
 BLINK_TEMP_FILES = (
     "face_detected.png",
     "face_tight_crop.png",
@@ -305,6 +306,15 @@ def _clear_deepface_scratch_files():
 
 
 def _save_blink_full_frame(frame_rgb, frame_num, output_dir):
+    h, w = frame_rgb.shape[:2]
+    max_dim = max(h, w)
+    if max_dim > BLINK_MISSING_FRAME_MAX_DIMENSION:
+        scale = BLINK_MISSING_FRAME_MAX_DIMENSION / max_dim
+        frame_rgb = cv2.resize(
+            frame_rgb,
+            (int(w * scale), int(h * scale)),
+            interpolation=cv2.INTER_AREA,
+        )
     frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
     cv2.imwrite(os.path.join(output_dir, f"{frame_num}.png"), frame_bgr)
 
