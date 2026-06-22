@@ -27,7 +27,7 @@ BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
 BLINK_PROGRESS_PATH = "AllResults/blink_progress.json"
 MAX_BLINK_FRAME_RAM_BYTES = 2 * 1024 ** 3
-BLINK_FRAME_RAM_COPIES = 2
+BLINK_FRAME_RAM_COPIES = 1
 BLINK_TEMP_FILES = (
     "face_detected.png",
     "face_tight_crop.png",
@@ -309,6 +309,34 @@ def _save_blink_full_frame(frame_rgb, frame_num, output_dir):
     cv2.imwrite(os.path.join(output_dir, f"{frame_num}.png"), frame_bgr)
 
 
+def _read_sampled_full_frame(video_reader, video_path, sample_frame_indices, frame_index):
+    if sample_frame_indices is None or frame_index >= len(sample_frame_indices):
+        return None
+    source_idx = int(sample_frame_indices[frame_index])
+    result = video_reader.read_frame_at_index(video_path, source_idx)
+    if result is None:
+        return None
+    frame_rgb, _ = result
+    return frame_rgb[0]
+
+
+def _try_save_missing_blink_png(
+    video_reader,
+    video_path,
+    sample_frame_indices,
+    frame_index,
+    total_frames,
+    row,
+):
+    frame_rgb = _read_sampled_full_frame(
+        video_reader, video_path, sample_frame_indices, frame_index)
+    if frame_rgb is None:
+        return False
+    _save_blink_full_frame(frame_rgb, frame_index + 1, BLINK_ALL_FRAMES_DIR)
+    _update_blink_progress(total_frames, frame_row=row)
+    return True
+
+
 def _copy_blink_frame_file(source_path, frame_num, output_dir):
     dest = os.path.join(output_dir, f"{frame_num}.png")
     shutil.copy2(source_path, dest)
@@ -542,13 +570,8 @@ def blink_on_video(video_path, fps, facedet, use_model):
 
     try:
         video_reader = VideoReader()
-        full_frames_result = video_reader.read_frames(video_path, num_frames=total_frames)
-        full_frames = full_frames_result[0] if full_frames_result else None
-        if full_frames is None:
-            print(
-                "blink_on_video() warning: could not read full video frames for PNG export; "
-                "skipping all_video_frames saves."
-            )
+        sample_frame_indices = video_reader.get_sample_frame_indices(
+            video_path, num_frames=total_frames)
 
         frames_per_video = total_frames
         video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
@@ -577,11 +600,15 @@ def blink_on_video(video_path, fps, facedet, use_model):
                 if len(frame_data["faces"]) == 0:
                     row = _blink_frame_row(
                         frame_index, total_frames, total_seconds, "missing")
-                    if full_frames is not None and frame_index < len(full_frames):
-                        _save_blink_full_frame(
-                            full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
+                    if _try_save_missing_blink_png(
+                        video_reader,
+                        video_path,
+                        sample_frame_indices,
+                        frame_index,
+                        total_frames,
+                        row,
+                    ):
                         latest_progress_row = row
-                        _update_blink_progress(total_frames, frame_row=row)
                     _print_blink_frame_row(row)
                     all_missing += 1
                     blink_frame_rows.append(row)
@@ -655,11 +682,15 @@ def blink_on_video(video_path, fps, facedet, use_model):
             for frame_index in range(len(faces), total_frames):
                 row = _blink_frame_row(
                     frame_index, total_frames, total_seconds, "missing")
-                if full_frames is not None and frame_index < len(full_frames):
-                    _save_blink_full_frame(
-                        full_frames[frame_index], frame_index + 1, BLINK_ALL_FRAMES_DIR)
+                if _try_save_missing_blink_png(
+                    video_reader,
+                    video_path,
+                    sample_frame_indices,
+                    frame_index,
+                    total_frames,
+                    row,
+                ):
                     latest_progress_row = row
-                    _update_blink_progress(total_frames, frame_row=row)
                 _print_blink_frame_row(row)
                 blink_frame_rows.append(row)
 

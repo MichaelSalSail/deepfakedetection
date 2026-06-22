@@ -19,6 +19,23 @@ class VideoReader:
         self.verbose = verbose
         self.insets = insets
 
+    def get_sample_frame_indices(self, path, num_frames, jitter=0, seed=None):
+        """Return native video frame indices for evenly spaced samples."""
+        assert num_frames > 0
+
+        capture = cv2.VideoCapture(path)
+        frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        capture.release()
+        if frame_count <= 0:
+            return None
+
+        frame_idxs = np.linspace(0, frame_count - 1, num_frames, endpoint=True, dtype=int)
+        if jitter > 0:
+            np.random.seed(seed)
+            jitter_offsets = np.random.randint(-jitter, jitter, len(frame_idxs))
+            frame_idxs = np.clip(frame_idxs + jitter_offsets, 0, frame_count - 1)
+        return frame_idxs
+
     def read_frames(self, path, num_frames, jitter=0, seed=None):
         """Reads frames that are always evenly spaced throughout the video.
 
@@ -33,16 +50,11 @@ class VideoReader:
         """
         assert num_frames > 0
 
+        frame_idxs = self.get_sample_frame_indices(path, num_frames, jitter=jitter, seed=seed)
+        if frame_idxs is None:
+            return None
+
         capture = cv2.VideoCapture(path)
-        frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
-        if frame_count <= 0: return None
-
-        frame_idxs = np.linspace(0, frame_count - 1, num_frames, endpoint=True, dtype=int)
-        if jitter > 0:
-            np.random.seed(seed)
-            jitter_offsets = np.random.randint(-jitter, jitter, len(frame_idxs))
-            frame_idxs = np.clip(frame_idxs + jitter_offsets, 0, frame_count - 1)
-
         result = self._read_frames_at_indices(path, capture, frame_idxs)
         capture.release()
         return result
