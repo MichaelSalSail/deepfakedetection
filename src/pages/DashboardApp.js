@@ -63,6 +63,10 @@ const MANUAL_DEEPFAKE_TIPS = [
   "Watch for unusual lighting, blur, or other visual artifacts throughout the video.",
 ];
 
+const LIMITATIONS_POINTS = [
+  "Use videos with only one unique subject. If a video has multiple people, the app may analyze different faces in different frames, so scores and the subject crop may not match a single person.",
+];
+
 const ANALYSIS_MODEL_ERROR_MESSAGE =
   "Analysis completed, but one or more models failed. Try Generate Results again, or upload a different video.";
 
@@ -775,6 +779,33 @@ export default function DashboardApp() {
 
         <Box sx={{ mt: 1 }}>
           <GeminiFrameAnalysis />
+        </Box>
+
+        <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
+          Limitations
+        </Typography>
+
+        <Box
+          component="ol"
+          sx={{
+            m: 0,
+            pl: 2.5,
+            mb: 2.5,
+            width: "100%",
+            color: "text.secondary",
+            "& > li:not(:last-of-type)": { mb: 1.25 },
+          }}
+        >
+          {LIMITATIONS_POINTS.map((point, index) => (
+            <Typography
+              key={index}
+              component="li"
+              variant="body2"
+              sx={{ lineHeight: 1.6 }}
+            >
+              {point}
+            </Typography>
+          ))}
         </Box>
 
         <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
