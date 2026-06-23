@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { alpha, Box, Card, CardContent, Typography } from "@mui/material";
+
+const SUBJECT_REFERENCE_URL = "http://localhost:5001/home/face_crop";
 
 // ----------------------------------------------------------------------
 
@@ -8,8 +11,13 @@ const dashedBorderSx = {
   borderColor: (theme) => alpha(theme.palette.info.main, 0.45),
 };
 
-function FramePlaceholder({ label, variant = "collage" }) {
+function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null }) {
   const isSubject = variant === "subject";
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [subjectImageUrl]);
 
   return (
     <Box
@@ -39,6 +47,32 @@ function FramePlaceholder({ label, variant = "collage" }) {
             py: 0.25,
           }}
         >
+          {subjectImageUrl && !imageLoadFailed ? (
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                flexShrink: 0,
+                borderRadius: 1.5,
+                overflow: "hidden",
+                border: "1px solid",
+                borderColor: (theme) => alpha(theme.palette.info.main, 0.35),
+              }}
+            >
+              <Box
+                component="img"
+                src={subjectImageUrl}
+                alt="Subject reference crop"
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+                onError={() => setImageLoadFailed(true)}
+              />
+            </Box>
+          ) : (
           <Box
             sx={{
               width: 56,
@@ -69,6 +103,7 @@ function FramePlaceholder({ label, variant = "collage" }) {
               Subject crop
             </Typography>
           </Box>
+          )}
         </Box>
       ) : (
         <Box
@@ -109,7 +144,17 @@ function FramePlaceholder({ label, variant = "collage" }) {
 
 // ----------------------------------------------------------------------
 
-export default function GeminiFrameAnalysis({ aiAnalysisComplete = false }) {
+export default function GeminiFrameAnalysis({
+  aiAnalysisComplete = false,
+  analysisComplete = false,
+  subjectImageKey = 0,
+  noFace = false,
+}) {
+  const subjectImageUrl =
+    analysisComplete && !noFace
+      ? `${SUBJECT_REFERENCE_URL}?t=${subjectImageKey}`
+      : null;
+
   return (
     <Card
       sx={{
@@ -140,7 +185,11 @@ export default function GeminiFrameAnalysis({ aiAnalysisComplete = false }) {
               minHeight: { md: 300 },
             }}
           >
-            <FramePlaceholder label="Subject" variant="subject" />
+            <FramePlaceholder
+              label="Subject"
+              variant="subject"
+              subjectImageUrl={subjectImageUrl}
+            />
             <FramePlaceholder label="Video Summary" variant="collage" />
             <FramePlaceholder label="Eye Blink Example" variant="collage" />
           </Box>

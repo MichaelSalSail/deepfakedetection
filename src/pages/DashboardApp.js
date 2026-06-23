@@ -32,7 +32,7 @@ import {
   ModelTimingLog,
   AiLog,
 } from "../components/_dashboard/app/index.js";
-import { hasAnyModelError } from "../utils/modelTimingStatus.js";
+import { hasAnyModelError, isNoFaceScenario } from "../utils/modelTimingStatus.js";
 import { parseEyeblinkCsv } from "../utils/parseEyeblinkCsv.js";
 import FileSaver from 'file-saver';
 
@@ -903,7 +903,12 @@ export default function DashboardApp() {
                 {" "}Google Gemini AI)
               </Typography>
             </Box>
-            <GeminiFrameAnalysis aiAnalysisComplete={aiAnalysisComplete} />
+            <GeminiFrameAnalysis
+              aiAnalysisComplete={aiAnalysisComplete}
+              analysisComplete={data_switched % 2 === 1}
+              subjectImageKey={subjectImageKey}
+              noFace={data_switched % 2 === 1 && isNoFaceScenario(results.models)}
+            />
           </Box>
         </Box>
 
