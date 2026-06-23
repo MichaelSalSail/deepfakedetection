@@ -173,6 +173,8 @@ export default function DashboardApp() {
     }, AI_ANALYSIS_MS);
   };
 
+  const analysisInProgress = modelLoading || aiAnalysisRunning;
+
   const liveBlinkPreviewActive =
     modelLoading && !blinkPreviewLocked && liveBlinkRow != null;
 
@@ -519,7 +521,7 @@ export default function DashboardApp() {
               <input
                 id="file-upload"
                 hidden
-                disabled={modelLoading || uploading}
+                disabled={analysisInProgress || uploading}
                 type="file"
                 accept=".mp4"
                 onChange={onFileChange}
@@ -527,8 +529,8 @@ export default function DashboardApp() {
               <Box sx={{ flexShrink: 0 }}>
               <label htmlFor="file-upload">
                 <LoadingButton
-                  loading={uploading || modelLoading}
-                  disabled={modelLoading || uploading}
+                  loading={uploading || analysisInProgress}
+                  disabled={analysisInProgress || uploading}
                   component="span"
                   variant="contained"
                   sx={{ whiteSpace: "nowrap" }}
@@ -539,8 +541,8 @@ export default function DashboardApp() {
               </Box>
               <Box sx={{ flexShrink: 0 }}>
                 <LoadingButton
-                  loading={modelLoading}
-                  disabled={modelLoading || uploading || !videoSaved}
+                  loading={analysisInProgress}
+                  disabled={analysisInProgress || uploading || !videoSaved}
                   variant="contained"
                   sx={{ whiteSpace: "nowrap" }}
                   onClick={() => {
