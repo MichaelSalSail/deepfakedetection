@@ -1,8 +1,6 @@
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { alpha, Box, Card, CardContent, Typography } from "@mui/material";
 
-const GEMINI_LOGO_URL = "/static/gemini-logo.png";
-
 // ----------------------------------------------------------------------
 
 const dashedBorderSx = {
@@ -136,50 +134,6 @@ export default function GeminiFrameAnalysis() {
             sx={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              flexShrink: 0,
-              width: { xs: "100%", md: 148 },
-              px: { xs: 0, md: 0.5 },
-            }}
-          >
-            <Box
-              component="img"
-              src={GEMINI_LOGO_URL}
-              alt="Google Gemini"
-              sx={{
-                width: 56,
-                height: 56,
-                objectFit: "contain",
-                mb: 1.5,
-              }}
-            />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                lineHeight: 1.2,
-                color: "info.darker",
-                fontSize: { xs: "1.35rem", md: "1.45rem" },
-              }}
-            >
-              Gemini Frame Analysis
-            </Typography>
-            <Typography
-              variant="caption"
-              color="info.dark"
-              fontWeight="medium"
-              sx={{ mt: 0.75, display: "block", lineHeight: 1.35 }}
-            >
-              Powered by Google Gemini AI
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
               gap: 1,
               flexShrink: 0,
               width: { xs: "100%", md: 176 },
@@ -210,7 +164,7 @@ export default function GeminiFrameAnalysis() {
               color="text.secondary"
               sx={{ mb: 1, display: "block" }}
             >
-              Gemini AI output
+              AI output
             </Typography>
             <Typography
               variant="body2"

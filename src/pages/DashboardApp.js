@@ -793,6 +793,39 @@ export default function DashboardApp() {
               mt: { xs: 2, md: 2 },
             }}
           >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                gap: { xs: 0.25, md: 2 },
+                alignItems: { xs: "flex-start", md: "center" },
+                mb: 0.5,
+              }}
+            >
+              <Typography variant="overline" color="text.secondary">
+                AI Frame Analysis
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  lineHeight: 1.4,
+                }}
+              >
+                (Powered by{" "}
+                <Box
+                  component="img"
+                  src="/static/gemini-logo.png"
+                  alt=""
+                  aria-hidden
+                  sx={{ width: 14, height: 14, objectFit: "contain", display: "block" }}
+                />
+                {" "}Google Gemini AI)
+              </Typography>
+            </Box>
             <GeminiFrameAnalysis />
           </Box>
         </Box>

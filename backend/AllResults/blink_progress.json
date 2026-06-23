@@ -1,0 +1,13 @@
+{
+  "status": "complete",
+  "latest_frame_num": 151,
+  "total_frames": 151,
+  "latest_frame": {
+    "frame_num": 151,
+    "total_frames": 151,
+    "timestamp_s": 10.1,
+    "score": 1.0,
+    "label": "open",
+    "classification": 2
+  }
+}
