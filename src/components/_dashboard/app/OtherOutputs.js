@@ -1,21 +1,15 @@
 import { useEffect, useState } from "react";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 // material
 import {
   Box,
   Card,
   CardContent,
-  IconButton,
-  Tooltip,
   Typography,
 } from "@mui/material";
 
 import { isNoFaceScenario } from "../../../utils/modelTimingStatus.js";
 
 const FACE_CROP_URL = "http://localhost:5001/home/face_crop";
-const SUBJECT_HELP =
-  "These models focus on one person only—the cropped face shown here. " +
-  "If your video has multiple people, the results describe just this subject.";
 
 function formatAgeRange(ageMin, ageMax, isPlaceholder) {
   if (isPlaceholder || (ageMin === 0 && ageMax === 0)) {
@@ -190,16 +184,14 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
           "&:last-child": { pb: compact ? 1.5 : 2 },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-start", mb: compact ? 1 : 1.5 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1, pr: 1 }}>
-            One subject per video — results reflect only this face.
-          </Typography>
-          <Tooltip title={SUBJECT_HELP} arrow placement="left">
-            <IconButton size="small" aria-label="About subject analysis" sx={{ mt: -0.5 }}>
-              <InfoOutlinedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          align="center"
+          sx={{ display: "block", mb: compact ? 1 : 1.5 }}
+        >
+          Estimated age range, gender likelihood, and eyewear.
+        </Typography>
 
         <Box
           sx={{

@@ -45,6 +45,10 @@ const BASE_MODEL_HELP =
   "Use the other model outputs to draw any final conclusions. " +
   "A green score indicates a genuine video; a red score indicates a deepfake.";
 
+const SUBJECT_HELP =
+  "These models focus on one person only—the cropped face shown here. " +
+  "If your video has multiple people, the results describe just this subject.";
+
 const SUBJECT_INTERPRETATION_POINTS = [
   "Eyewear and facial hair are often harder to fake, so they can be signs of a genuine video.",
 ];
@@ -629,9 +633,24 @@ export default function DashboardApp() {
             </Box>
 
             <Box sx={{ flexShrink: 0 }}>
-              <Typography variant="overline" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
-                Subject
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 0.5,
+                  flexShrink: 0,
+                }}
+              >
+                <Typography variant="overline" color="text.secondary">
+                  Subject
+                </Typography>
+                <Tooltip title={SUBJECT_HELP} arrow placement="left">
+                  <IconButton size="small" aria-label="About subject analysis" sx={{ mt: -0.5 }}>
+                    <InfoOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
               <OtherOutputs
                 results={results}
                 analysisComplete={data_switched % 2 === 1}

@@ -318,7 +318,7 @@ export default function EyeBlinkTimelineChart({
             </svg>
 
             {chartData.map(([x, y], index) => {
-              const tooltipText = `${Number(x).toFixed(2)}s — ${formatBlinkLabelDisplay(y)}`;
+              const tooltipText = `${Number(x).toFixed(2)}s - ${formatBlinkLabelDisplay(y)}`;
               return (
               <Tooltip
                 key={`tooltip-${index}`}
