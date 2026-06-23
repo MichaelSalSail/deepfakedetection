@@ -109,7 +109,7 @@ function FramePlaceholder({ label, variant = "collage" }) {
 
 // ----------------------------------------------------------------------
 
-export default function GeminiFrameAnalysis() {
+export default function GeminiFrameAnalysis({ aiAnalysisComplete = false }) {
   return (
     <Card
       sx={{
@@ -170,14 +170,14 @@ export default function GeminiFrameAnalysis() {
               variant="body2"
               color="text.secondary"
               sx={{
-                fontStyle: "italic",
+                fontStyle: aiAnalysisComplete ? "normal" : "italic",
                 lineHeight: 1.65,
-                opacity: 0.72,
+                opacity: aiAnalysisComplete ? 1 : 0.72,
               }}
             >
-              Gemini will review the full scene frame and the cropped subject frame to describe
-              what it sees — setting, eyewear reflections, facial details, and signs of
-              manipulation or AI generation. Results will appear here after analysis.
+              {aiAnalysisComplete
+                ? "Gemini finished running! Analysis would go here."
+                : "Gemini will review the full scene frame and the cropped subject frame to describe what it sees — setting, eyewear reflections, facial details, and signs of manipulation or AI generation. Results will appear here after analysis."}
             </Typography>
           </Box>
         </Box>

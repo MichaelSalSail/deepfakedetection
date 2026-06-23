@@ -1,3 +1,4 @@
+import CheckIcon from "@mui/icons-material/Check";
 import { alpha, Box, Typography } from "@mui/material";
 
 function DurationBox({ duration }) {
@@ -30,7 +31,7 @@ function DurationBox({ duration }) {
   );
 }
 
-export default function AiLog() {
+export default function AiLog({ duration = "0s", complete = false }) {
   return (
     <Box
       sx={{
@@ -74,7 +75,12 @@ export default function AiLog() {
         <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25 }}>
           Gemini
         </Typography>
-        <DurationBox duration="0s" />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+          <DurationBox duration={duration} />
+          {complete ? (
+            <CheckIcon sx={{ fontSize: 12, color: "success.main" }} aria-hidden />
+          ) : null}
+        </Box>
       </Box>
     </Box>
   );

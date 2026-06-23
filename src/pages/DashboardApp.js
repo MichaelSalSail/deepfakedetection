@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 // material
 import {
   Box,
@@ -40,6 +40,8 @@ import axios from "axios";
 
 const MAX_VIDEO_BYTES = 50000000;
 const BLINK_PROGRESS_POLL_MS = 400;
+const AI_ANALYSIS_MS = 3000;
+const AI_ANALYSIS_DURATION = "3s";
 
 const BASE_MODEL_HELP =
   "Score colors: Green below 48%. Yellow from 48% to 68%. Red above 68%. " +
@@ -142,6 +144,34 @@ export default function DashboardApp() {
   const [liveBlinkRow, setLiveBlinkRow] = useState(null);
   const [liveBlinkFrameKey, setLiveBlinkFrameKey] = useState(0);
   const [blinkPreviewLocked, setBlinkPreviewLocked] = useState(false);
+  const [aiAnalysisRunning, setAiAnalysisRunning] = useState(false);
+  const [aiAnalysisComplete, setAiAnalysisComplete] = useState(false);
+  const aiAnalysisTimerRef = useRef(null);
+
+  const clearAiAnalysisTimers = () => {
+    if (aiAnalysisTimerRef.current) {
+      clearTimeout(aiAnalysisTimerRef.current);
+      aiAnalysisTimerRef.current = null;
+    }
+  };
+
+  const resetAiAnalysis = () => {
+    clearAiAnalysisTimers();
+    setAiAnalysisRunning(false);
+    setAiAnalysisComplete(false);
+  };
+
+  const startAiAnalysis = () => {
+    clearAiAnalysisTimers();
+    setAiAnalysisComplete(false);
+    setAiAnalysisRunning(true);
+
+    aiAnalysisTimerRef.current = setTimeout(() => {
+      clearAiAnalysisTimers();
+      setAiAnalysisRunning(false);
+      setAiAnalysisComplete(true);
+    }, AI_ANALYSIS_MS);
+  };
 
   const liveBlinkPreviewActive =
     modelLoading && !blinkPreviewLocked && liveBlinkRow != null;
@@ -170,6 +200,8 @@ export default function DashboardApp() {
     }, ALERT_PROGRESS_MS);
     return () => clearTimeout(timer);
   }, [info, infoKey]);
+
+  useEffect(() => () => clearAiAnalysisTimers(), []);
 
   useEffect(() => {
     if (!modelLoading || blinkPreviewLocked) {
@@ -221,6 +253,7 @@ export default function DashboardApp() {
   };
 
   const wait_for_models = () => {
+    resetAiAnalysis();
     setAnalysisError(false);
     setSelectedBlinkPoint(null);
     setBlinkTimelineRows(null);
@@ -289,6 +322,7 @@ export default function DashboardApp() {
     setLiveBlinkRow(null);
     setLiveBlinkFrameKey(0);
     setBlinkPreviewLocked(false);
+    resetAiAnalysis();
 
     // obtain the video duration
     var reader = new FileReader();
@@ -335,6 +369,7 @@ export default function DashboardApp() {
       // the process attached w/ 'Generate Results' has ended, update the count
       switched();
       setModelLoading(false);
+      startAiAnalysis();
       if (hasAnyModelError(temp.models)) {
         setAnalysisErrorMessage(ANALYSIS_MODEL_ERROR_MESSAGE);
         setAnalysisError(true);
@@ -534,7 +569,10 @@ export default function DashboardApp() {
                   results={results}
                   analysisComplete={data_switched % 2 === 1}
                 />
-                <AiLog />
+                <AiLog
+                  duration={aiAnalysisComplete ? AI_ANALYSIS_DURATION : "0s"}
+                  complete={aiAnalysisComplete}
+                />
               </Box>
             </Box>
           </Box>
@@ -606,6 +644,19 @@ export default function DashboardApp() {
                     Analysis runs locally. For fastest results, use a 10 to 20 second video.
                   </Typography>
                   <LinearProgress />
+                </Box>
+              ) : aiAnalysisRunning ? (
+                <Box sx={{ flexShrink: 0, px: 2, pb: 1.5 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    align="center"
+                    display="block"
+                    sx={{ mb: 0.75 }}
+                  >
+                    AI Analysis
+                  </Typography>
+                  <LinearProgress color="info" />
                 </Box>
               ) : null}
             </Card>
@@ -826,7 +877,7 @@ export default function DashboardApp() {
                 {" "}Google Gemini AI)
               </Typography>
             </Box>
-            <GeminiFrameAnalysis />
+            <GeminiFrameAnalysis aiAnalysisComplete={aiAnalysisComplete} />
           </Box>
         </Box>
 
