@@ -91,6 +91,11 @@ const alertProgressBarSx = {
   },
 };
 
+const alertInfoProgressBarSx = {
+  ...alertProgressBarSx,
+  bgcolor: "info.main",
+};
+
 const alertWithProgressSx = {
   mb: 2,
   position: "relative",
@@ -414,7 +419,7 @@ export default function DashboardApp() {
             sx={alertWithProgressSx}
           >
             Results for this video are already shown below.
-            <Box key={infoKey} aria-hidden sx={alertProgressBarSx} />
+            <Box key={infoKey} aria-hidden sx={alertInfoProgressBarSx} />
           </Alert>
         </Collapse>
         <Collapse in={analysisError}>
