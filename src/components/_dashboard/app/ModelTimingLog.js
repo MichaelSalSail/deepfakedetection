@@ -85,7 +85,7 @@ export default function ModelTimingLog({ results, analysisComplete = false }) {
           borderColor: "grey.400",
         }}
       >
-        Runtime Log
+        ML Log
       </Typography>
       {timingRows.map((row, index) => (
         <Box

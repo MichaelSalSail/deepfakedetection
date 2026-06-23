@@ -30,6 +30,7 @@ import {
   EyeBlinkPointLabelCard,
   GeminiFrameAnalysis,
   ModelTimingLog,
+  AiLog,
 } from "../components/_dashboard/app/index.js";
 import { hasAnyModelError } from "../utils/modelTimingStatus.js";
 import { parseEyeblinkCsv } from "../utils/parseEyeblinkCsv.js";
@@ -521,10 +522,20 @@ export default function DashboardApp() {
                   Generate Results
                 </LoadingButton>
               </Box>
-              <ModelTimingLog
-                results={results}
-                analysisComplete={data_switched % 2 === 1}
-              />
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  flexShrink: 0,
+                }}
+              >
+                <ModelTimingLog
+                  results={results}
+                  analysisComplete={data_switched % 2 === 1}
+                />
+                <AiLog />
+              </Box>
             </Box>
           </Box>
 
