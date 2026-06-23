@@ -485,29 +485,23 @@ export default function DashboardApp() {
               />
               <Box sx={{ flexShrink: 0 }}>
               <label htmlFor="file-upload">
-                {modelLoading || uploading ? (
-                  <LoadingButton loading variant="contained">
-                    {uploading ? "Saving video..." : "Loading"}
-                  </LoadingButton>
-                ) : (
-                  <Button
-                    disabled={modelLoading}
-                    component="span"
-                    variant="contained"
-                  >
-                    Upload Video
-                  </Button>
-                )}
+                <LoadingButton
+                  loading={uploading || modelLoading}
+                  disabled={modelLoading || uploading}
+                  component="span"
+                  variant="contained"
+                  sx={{ whiteSpace: "nowrap" }}
+                >
+                  Upload Video
+                </LoadingButton>
               </label>
               </Box>
               <Box sx={{ flexShrink: 0 }}>
-              {modelLoading ? (
-                <LoadingButton loading={modelLoading} />
-              ) : (
-                <Button
+                <LoadingButton
+                  loading={modelLoading}
                   disabled={modelLoading || uploading || !videoSaved}
-                  component="span"
                   variant="contained"
+                  sx={{ whiteSpace: "nowrap" }}
                   onClick={() => {
                     setUploadSuccess(false);
                     if (lastfilerun === file) {
@@ -520,8 +514,7 @@ export default function DashboardApp() {
                   }}
                 >
                   Generate Results
-                </Button>
-              )}
+                </LoadingButton>
               </Box>
               <ModelTimingLog
                 results={results}
