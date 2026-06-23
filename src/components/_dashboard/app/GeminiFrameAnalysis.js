@@ -5,35 +5,21 @@ const GEMINI_LOGO_URL = "/static/gemini-logo.png";
 
 // ----------------------------------------------------------------------
 
-function FramePlaceholder({ label, variant = "scene" }) {
-  const isScene = variant === "scene";
+const dashedBorderSx = {
+  border: "1px dashed",
+  borderColor: (theme) => alpha(theme.palette.info.main, 0.45),
+};
 
-  const outerBoxSx = {
-    flex: 1,
-    minHeight: 88,
-    width: "100%",
-    borderRadius: 1.5,
-    bgcolor: "common.white",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 0.5,
-    px: 1,
-  };
-
-  const dashedBorderSx = {
-    border: "1px dashed",
-    borderColor: (theme) => alpha(theme.palette.info.main, 0.45),
-  };
+function FramePlaceholder({ label, variant = "collage" }) {
+  const isSubject = variant === "subject";
 
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        flex: 1,
-        minHeight: 0,
+        flex: isSubject ? "0 0 auto" : 1,
+        minHeight: isSubject ? 0 : 72,
         alignItems: "stretch",
       }}
     >
@@ -45,8 +31,64 @@ function FramePlaceholder({ label, variant = "scene" }) {
       >
         {label}
       </Typography>
-      {isScene ? (
-        <Box sx={{ ...outerBoxSx, ...dashedBorderSx }}>
+      {isSubject ? (
+        <Box
+          sx={{
+            width: "100%",
+            bgcolor: "common.white",
+            display: "flex",
+            justifyContent: "center",
+            py: 0.25,
+          }}
+        >
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              flexShrink: 0,
+              borderRadius: 1.5,
+              ...dashedBorderSx,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 0.25,
+              px: 0.5,
+            }}
+          >
+            <ImageOutlinedIcon
+              sx={{
+                fontSize: 18,
+                color: (theme) => alpha(theme.palette.info.dark, 0.5),
+              }}
+            />
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              align="center"
+              sx={{ lineHeight: 1.2, fontSize: "0.6rem" }}
+            >
+              Subject crop
+            </Typography>
+          </Box>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 72,
+            width: "100%",
+            borderRadius: 1.5,
+            bgcolor: "common.white",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 0.5,
+            px: 1,
+            ...dashedBorderSx,
+          }}
+        >
           <ImageOutlinedIcon
             sx={{
               fontSize: 28,
@@ -59,41 +101,8 @@ function FramePlaceholder({ label, variant = "scene" }) {
             align="center"
             sx={{ lineHeight: 1.3, fontSize: "0.7rem" }}
           >
-            Full video frame
+            Frame Collage
           </Typography>
-        </Box>
-      ) : (
-        <Box sx={outerBoxSx}>
-          <Box
-            sx={{
-              width: 72,
-              height: 72,
-              flexShrink: 0,
-              borderRadius: 1.5,
-              ...dashedBorderSx,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0.5,
-              px: 1,
-            }}
-          >
-            <ImageOutlinedIcon
-              sx={{
-                fontSize: 20,
-                color: (theme) => alpha(theme.palette.info.dark, 0.5),
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              align="center"
-              sx={{ lineHeight: 1.3, fontSize: "0.65rem" }}
-            >
-              Subject crop
-            </Typography>
-          </Box>
         </Box>
       )}
     </Box>
@@ -120,7 +129,7 @@ export default function GeminiFrameAnalysis() {
             flexDirection: { xs: "column", md: "row" },
             gap: { xs: 2, md: 2.5 },
             alignItems: "stretch",
-            minHeight: { md: 220 },
+            minHeight: { md: 300 },
           }}
         >
           <Box
@@ -174,11 +183,12 @@ export default function GeminiFrameAnalysis() {
               gap: 1,
               flexShrink: 0,
               width: { xs: "100%", md: 176 },
-              minHeight: { md: 220 },
+              minHeight: { md: 300 },
             }}
           >
             <FramePlaceholder label="Subject" variant="subject" />
-            <FramePlaceholder label="Scene" variant="scene" />
+            <FramePlaceholder label="Video Summary" variant="collage" />
+            <FramePlaceholder label="Eye Blink Example" variant="collage" />
           </Box>
 
           <Box

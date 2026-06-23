@@ -773,10 +773,17 @@ export default function DashboardApp() {
             </Box>
           </Box>
           </Box>
-        </Box>
 
-        <Box sx={{ mt: 1 }}>
-          <GeminiFrameAnalysis />
+          <Box
+            sx={{
+              gridColumn: { md: "1 / -1" },
+              gridRow: { md: "4" },
+              minWidth: 0,
+              mt: { xs: 2, md: 2 },
+            }}
+          >
+            <GeminiFrameAnalysis />
+          </Box>
         </Box>
 
         <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
