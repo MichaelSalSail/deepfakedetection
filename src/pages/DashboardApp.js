@@ -41,13 +41,12 @@ const MAX_VIDEO_BYTES = 50000000;
 const BLINK_PROGRESS_POLL_MS = 400;
 
 const BASE_MODEL_HELP =
-  "In our testing, the base model is most likely to yield incorrect predictions in the yellow range. " +
-  "Use the other model outputs to draw any final conclusions. " +
-  "A green score indicates a genuine video; a red score indicates a deepfake.";
+  "Score colors: Green below 48%. Yellow from 48% to 68%. Red above 68%. " +
+  "In testing, the base model is least reliable in the yellow range.";
 
 const SUBJECT_HELP =
-  "These models focus on one person only—the cropped face shown here. " +
-  "If your video has multiple people, the results describe just this subject.";
+  "Gender score colors: Green at 60% or above. Yellow above 40% and below 60%. " +
+  "Red at 40% or below. ";
 
 const SUBJECT_INTERPRETATION_POINTS = [
   "Eyewear and facial hair are often harder to fake, so they can be signs of a genuine video.",
