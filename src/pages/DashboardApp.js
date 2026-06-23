@@ -632,31 +632,55 @@ export default function DashboardApp() {
                   />
                 </Box>
               </Box>
-              {modelLoading ? (
+              {modelLoading || aiAnalysisRunning ? (
                 <Box sx={{ flexShrink: 0, px: 2, pb: 1.5 }}>
+                  {modelLoading ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        justifyContent: "center",
+                        alignItems: "baseline",
+                        gap: 0.75,
+                        mb: 0.75,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ lineHeight: 1.4 }}
+                      >
+                        1/2 — Running local ML models
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ lineHeight: 1.4, opacity: 0.8 }}
+                      >
+                        (For fastest results, use a 10-20s video.)
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      align="center"
+                      display="block"
+                      sx={{ mb: 0.75 }}
+                    >
+                      2/2 — Running cloud AI analysis
+                    </Typography>
+                  )}
+                  <LinearProgress color={aiAnalysisRunning ? "info" : undefined} />
                   <Typography
                     variant="caption"
                     color="text.secondary"
                     align="center"
                     display="block"
-                    sx={{ mb: 0.75 }}
+                    sx={{ mt: 0.75, opacity: 0.8 }}
                   >
-                    Analysis runs locally. For fastest results, use a 10 to 20 second video.
+                    You can watch the video while analysis runs.
                   </Typography>
-                  <LinearProgress />
-                </Box>
-              ) : aiAnalysisRunning ? (
-                <Box sx={{ flexShrink: 0, px: 2, pb: 1.5 }}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    align="center"
-                    display="block"
-                    sx={{ mb: 0.75 }}
-                  >
-                    AI Analysis
-                  </Typography>
-                  <LinearProgress color="info" />
                 </Box>
               ) : null}
             </Card>
