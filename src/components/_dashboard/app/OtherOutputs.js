@@ -42,20 +42,20 @@ function orderGenderScoreRows(manScore, womanScore, isPlaceholder) {
   if (isPlaceholder || manScore == null || womanScore == null) {
     return rows;
   }
-  const colors = rows.map((row) => genderScoreColor(Number(row.score)));
-  if (colors.every((color) => color === "warning.dark")) {
-    return rows;
-  }
   const rank = (color) => {
     if (color === "green") return 0;
     if (color === "warning.dark") return 1;
     return 2;
   };
-  return [...rows].sort(
-    (a, b) =>
+  return [...rows].sort((a, b) => {
+    const rankDiff =
       rank(genderScoreColor(Number(a.score))) -
-      rank(genderScoreColor(Number(b.score)))
-  );
+      rank(genderScoreColor(Number(b.score)));
+    if (rankDiff !== 0) {
+      return rankDiff;
+    }
+    return Number(b.score) - Number(a.score);
+  });
 }
 
 const STAT_LABEL_SX = {
