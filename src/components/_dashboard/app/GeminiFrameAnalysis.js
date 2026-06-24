@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
-import { alpha, Box, Card, CardContent, Typography } from "@mui/material";
+import { alpha, Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
 
 const SUBJECT_REFERENCE_URL = "http://localhost:5001/home/face_crop";
 const EYEBLINK_EXAMPLE_URL = "http://localhost:5001/home/eyeblink_example";
@@ -12,7 +12,31 @@ const dashedBorderSx = {
   borderColor: (theme) => alpha(theme.palette.info.main, 0.45),
 };
 
-function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null, imageUrl = null }) {
+const collageTooltipProps = {
+  arrow: true,
+  placement: "right",
+  componentsProps: {
+    tooltip: {
+      sx: {
+        maxWidth: "none",
+        p: 1,
+        bgcolor: "common.white",
+        color: "text.primary",
+        border: "1px solid",
+        borderColor: (theme) => alpha(theme.palette.info.main, 0.35),
+        boxShadow: 2,
+      },
+    },
+  },
+};
+
+function FramePlaceholder({
+  label,
+  variant = "collage",
+  subjectImageUrl = null,
+  imageUrl = null,
+  enableHoverPreview = false,
+}) {
   const isSubject = variant === "subject";
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const resolvedImageUrl = isSubject ? subjectImageUrl : imageUrl;
@@ -20,6 +44,56 @@ function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null, 
   useEffect(() => {
     setImageLoadFailed(false);
   }, [resolvedImageUrl]);
+
+  const showCollageImage = !isSubject && resolvedImageUrl && !imageLoadFailed;
+  const collageImage = showCollageImage ? (
+    <Box
+      component="img"
+      src={resolvedImageUrl}
+      alt={label}
+      sx={{
+        width: "100%",
+        height: "100%",
+        minHeight: 72,
+        objectFit: "contain",
+        display: "block",
+      }}
+      onError={() => setImageLoadFailed(true)}
+    />
+  ) : null;
+
+  const collageImageWithOptionalPreview =
+    showCollageImage && enableHoverPreview ? (
+      <Tooltip
+        {...collageTooltipProps}
+        title={
+          <Box
+            component="img"
+            src={resolvedImageUrl}
+            alt={`${label} enlarged`}
+            sx={{
+              display: "block",
+              maxWidth: 420,
+              width: "100%",
+              height: "auto",
+            }}
+          />
+        }
+      >
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 72,
+            display: "flex",
+            cursor: "zoom-in",
+          }}
+        >
+          {collageImage}
+        </Box>
+      </Tooltip>
+    ) : (
+      collageImage
+    );
 
   return (
     <Box
@@ -121,25 +195,13 @@ function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null, 
             justifyContent: "center",
             gap: 0.5,
             px: 1,
-            py: resolvedImageUrl && !imageLoadFailed ? 0.5 : undefined,
+            py: showCollageImage ? 0.5 : undefined,
             overflow: "hidden",
-            ...(resolvedImageUrl && !imageLoadFailed ? {} : dashedBorderSx),
+            ...(showCollageImage ? {} : dashedBorderSx),
           }}
         >
-          {resolvedImageUrl && !imageLoadFailed ? (
-            <Box
-              component="img"
-              src={resolvedImageUrl}
-              alt={label}
-              sx={{
-                width: "100%",
-                height: "100%",
-                minHeight: 72,
-                objectFit: "contain",
-                display: "block",
-              }}
-              onError={() => setImageLoadFailed(true)}
-            />
+          {showCollageImage ? (
+            collageImageWithOptionalPreview
           ) : (
             <>
               <ImageOutlinedIcon
@@ -215,8 +277,13 @@ export default function GeminiFrameAnalysis({
               variant="subject"
               subjectImageUrl={subjectImageUrl}
             />
-            <FramePlaceholder label="Video Summary" variant="collage" />
-            <FramePlaceholder label="Eye Blink Example" variant="collage" imageUrl={eyeBlinkExampleUrl} />
+            <FramePlaceholder label="Video Summary" variant="collage" enableHoverPreview />
+            <FramePlaceholder
+              label="Eye Blink Example"
+              variant="collage"
+              imageUrl={eyeBlinkExampleUrl}
+              enableHoverPreview
+            />
           </Box>
 
           <Box
