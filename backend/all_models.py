@@ -21,7 +21,8 @@ from tensorflow.keras.applications.vgg16 import decode_predictions
 from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
-                             clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices
+                             clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices,\
+                             find_blink_instances, format_blink_instance_line
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
@@ -285,6 +286,13 @@ def _print_blink_frame_row(row):
         f"frame {row['frame_num']:03d}/{row['total_frames']}  "
         f"t={row['timestamp_s']:.2f}s  score={score_str}  {row['label']}"
     )
+
+
+def _print_blink_instances(frame_rows):
+    instances = find_blink_instances(frame_rows)
+    print(f"\n---- Eye Blink Instances ({len(instances)} found) ----")
+    for inst in instances:
+        print(format_blink_instance_line(inst["index"], inst))
 
 
 def _prepare_blink_all_frames_dir():
@@ -706,6 +714,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
             blink_frame_rows,
             "AllResults/eyeblink_data.csv",
         )
+        _print_blink_instances(blink_frame_rows)
     except Exception as e:
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
         eyeblink_csv(

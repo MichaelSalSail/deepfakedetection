@@ -244,6 +244,72 @@ def eyeblink_csv(frame_rows, output_path, total_frames=None,
 
     blinks_df.to_csv(output_path, index=False)
 
+
+def _compress_blink_label_runs(frame_rows):
+    runs = []
+    current = None
+    for row in frame_rows:
+        label = row["label"]
+        if label not in ("open", "closed"):
+            current = None
+            continue
+        if current is not None and current["label"] == label:
+            current["count"] += 1
+            current["end_frame_num"] = row["frame_num"]
+            current["end_timestamp_s"] = row["timestamp_s"]
+            continue
+        current = {
+            "label": label,
+            "count": 1,
+            "start_frame_num": row["frame_num"],
+            "end_frame_num": row["frame_num"],
+            "start_timestamp_s": row["timestamp_s"],
+            "end_timestamp_s": row["timestamp_s"],
+        }
+        runs.append(current)
+    return runs
+
+
+def find_blink_instances(frame_rows):
+    runs = _compress_blink_label_runs(frame_rows)
+    instances = []
+    i = 0
+    while i <= len(runs) - 3:
+        pre_open, closed, post_open = runs[i], runs[i + 1], runs[i + 2]
+        if (
+            pre_open["label"] == "open"
+            and closed["label"] == "closed"
+            and post_open["label"] == "open"
+        ):
+            start_ts = pre_open["start_timestamp_s"]
+            end_ts = post_open["end_timestamp_s"]
+            instances.append({
+                "index": len(instances) + 1,
+                "open_count": pre_open["count"],
+                "closed_count": closed["count"],
+                "post_open_count": post_open["count"],
+                "start_timestamp_s": start_ts,
+                "end_timestamp_s": end_ts,
+                "duration_s": round(end_ts - start_ts, 2),
+                "start_frame_num": pre_open["start_frame_num"],
+                "end_frame_num": post_open["end_frame_num"],
+            })
+            i += 2
+        else:
+            i += 1
+    return instances
+
+
+def format_blink_instance_line(index, instance):
+    return (
+        f"{index}. {instance['start_timestamp_s']:.2f}s–"
+        f"{instance['end_timestamp_s']:.2f}s ({instance['duration_s']:.2f}s) | "
+        f"{instance['open_count']} open → {instance['closed_count']} closed → "
+        f"{instance['post_open_count']} open | "
+        f"samples {instance['start_frame_num']}–{instance['end_frame_num']}"
+    )
+
+
 def write_result_update_json(results, output_path):
     '''
     Write the four model result dicts to result_update.json.
