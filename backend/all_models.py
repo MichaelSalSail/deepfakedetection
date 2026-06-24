@@ -23,10 +23,12 @@ from helper_functions import isotropically_resize_image, make_square_image, more
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
                              clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices,\
                              find_blink_instances, format_blink_instance_line, rank_blink_instances,\
-                             format_blink_example_line
+                             format_blink_example_line, clear_blink_gemini_dir, save_eyeblink_example_collage
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
+BLINK_GEMINI_DIR = os.path.join(BLINK_TEMP_DIR, "gemini")
+EYEBLINK_EXAMPLE_PATH = os.path.join(BLINK_GEMINI_DIR, "eyeblink_example.png")
 BLINK_PROGRESS_PATH = "AllResults/blink_progress.json"
 MAX_BLINK_FRAME_RAM_BYTES = 2 * 1024 ** 3
 BLINK_FRAME_RAM_COPIES = 1
@@ -299,6 +301,17 @@ def _print_blink_instances(frame_rows):
         print(format_blink_instance_line(inst["index"], inst))
     if instances:
         print(format_blink_example_line(instances[0]))
+        saved = save_eyeblink_example_collage(
+            instances[0]["core_frame_nums"],
+            BLINK_ALL_FRAMES_DIR,
+            EYEBLINK_EXAMPLE_PATH,
+        )
+        if saved:
+            frame_count = len(instances[0]["core_frame_nums"])
+            print(
+                f"saved eyeblink_example.png ({frame_count} frames) -> "
+                f"{EYEBLINK_EXAMPLE_PATH}"
+            )
 
 
 def _prepare_blink_all_frames_dir():
@@ -556,6 +569,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
             os.remove(path)
 
     _clear_deepface_scratch_files()
+    clear_blink_gemini_dir(BLINK_GEMINI_DIR)
 
     video_data = cv2.VideoCapture(video_path)
     frame_count = int(video_data.get(cv2.CAP_PROP_FRAME_COUNT))

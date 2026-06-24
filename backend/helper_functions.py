@@ -571,6 +571,69 @@ def clear_blink_frame_pngs(frames_dir):
         if filename.endswith(".png"):
             os.remove(os.path.join(frames_dir, filename))
 
+
+def clear_blink_gemini_dir(gemini_dir):
+    '''
+    Remove saved Gemini prompt collage PNGs from a prior blink run.
+
+    Args:
+        gemini_dir: path to temp/gemini directory.
+    '''
+    os.makedirs(gemini_dir, exist_ok=True)
+    for filename in os.listdir(gemini_dir):
+        if filename.endswith(".png"):
+            os.remove(os.path.join(gemini_dir, filename))
+
+
+def save_eyeblink_example_collage(frame_nums, frames_dir, output_path, target_height=128):
+    '''
+    Build a left-to-right collage from per-frame blink PNGs.
+
+    Args:
+        frame_nums: ordered frame_num values (sorted ascending before load).
+        frames_dir: path to all_video_frames directory.
+        output_path: destination PNG path.
+        target_height: uniform height for each panel in pixels.
+
+    Returns:
+        output_path on success, or None if frame_nums is empty or any PNG is missing.
+    '''
+    if not frame_nums:
+        return None
+
+    sorted_frame_nums = sorted(frame_nums)
+    missing = []
+    for frame_num in sorted_frame_nums:
+        if not os.path.isfile(os.path.join(frames_dir, f"{frame_num}.png")):
+            missing.append(frame_num)
+    if missing:
+        missing_str = ", ".join(str(frame_num) for frame_num in missing)
+        print(
+            "save_eyeblink_example_collage() warning: missing frame PNG(s) "
+            f"[{missing_str}]; skipping collage save."
+        )
+        return None
+
+    images = []
+    for frame_num in sorted_frame_nums:
+        path = os.path.join(frames_dir, f"{frame_num}.png")
+        img = Image.open(path).convert("RGB")
+        scale = target_height / img.height
+        resized_width = max(1, int(img.width * scale))
+        images.append(img.resize((resized_width, target_height), Image.Resampling.LANCZOS))
+
+    total_width = sum(img.width for img in images)
+    collage = Image.new("RGB", (total_width, target_height))
+    x_offset = 0
+    for img in images:
+        collage.paste(img, (x_offset, 0))
+        x_offset += img.width
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    collage.save(output_path)
+    return output_path
+
+
 def reset_blink_live_preview_state(progress_path, frames_dir):
     '''
     Reset blink live-preview artifacts for a new upload or inference run.
