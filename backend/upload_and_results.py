@@ -60,6 +60,14 @@ def get_face_crop():
         return "Face crop not found", 404
     return send_file(file_dir, mimetype='image/png')
 
+@app.route('/home/eyeblink_example', methods=['GET', 'OPTIONS'])
+def get_eyeblink_example():
+    file_dir = os.path.join(
+        APP_PATH, 'backend/current_upload/temp/gemini/eyeblink_example.png')
+    if not os.path.exists(file_dir):
+        return "Eye blink example not found", 404
+    return send_file(file_dir, mimetype='image/png')
+
 @app.route('/home/blink_progress', methods=['GET', 'OPTIONS'])
 def get_blink_progress():
     file_dir = os.path.join(APP_PATH, 'backend/AllResults/blink_progress.json')

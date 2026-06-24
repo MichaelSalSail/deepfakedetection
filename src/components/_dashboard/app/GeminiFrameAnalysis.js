@@ -3,6 +3,7 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { alpha, Box, Card, CardContent, Typography } from "@mui/material";
 
 const SUBJECT_REFERENCE_URL = "http://localhost:5001/home/face_crop";
+const EYEBLINK_EXAMPLE_URL = "http://localhost:5001/home/eyeblink_example";
 
 // ----------------------------------------------------------------------
 
@@ -11,13 +12,14 @@ const dashedBorderSx = {
   borderColor: (theme) => alpha(theme.palette.info.main, 0.45),
 };
 
-function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null }) {
+function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null, imageUrl = null }) {
   const isSubject = variant === "subject";
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const resolvedImageUrl = isSubject ? subjectImageUrl : imageUrl;
 
   useEffect(() => {
     setImageLoadFailed(false);
-  }, [subjectImageUrl]);
+  }, [resolvedImageUrl]);
 
   return (
     <Box
@@ -119,23 +121,43 @@ function FramePlaceholder({ label, variant = "collage", subjectImageUrl = null }
             justifyContent: "center",
             gap: 0.5,
             px: 1,
-            ...dashedBorderSx,
+            py: resolvedImageUrl && !imageLoadFailed ? 0.5 : undefined,
+            overflow: "hidden",
+            ...(resolvedImageUrl && !imageLoadFailed ? {} : dashedBorderSx),
           }}
         >
-          <ImageOutlinedIcon
-            sx={{
-              fontSize: 28,
-              color: (theme) => alpha(theme.palette.info.dark, 0.5),
-            }}
-          />
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            align="center"
-            sx={{ lineHeight: 1.3, fontSize: "0.7rem" }}
-          >
-            Frame Collage
-          </Typography>
+          {resolvedImageUrl && !imageLoadFailed ? (
+            <Box
+              component="img"
+              src={resolvedImageUrl}
+              alt={label}
+              sx={{
+                width: "100%",
+                height: "100%",
+                minHeight: 72,
+                objectFit: "contain",
+                display: "block",
+              }}
+              onError={() => setImageLoadFailed(true)}
+            />
+          ) : (
+            <>
+              <ImageOutlinedIcon
+                sx={{
+                  fontSize: 28,
+                  color: (theme) => alpha(theme.palette.info.dark, 0.5),
+                }}
+              />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                align="center"
+                sx={{ lineHeight: 1.3, fontSize: "0.7rem" }}
+              >
+                Frame Collage
+              </Typography>
+            </>
+          )}
         </Box>
       )}
     </Box>
@@ -154,6 +176,9 @@ export default function GeminiFrameAnalysis({
     analysisComplete && !noFace
       ? `${SUBJECT_REFERENCE_URL}?t=${subjectImageKey}`
       : null;
+  const eyeBlinkExampleUrl = analysisComplete
+    ? `${EYEBLINK_EXAMPLE_URL}?t=${subjectImageKey}`
+    : null;
 
   return (
     <Card
@@ -191,7 +216,7 @@ export default function GeminiFrameAnalysis({
               subjectImageUrl={subjectImageUrl}
             />
             <FramePlaceholder label="Video Summary" variant="collage" />
-            <FramePlaceholder label="Eye Blink Example" variant="collage" />
+            <FramePlaceholder label="Eye Blink Example" variant="collage" imageUrl={eyeBlinkExampleUrl} />
           </Box>
 
           <Box
