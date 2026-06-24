@@ -22,7 +22,7 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
                              clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices,\
-                             find_blink_instances, format_blink_instance_line
+                             find_blink_instances, format_blink_instance_line, rank_blink_instances
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
@@ -289,8 +289,11 @@ def _print_blink_frame_row(row):
 
 
 def _print_blink_instances(frame_rows):
-    instances = find_blink_instances(frame_rows)
-    print(f"\n---- Eye Blink Instances ({len(instances)} found) ----")
+    instances = rank_blink_instances(find_blink_instances(frame_rows))
+    print(
+        f"\n---- Eye Blink Instances ({len(instances)} found) "
+        f"(favorability 0–1, 1 = best) ----"
+    )
     for inst in instances:
         print(format_blink_instance_line(inst["index"], inst))
 

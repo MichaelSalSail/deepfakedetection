@@ -203,6 +203,13 @@ BLINK_LABEL_TO_CLASSIFICATION = {
     "open": 2,
 }
 
+BLINK_CORE_TARGET = 2
+BLINK_IDEAL_PHASE_RANGE = (2, 3)
+TIER_PERFECT_NATURAL = 1.00
+TIER_GOOD_NATURAL = 0.92
+TIER_CONSECUTIVE = 1.00
+TIER_EXTRACTED = 0.85
+
 
 def eyeblink_csv(frame_rows, output_path, total_frames=None,
                  native_fps=None, sample_frame_indices=None):
@@ -300,13 +307,160 @@ def find_blink_instances(frame_rows):
     return instances
 
 
-def format_blink_instance_line(index, instance):
+def _evenly_spaced_indices(n, k=2):
+    if n <= k:
+        return list(range(n))
+    return [round(i * (n - 1) / (k - 1)) for i in range(k)]
+
+
+def _has_consecutive_boundary_core(pre, closed, post):
+    return pre >= 2 and closed >= 2 and closed <= 3 and post >= 2
+
+
+def _extract_core_counts(pre, closed, post):
+    if pre == 1 or closed == 1 or post == 1:
+        return min(pre, 2), min(closed, 2), min(post, 2), "partial"
+
+    if pre <= 3 and closed <= 3 and post <= 3:
+        return pre, closed, post, "natural"
+
+    if _has_consecutive_boundary_core(pre, closed, post):
+        return BLINK_CORE_TARGET, BLINK_CORE_TARGET, BLINK_CORE_TARGET, "consecutive"
+
+    return BLINK_CORE_TARGET, BLINK_CORE_TARGET, BLINK_CORE_TARGET, "extracted"
+
+
+def _phase_adequacy(count):
+    if count == 1:
+        return 0.25
+    if count in BLINK_IDEAL_PHASE_RANGE:
+        return 1.0
+    return 1.0
+
+
+def _balance_score(open_count, closed_count, post_open_count):
+    counts = (open_count, closed_count, post_open_count)
+    max_count = max(counts)
+    min_count = min(counts)
+    return 1.0 - (max_count - min_count) / max(max_count, 1)
+
+
+def _tier_multiplier(method, open_count, closed_count, post_open_count):
+    if method == "partial":
+        return 1.0
+    if method == "natural":
+        if open_count == 2 and closed_count == 2 and post_open_count == 2:
+            return TIER_PERFECT_NATURAL
+        return TIER_GOOD_NATURAL
+    if (
+        method == "consecutive"
+        and open_count == BLINK_CORE_TARGET
+        and closed_count == BLINK_CORE_TARGET
+        and post_open_count == BLINK_CORE_TARGET
+    ):
+        return TIER_CONSECUTIVE
+    if (
+        method == "extracted"
+        and open_count == BLINK_CORE_TARGET
+        and closed_count == BLINK_CORE_TARGET
+        and post_open_count == BLINK_CORE_TARGET
+    ):
+        return TIER_EXTRACTED
+    return 1.0
+
+
+def _blink_reason_tags(method, open_count, closed_count, post_open_count, balance):
+    tags = []
+    if (
+        method == "natural"
+        and open_count == 2
+        and closed_count == 2
+        and post_open_count == 2
+    ):
+        return ["natural", "ideal adequacy", "perfect balance"]
+
+    if (
+        method == "consecutive"
+        and open_count == 2
+        and closed_count == 2
+        and post_open_count == 2
+        and balance == 1.0
+    ):
+        return ["consecutive", "perfect balance"]
+
+    if method == "natural":
+        tags.append("natural")
+    elif method == "consecutive":
+        tags.append("consecutive")
+    elif method == "extracted":
+        tags.append("extracted")
+
+    for name, count in (
+        ("open", open_count),
+        ("closed", closed_count),
+        ("post-open", post_open_count),
+    ):
+        if count == 1:
+            tags.append(f"thin {name} phase")
+            break
+
+    if open_count == closed_count == post_open_count and balance == 1.0:
+        if "perfect balance" not in tags:
+            tags.append("perfect balance")
+    elif balance >= 0.8:
+        tags.append("good balance")
+    elif balance < 0.5:
+        tags.append("skewed")
+
+    return tags[:3]
+
+
+def score_blink_instance(instance):
+    pre = instance["open_count"]
+    closed = instance["closed_count"]
+    post = instance["post_open_count"]
+
+    core_open, core_closed, core_post_open, method = _extract_core_counts(pre, closed, post)
+    adequacy = (
+        _phase_adequacy(core_open)
+        + _phase_adequacy(core_closed)
+        + _phase_adequacy(core_post_open)
+    ) / 3
+    balance = _balance_score(core_open, core_closed, core_post_open)
+    tier = _tier_multiplier(method, core_open, core_closed, core_post_open)
+    score = round(min(1.0, max(0.0, adequacy * balance * tier)), 2)
+
+    instance["chronological_index"] = instance.get("index")
+    instance["core_open"] = core_open
+    instance["core_closed"] = core_closed
+    instance["core_post_open"] = core_post_open
+    instance["core_method"] = method
+    instance["favorability_score"] = score
+    instance["reason_tags"] = _blink_reason_tags(
+        method, core_open, core_closed, core_post_open, balance)
+    return instance
+
+
+def rank_blink_instances(instances):
+    scored = [score_blink_instance(dict(inst)) for inst in instances]
+    scored.sort(key=lambda inst: (-inst["favorability_score"], inst["chronological_index"]))
+    for rank, inst in enumerate(scored, 1):
+        inst["index"] = rank
+    return scored
+
+
+def format_blink_instance_line(rank, instance):
+    tags = ", ".join(instance["reason_tags"])
     return (
-        f"{index}. {instance['start_timestamp_s']:.2f}s–"
+        f"{rank}. {instance['start_timestamp_s']:.2f}s–"
         f"{instance['end_timestamp_s']:.2f}s ({instance['duration_s']:.2f}s) | "
         f"{instance['open_count']} open → {instance['closed_count']} closed → "
         f"{instance['post_open_count']} open | "
-        f"samples {instance['start_frame_num']}–{instance['end_frame_num']}"
+        f"samples {instance['start_frame_num']}–{instance['end_frame_num']} | "
+        f"score {instance['favorability_score']:.2f} | "
+        f"core {instance['core_open']}+{instance['core_closed']}+"
+        f"{instance['core_post_open']} | "
+        f"{tags}"
     )
 
 
