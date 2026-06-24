@@ -415,6 +415,69 @@ def _blink_reason_tags(method, open_count, closed_count, post_open_count, balanc
     return tags[:3]
 
 
+def _pick_phase_frame_nums(phase_start, phase_len, pick_count, pick_mode):
+    if phase_len <= 0 or pick_count <= 0:
+        return []
+    pick_count = min(pick_count, phase_len)
+    if pick_mode == "all":
+        return [phase_start + i for i in range(phase_len)]
+    if pick_mode == "first":
+        return [phase_start + i for i in range(pick_count)]
+    if pick_mode == "last":
+        offset = phase_len - pick_count
+        return [phase_start + offset + i for i in range(pick_count)]
+    if pick_mode == "evenly_spaced":
+        indices = _evenly_spaced_indices(phase_len, pick_count)
+        return [phase_start + i for i in indices]
+    return []
+
+
+def resolve_core_frame_nums(instance):
+    start = instance["start_frame_num"]
+    pre_len = instance["open_count"]
+    closed_len = instance["closed_count"]
+    post_len = instance["post_open_count"]
+    pre_start = start
+    closed_start = start + pre_len
+    post_start = start + pre_len + closed_len
+
+    core_open = instance["core_open"]
+    core_closed = instance["core_closed"]
+    core_post_open = instance["core_post_open"]
+    method = instance["core_method"]
+
+    if method == "natural":
+        pre_frames = _pick_phase_frame_nums(pre_start, pre_len, pre_len, "all")
+        closed_frames = _pick_phase_frame_nums(closed_start, closed_len, closed_len, "all")
+        post_frames = _pick_phase_frame_nums(post_start, post_len, post_len, "all")
+    elif method == "consecutive":
+        pre_frames = _pick_phase_frame_nums(pre_start, pre_len, core_open, "last")
+        closed_frames = _pick_phase_frame_nums(closed_start, closed_len, core_closed, "first")
+        post_frames = _pick_phase_frame_nums(post_start, post_len, core_post_open, "first")
+    elif method == "extracted":
+        pre_frames = _pick_phase_frame_nums(pre_start, pre_len, core_open, "evenly_spaced")
+        closed_frames = _pick_phase_frame_nums(
+            closed_start, closed_len, core_closed, "evenly_spaced")
+        post_frames = _pick_phase_frame_nums(
+            post_start, post_len, core_post_open, "evenly_spaced")
+    else:
+        pre_frames = _pick_phase_frame_nums(pre_start, pre_len, core_open, "first")
+        closed_frames = _pick_phase_frame_nums(closed_start, closed_len, core_closed, "first")
+        post_frames = _pick_phase_frame_nums(post_start, post_len, core_post_open, "first")
+
+    return pre_frames + closed_frames + post_frames
+
+
+def format_blink_example_line(instance):
+    frame_nums = instance["core_frame_nums"]
+    frames_str = ", ".join(str(frame_num) for frame_num in frame_nums)
+    return (
+        f"eye blink for eyeblink_example.png: core "
+        f"{instance['core_open']}+{instance['core_closed']}+{instance['core_post_open']} "
+        f"(frames {frames_str})"
+    )
+
+
 def score_blink_instance(instance):
     pre = instance["open_count"]
     closed = instance["closed_count"]
@@ -438,6 +501,7 @@ def score_blink_instance(instance):
     instance["favorability_score"] = score
     instance["reason_tags"] = _blink_reason_tags(
         method, core_open, core_closed, core_post_open, balance)
+    instance["core_frame_nums"] = resolve_core_frame_nums(instance)
     return instance
 
 
