@@ -37,6 +37,7 @@ function FramePlaceholder({
   subjectImageUrl = null,
   imageUrl = null,
   enableHoverPreview = false,
+  hoverPreviewMaxWidth = 420,
 }) {
   const isSubject = variant === "subject";
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
@@ -74,7 +75,7 @@ function FramePlaceholder({
             alt={`${label} enlarged`}
             sx={{
               display: "block",
-              maxWidth: 420,
+              maxWidth: hoverPreviewMaxWidth,
               width: "100%",
               height: "auto",
             }}
@@ -286,6 +287,7 @@ export default function GeminiFrameAnalysis({
               variant="collage"
               imageUrl={videoSummaryUrl}
               enableHoverPreview
+              hoverPreviewMaxWidth={960}
             />
             <FramePlaceholder
               label="Eye Blink Example"
