@@ -68,6 +68,14 @@ def get_eyeblink_example():
         return "Eye blink example not found", 404
     return send_file(file_dir, mimetype='image/png')
 
+@app.route('/home/video_summary', methods=['GET', 'OPTIONS'])
+def get_video_summary():
+    file_dir = os.path.join(
+        APP_PATH, 'backend/current_upload/temp/gemini/video_summary.png')
+    if not os.path.exists(file_dir):
+        return "Video summary not found", 404
+    return send_file(file_dir, mimetype='image/png')
+
 @app.route('/home/blink_progress', methods=['GET', 'OPTIONS'])
 def get_blink_progress():
     file_dir = os.path.join(APP_PATH, 'backend/AllResults/blink_progress.json')

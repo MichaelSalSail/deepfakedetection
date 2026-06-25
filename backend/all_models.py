@@ -23,12 +23,16 @@ from helper_functions import isotropically_resize_image, make_square_image, more
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
                              clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices,\
                              find_blink_instances, format_blink_instance_line, rank_blink_instances,\
-                             format_blink_example_line, clear_blink_gemini_dir, save_eyeblink_example_collage
+                             format_blink_example_line, clear_blink_gemini_dir, save_eyeblink_example_collage,\
+                             video_summary_frame_count, clear_blink_summary_frames_dir
 
 BLINK_TEMP_DIR = os.path.join("current_upload", "temp")
 BLINK_ALL_FRAMES_DIR = os.path.join(BLINK_TEMP_DIR, "all_video_frames")
 BLINK_GEMINI_DIR = os.path.join(BLINK_TEMP_DIR, "gemini")
 EYEBLINK_EXAMPLE_PATH = os.path.join(BLINK_GEMINI_DIR, "eyeblink_example.png")
+VIDEO_SUMMARY_PATH = os.path.join(BLINK_GEMINI_DIR, "video_summary.png")
+VIDEO_SUMMARY_FRAMES_DIR = os.path.join(BLINK_GEMINI_DIR, "summary_frames")
+VIDEO_SUMMARY_COLLAGE_HEIGHT = 256
 BLINK_PROGRESS_PATH = "AllResults/blink_progress.json"
 MAX_BLINK_FRAME_RAM_BYTES = 2 * 1024 ** 3
 BLINK_FRAME_RAM_COPIES = 1
@@ -371,6 +375,55 @@ def _try_save_missing_blink_png(
 def _copy_blink_frame_file(source_path, frame_num, output_dir):
     dest = os.path.join(output_dir, f"{frame_num}.png")
     shutil.copy2(source_path, dest)
+
+
+def _save_video_summary_collage(video_reader, video_path, frame_count, native_fps):
+    num_frames = video_summary_frame_count(frame_count, native_fps)
+    if frame_count <= 0 or num_frames <= 0:
+        return None
+
+    indices = np.linspace(0, frame_count - 1, num_frames, endpoint=True, dtype=int)
+    duration_s = round(frame_count / native_fps, 2) if native_fps > 0 else 0.0
+    timestamps = [
+        _blink_frame_timestamp(int(source_idx), native_fps) for source_idx in indices
+    ]
+    ts_str = ", ".join(f"{ts:.2f}s" for ts in timestamps)
+    print(
+        f"video_summary.png: video length {duration_s:.2f}s -> "
+        f"extracting {num_frames} frames at timestamps {ts_str} "
+        f"(native video times; not blink sample frame numbers)"
+    )
+
+    clear_blink_summary_frames_dir(VIDEO_SUMMARY_FRAMES_DIR)
+
+    saved_nums = []
+    for panel_num, source_idx in enumerate(indices, start=1):
+        result = video_reader.read_frame_at_index(video_path, int(source_idx))
+        if result is None:
+            print(
+                "video_summary.png warning: failed to read native frame "
+                f"{int(source_idx)} (t={_blink_frame_timestamp(int(source_idx), native_fps):.2f}s)"
+            )
+            continue
+        frame_rgb, _ = result
+        _save_blink_full_frame(frame_rgb[0], panel_num, VIDEO_SUMMARY_FRAMES_DIR)
+        saved_nums.append(panel_num)
+
+    if not saved_nums:
+        return None
+
+    saved = save_eyeblink_example_collage(
+        saved_nums,
+        VIDEO_SUMMARY_FRAMES_DIR,
+        VIDEO_SUMMARY_PATH,
+        target_height=VIDEO_SUMMARY_COLLAGE_HEIGHT,
+    )
+    if saved:
+        print(
+            f"saved video_summary.png ({len(saved_nums)} frames) -> "
+            f"{VIDEO_SUMMARY_PATH}"
+        )
+    return saved
 
 
 def _serialize_blink_frame_for_json(row):
@@ -735,6 +788,7 @@ def blink_on_video(video_path, fps, facedet, use_model):
             "AllResults/eyeblink_data.csv",
         )
         _print_blink_instances(blink_frame_rows)
+        _save_video_summary_collage(video_reader, video_path, frame_count, native_fps)
     except Exception as e:
         print("Prediction error on video " + str(video_path) + ": " + str(e) + "\n")
         eyeblink_csv(

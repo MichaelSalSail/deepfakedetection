@@ -585,6 +585,38 @@ def clear_blink_gemini_dir(gemini_dir):
             os.remove(os.path.join(gemini_dir, filename))
 
 
+VIDEO_SUMMARY_MIN_FRAMES = 2
+VIDEO_SUMMARY_MAX_FRAMES = 10
+
+
+def video_summary_frame_count(frame_count, native_fps):
+    '''
+    Number of evenly spaced full-frame panels for video_summary.png.
+
+    Returns min(10, max(2, ceil(duration_seconds))).
+    '''
+    if native_fps <= 0 or frame_count <= 0:
+        return VIDEO_SUMMARY_MIN_FRAMES
+    duration_seconds = frame_count / native_fps
+    return min(
+        VIDEO_SUMMARY_MAX_FRAMES,
+        max(VIDEO_SUMMARY_MIN_FRAMES, math.ceil(duration_seconds)),
+    )
+
+
+def clear_blink_summary_frames_dir(summary_frames_dir):
+    '''
+    Remove saved per-panel video summary PNGs.
+
+    Args:
+        summary_frames_dir: path to gemini/summary_frames directory.
+    '''
+    os.makedirs(summary_frames_dir, exist_ok=True)
+    for filename in os.listdir(summary_frames_dir):
+        if filename.endswith(".png"):
+            os.remove(os.path.join(summary_frames_dir, filename))
+
+
 def save_eyeblink_example_collage(frame_nums, frames_dir, output_path, target_height=128):
     '''
     Build a left-to-right collage from per-frame blink PNGs.

@@ -3,6 +3,7 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { alpha, Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
 
 const SUBJECT_REFERENCE_URL = "http://localhost:5001/home/face_crop";
+const VIDEO_SUMMARY_URL = "http://localhost:5001/home/video_summary";
 const EYEBLINK_EXAMPLE_URL = "http://localhost:5001/home/eyeblink_example";
 
 // ----------------------------------------------------------------------
@@ -238,6 +239,9 @@ export default function GeminiFrameAnalysis({
     analysisComplete && !noFace
       ? `${SUBJECT_REFERENCE_URL}?t=${subjectImageKey}`
       : null;
+  const videoSummaryUrl = analysisComplete
+    ? `${VIDEO_SUMMARY_URL}?t=${subjectImageKey}`
+    : null;
   const eyeBlinkExampleUrl = analysisComplete
     ? `${EYEBLINK_EXAMPLE_URL}?t=${subjectImageKey}`
     : null;
@@ -277,7 +281,12 @@ export default function GeminiFrameAnalysis({
               variant="subject"
               subjectImageUrl={subjectImageUrl}
             />
-            <FramePlaceholder label="Video Summary" variant="collage" enableHoverPreview />
+            <FramePlaceholder
+              label="Video Summary"
+              variant="collage"
+              imageUrl={videoSummaryUrl}
+              enableHoverPreview
+            />
             <FramePlaceholder
               label="Eye Blink Example"
               variant="collage"
