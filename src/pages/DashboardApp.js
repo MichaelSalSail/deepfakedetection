@@ -33,6 +33,7 @@ import {
   AiLog,
 } from "../components/_dashboard/app/index.js";
 import { hasAnyModelError, isNoFaceScenario } from "../utils/modelTimingStatus.js";
+import { canRunGeminiAnalysis } from "../utils/geminiAnalysisStatus.js";
 import { parseEyeblinkCsv } from "../utils/parseEyeblinkCsv.js";
 import FileSaver from 'file-saver';
 
@@ -146,6 +147,8 @@ export default function DashboardApp() {
   const [blinkPreviewLocked, setBlinkPreviewLocked] = useState(false);
   const [aiAnalysisRunning, setAiAnalysisRunning] = useState(false);
   const [aiAnalysisComplete, setAiAnalysisComplete] = useState(false);
+  const [aiAnalysisSkipped, setAiAnalysisSkipped] = useState(false);
+  const [geminiPreflight, setGeminiPreflight] = useState(null);
   const aiAnalysisTimerRef = useRef(null);
 
   const clearAiAnalysisTimers = () => {
@@ -159,6 +162,8 @@ export default function DashboardApp() {
     clearAiAnalysisTimers();
     setAiAnalysisRunning(false);
     setAiAnalysisComplete(false);
+    setAiAnalysisSkipped(false);
+    setGeminiPreflight(null);
   };
 
   const startAiAnalysis = () => {
@@ -371,11 +376,25 @@ export default function DashboardApp() {
       // the process attached w/ 'Generate Results' has ended, update the count
       switched();
       setModelLoading(false);
-      startAiAnalysis();
       if (hasAnyModelError(temp.models)) {
         setAnalysisErrorMessage(ANALYSIS_MODEL_ERROR_MESSAGE);
         setAnalysisError(true);
       }
+      axios.get('http://localhost:5001/home/gemini_inputs')
+        .then((preflightRes) => {
+          const preflight = preflightRes.data;
+          setGeminiPreflight(preflight);
+          if (canRunGeminiAnalysis(preflight)) {
+            startAiAnalysis();
+          } else {
+            setAiAnalysisSkipped(true);
+          }
+        })
+        .catch((preflightError) => {
+          console.log(preflightError);
+          setGeminiPreflight(null);
+          setAiAnalysisSkipped(true);
+        });
       axios.get('http://localhost:5001/home/eyeblink_csv', { responseType: 'text' })
         .then((csvResponse) => {
           const rows = parseEyeblinkCsv(csvResponse.data);
@@ -572,8 +591,16 @@ export default function DashboardApp() {
                   analysisComplete={data_switched % 2 === 1}
                 />
                 <AiLog
-                  duration={aiAnalysisComplete ? AI_ANALYSIS_DURATION : "0s"}
-                  complete={aiAnalysisComplete}
+                  duration={
+                    aiAnalysisSkipped
+                      ? "—"
+                      : aiAnalysisComplete
+                        ? AI_ANALYSIS_DURATION
+                        : "0s"
+                  }
+                  showStatusIcon={data_switched % 2 === 1}
+                  hasError={aiAnalysisSkipped}
+                  complete={aiAnalysisComplete && !aiAnalysisSkipped}
                 />
               </Box>
             </Box>
@@ -905,9 +932,10 @@ export default function DashboardApp() {
             </Box>
             <GeminiFrameAnalysis
               aiAnalysisComplete={aiAnalysisComplete}
+              aiAnalysisSkipped={aiAnalysisSkipped}
               analysisComplete={data_switched % 2 === 1}
               subjectImageKey={subjectImageKey}
-              noFace={data_switched % 2 === 1 && isNoFaceScenario(results.models)}
+              geminiPreflight={geminiPreflight}
             />
           </Box>
         </Box>

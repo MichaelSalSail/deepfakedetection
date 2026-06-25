@@ -76,6 +76,16 @@ def get_video_summary():
         return "Video summary not found", 404
     return send_file(file_dir, mimetype='image/png')
 
+@app.route('/home/gemini_inputs', methods=['GET', 'OPTIONS'])
+def get_gemini_inputs():
+    temp_dir = os.path.join(APP_PATH, 'backend/current_upload/temp')
+    gemini_dir = os.path.join(temp_dir, 'gemini')
+    return {
+        "subject": os.path.isfile(os.path.join(temp_dir, 'subject_reference.png')),
+        "video_summary": os.path.isfile(os.path.join(gemini_dir, 'video_summary.png')),
+        "eyeblink_example": os.path.isfile(os.path.join(gemini_dir, 'eyeblink_example.png')),
+    }
+
 @app.route('/home/blink_progress', methods=['GET', 'OPTIONS'])
 def get_blink_progress():
     file_dir = os.path.join(APP_PATH, 'backend/AllResults/blink_progress.json')

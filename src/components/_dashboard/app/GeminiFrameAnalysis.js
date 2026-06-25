@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { alpha, Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
+import {
+  GEMINI_OPTIONAL_NOTE,
+  buildGeminiSkipMessage,
+  shouldShowGeminiOptionalNote,
+} from "../../../utils/geminiAnalysisStatus.js";
 
 const SUBJECT_REFERENCE_URL = "http://localhost:5001/home/face_crop";
 const VIDEO_SUMMARY_URL = "http://localhost:5001/home/video_summary";
@@ -232,20 +237,41 @@ function FramePlaceholder({
 
 export default function GeminiFrameAnalysis({
   aiAnalysisComplete = false,
+  aiAnalysisSkipped = false,
   analysisComplete = false,
   subjectImageKey = 0,
-  noFace = false,
+  geminiPreflight = null,
 }) {
   const subjectImageUrl =
-    analysisComplete && !noFace
+    analysisComplete && geminiPreflight?.subject
       ? `${SUBJECT_REFERENCE_URL}?t=${subjectImageKey}`
       : null;
-  const videoSummaryUrl = analysisComplete
-    ? `${VIDEO_SUMMARY_URL}?t=${subjectImageKey}`
-    : null;
-  const eyeBlinkExampleUrl = analysisComplete
-    ? `${EYEBLINK_EXAMPLE_URL}?t=${subjectImageKey}`
-    : null;
+  const videoSummaryUrl =
+    analysisComplete && geminiPreflight?.video_summary
+      ? `${VIDEO_SUMMARY_URL}?t=${subjectImageKey}`
+      : null;
+  const eyeBlinkExampleUrl =
+    analysisComplete && geminiPreflight?.eyeblink_example
+      ? `${EYEBLINK_EXAMPLE_URL}?t=${subjectImageKey}`
+      : null;
+
+  const skipMessage = aiAnalysisSkipped ? buildGeminiSkipMessage(geminiPreflight) : null;
+  const showOptionalNote =
+    aiAnalysisComplete && shouldShowGeminiOptionalNote(geminiPreflight);
+
+  let outputText = "Gemini will review the full scene frame and the cropped subject frame to describe what it sees — setting, eyewear reflections, facial details, and signs of manipulation or AI generation. Results will appear here after analysis.";
+  let outputItalic = true;
+  let outputOpacity = 0.72;
+
+  if (skipMessage) {
+    outputText = skipMessage;
+    outputItalic = false;
+    outputOpacity = 1;
+  } else if (aiAnalysisComplete) {
+    outputText = "Gemini finished running! Analysis would go here.";
+    outputItalic = false;
+    outputOpacity = 1;
+  }
 
   return (
     <Card
@@ -318,18 +344,25 @@ export default function GeminiFrameAnalysis({
             >
               AI output
             </Typography>
+            {showOptionalNote ? (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ lineHeight: 1.65, mb: 1 }}
+              >
+                {GEMINI_OPTIONAL_NOTE}
+              </Typography>
+            ) : null}
             <Typography
               variant="body2"
               color="text.secondary"
               sx={{
-                fontStyle: aiAnalysisComplete ? "normal" : "italic",
+                fontStyle: outputItalic ? "italic" : "normal",
                 lineHeight: 1.65,
-                opacity: aiAnalysisComplete ? 1 : 0.72,
+                opacity: outputOpacity,
               }}
             >
-              {aiAnalysisComplete
-                ? "Gemini finished running! Analysis would go here."
-                : "Gemini will review the full scene frame and the cropped subject frame to describe what it sees — setting, eyewear reflections, facial details, and signs of manipulation or AI generation. Results will appear here after analysis."}
+              {outputText}
             </Typography>
           </Box>
         </Box>

@@ -1,4 +1,5 @@
 import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import { alpha, Box, Typography } from "@mui/material";
 
 function DurationBox({ duration }) {
@@ -31,7 +32,12 @@ function DurationBox({ duration }) {
   );
 }
 
-export default function AiLog({ duration = "0s", complete = false }) {
+export default function AiLog({
+  duration = "0s",
+  complete = false,
+  hasError = false,
+  showStatusIcon = false,
+}) {
   return (
     <Box
       sx={{
@@ -77,8 +83,12 @@ export default function AiLog({ duration = "0s", complete = false }) {
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
           <DurationBox duration={duration} />
-          {complete ? (
-            <CheckIcon sx={{ fontSize: 12, color: "success.main" }} aria-hidden />
+          {showStatusIcon ? (
+            hasError ? (
+              <CloseIcon sx={{ fontSize: 12, color: "error.main" }} aria-hidden />
+            ) : complete ? (
+              <CheckIcon sx={{ fontSize: 12, color: "success.main" }} aria-hidden />
+            ) : null
           ) : null}
         </Box>
       </Box>
