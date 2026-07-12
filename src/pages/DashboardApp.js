@@ -45,7 +45,7 @@ const AI_ANALYSIS_MS = 3000;
 const AI_ANALYSIS_DURATION = "3s";
 
 const BASE_MODEL_HELP =
-  "Score colors: Green below 48%. Yellow from 48% to 68%. Red above 68%. " +
+  "Score colors: Green below 35%. Yellow from 35% to 65%. Red above 65%. " +
   "In testing, the base model is least reliable in the yellow range.";
 
 const SUBJECT_HELP =

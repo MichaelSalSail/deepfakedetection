@@ -28,10 +28,10 @@ function getDfdDisplay(dfdScore, noFace = false) {
         "Often means the analysis failed (e.g. out of memory). Try a shorter video.",
     };
   }
-  if (dfdScore < 48) {
+  if (dfdScore < 35) {
     return { color: "green", verdict: "Likely Authentic", failureHint: null };
   }
-  if (dfdScore <= 68) {
+  if (dfdScore <= 65) {
     return {
       color: "warning.dark",
       verdict: "Uncertain",
