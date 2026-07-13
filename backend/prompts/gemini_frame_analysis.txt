@@ -1,4 +1,11 @@
-You are assisting a deepfake-detection tool that combines local ML models with your visual analysis. You will receive up to three images, a per-frame eye-blink CSV file, and numeric model outputs from a short video. Base your answers on what you can see and the context provided. If evidence is weak or contradictory, say so explicitly. Do not claim certainty you cannot justify from these inputs alone.
+You are assisting a deepfake-detection tool that combines local ML models with your visual analysis. You will receive a short source video, up to two images, a per-frame eye-blink CSV file, and numeric model outputs. Base your answers on what you can see and the context provided. If evidence is weak or contradictory, say so explicitly. Do not claim certainty you cannot justify from these inputs alone.
+
+================================================================================
+INPUT VIDEO
+================================================================================
+
+Attached video — target.mp4
+The full uploaded video (maximum 1 minute long). By default this is sampled at ~1 frame/second, giving much finer temporal coverage than a static collage of stills. Use this to infer setting, activity, camera framing, subject movement through the scene, background stability, and whether the same person and environment stay consistent over time — plus lighting, blur, compression, or temporal/frame-to-frame anomalies visible as the video plays.
 
 ================================================================================
 INPUT IMAGES (in order)
@@ -7,10 +14,7 @@ INPUT IMAGES (in order)
 Image 1 — subject_reference.png
 A square-cropped face of the primary subject, taken from the video during automated blink analysis. The pipeline prefers a frame where the eyes appear open and the face is cleanly cropped. Use this for fine facial detail: apparent age range, perceived gender presentation, skin texture, eyewear, facial hair, makeup, and face-level artifacts (blur, warping, inconsistent lighting on skin).
 
-Image 2 — video_summary.png
-A left-to-right collage of {video_summary_panel_count} evenly spaced FULL-FRAME stills from the video (chronological: earliest panel on the left, latest on the right). Use this to infer setting, activity, camera framing, subject movement through the scene, background stability, and whether the same person and environment stay consistent over time.
-
-Image 3 — eyeblink_example.png {eyeblink_example_status}
+Image 2 — eyeblink_example.png {eyeblink_example_status}
 {eyeblink_example_description}
 
 ================================================================================
@@ -63,23 +67,23 @@ Primary image: subject_reference.png (Image 1).
 Describe the subject’s apparent age range, gender presentation, and notable visible traits (eyewear, facial hair, distinguishing features). Compare your visual read to the local age/gender estimates above — agree, disagree, or qualify when model outputs look unreliable. If the face crop is poor or absent, say what you can and cannot determine.
 
 ### 2. What is this video about?
-Primary image: video_summary.png (Image 2).
+Primary source: the attached video (target.mp4).
 
-Describe the setting, what the subject appears to be doing, and how the scene evolves from left to right. Note whether the same person, wardrobe, and environment stay consistent across panels, or whether anything changes in a way that could suggest splicing or inconsistent generation. Mention obvious lighting, blur, compression, or background anomalies visible across the timeline.
+Describe the setting, what the subject appears to be doing, and how the scene evolves over the course of the video. Note whether the same person, wardrobe, and environment stay consistent throughout, or whether anything changes in a way that could suggest splicing or inconsistent generation. Mention obvious lighting, blur, compression, or background anomalies visible across the timeline.
 
 ### 3. Is this video AI-generated, manipulated, or a deepfake?
-Use ALL available images, model outputs, and eyeblink_data.csv. Synthesize visual findings with the numeric signals and frame-by-frame blink data below.
+Use ALL available inputs — the attached video, images, model outputs, and eyeblink_data.csv. Synthesize visual findings with the numeric signals and frame-by-frame blink data below.
 
 When weighing authenticity, apply these heuristics (none are definitive alone):
 1. Eyewear and facial hair are often harder to fake convincingly — detailed, consistent glasses or facial hair can support authenticity, but their absence does not prove a fake.
 2. Blink-cycle physiology (from eyeblink_data.csv): a normal human blink closes the eyelid for roughly 100–150ms, with a full open→closed→open cycle typically 300–400ms; blinks are sparse events (15–20/minute at rest), not a constant signal. At 15 fps (~66.7ms per frame), a single blink typically spans 2–6 consecutive "closed" frames bounded by "open" frames — that's the expected, benign pattern. Frames that alternate open/closed/open/closed continuously over many consecutive frames would require a blink cycle of ~66–130ms sustained repeatedly, which is not physiologically achievable even for fast voluntary blinks — treat sustained alternation as suspicious.
 3. Missing/unknown frame patterns (from eyeblink_data.csv): these can mean the subject turned away OR that face detection struggled. Missing/unknown appearing in a group (e.g. during a head turn) is benign. Isolated single-frame instances of missing/unknown scattered between open/closed frames throughout the video are more suspicious and can indicate deepfake distortion — though genuine video edits/cuts can also produce this pattern, so weigh it alongside visual evidence.
-4. Deepfakes are often easier when the subject stays still; natural head movement, expression changes, and interaction with the environment across video_summary panels can support authenticity.
-5. Watch for unusual lighting, blur, warping, edge artifacts, teeth/eye irregularities, and temporal inconsistency between panels or within the blink sequence.
+4. Deepfakes are often easier when the subject stays still; natural head movement, expression changes, and interaction with the environment throughout the video can support authenticity.
+5. Watch for unusual lighting, blur, warping, edge artifacts, teeth/eye irregularities, and temporal inconsistency across the video or within the blink sequence.
 
 Explicitly address:
 - Agreement or tension with the deepfake detector score (especially if yellow/uncertain).
-- Whether blink motion in Image 3 (if provided) looks physiologically natural or stiff/artifact-heavy, and whether the frame-by-frame pattern in eyeblink_data.csv is physiologically plausible (see heuristics 2–3 above) or shows suspicious rapid alternation / scattered anomalies.
+- Whether blink motion in Image 2 (if provided) looks physiologically natural or stiff/artifact-heavy, and whether the frame-by-frame pattern in eyeblink_data.csv is physiologically plausible (see heuristics 2–3 above) or shows suspicious rapid alternation / scattered anomalies.
 - Whether the video looks fully synthetic, face-swapped/manipulated, or likely authentic — or if evidence is insufficient.
 - Your overall confidence: Low / Medium / High, with one sentence on the main reason.
 
