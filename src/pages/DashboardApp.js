@@ -907,7 +907,7 @@ export default function DashboardApp() {
               }}
             >
               <Typography variant="overline" color="text.secondary">
-                AI Frame Analysis
+                AI Video Analysis
               </Typography>
               <Typography
                 variant="caption"

@@ -76,6 +76,14 @@ def get_video_summary():
         return "Video summary not found", 404
     return send_file(file_dir, mimetype='image/png')
 
+@app.route('/home/video_thumbnail', methods=['GET', 'OPTIONS'])
+def get_video_thumbnail():
+    file_dir = os.path.join(
+        APP_PATH, 'backend/current_upload/temp/gemini/summary_frames/1.png')
+    if not os.path.exists(file_dir):
+        return "Video thumbnail not found", 404
+    return send_file(file_dir, mimetype='image/png')
+
 @app.route('/home/gemini_inputs', methods=['GET', 'OPTIONS'])
 def get_gemini_inputs():
     temp_dir = os.path.join(APP_PATH, 'backend/current_upload/temp')
@@ -83,6 +91,7 @@ def get_gemini_inputs():
     return {
         "subject": os.path.isfile(os.path.join(temp_dir, 'subject_reference.png')),
         "video_summary": os.path.isfile(os.path.join(gemini_dir, 'video_summary.png')),
+        "video_thumbnail": os.path.isfile(os.path.join(gemini_dir, 'summary_frames', '1.png')),
         "eyeblink_example": os.path.isfile(os.path.join(gemini_dir, 'eyeblink_example.png')),
     }
 

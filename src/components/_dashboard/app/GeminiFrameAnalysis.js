@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { alpha, Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
 import {
   GEMINI_OPTIONAL_NOTE,
@@ -8,7 +9,7 @@ import {
 } from "../../../utils/geminiAnalysisStatus.js";
 
 const SUBJECT_REFERENCE_URL = "http://localhost:5001/home/face_crop";
-const VIDEO_SUMMARY_URL = "http://localhost:5001/home/video_summary";
+const VIDEO_THUMBNAIL_URL = "http://localhost:5001/home/video_thumbnail";
 const EYEBLINK_EXAMPLE_URL = "http://localhost:5001/home/eyeblink_example";
 
 // ----------------------------------------------------------------------
@@ -36,6 +37,21 @@ const collageTooltipProps = {
   },
 };
 
+const playOverlaySx = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 32,
+  height: 32,
+  borderRadius: "50%",
+  bgcolor: alpha("#000000", 0.5),
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  pointerEvents: "none",
+};
+
 function FramePlaceholder({
   label,
   variant = "collage",
@@ -43,6 +59,8 @@ function FramePlaceholder({
   imageUrl = null,
   enableHoverPreview = false,
   hoverPreviewMaxWidth = 420,
+  showPlayOverlay = false,
+  placeholderText = "Frame Collage",
 }) {
   const isSubject = variant === "subject";
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
@@ -208,7 +226,14 @@ function FramePlaceholder({
           }}
         >
           {showCollageImage ? (
-            collageImageWithOptionalPreview
+            <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+              {collageImageWithOptionalPreview}
+              {showPlayOverlay ? (
+                <Box sx={playOverlaySx}>
+                  <PlayArrowIcon sx={{ fontSize: 20, color: "common.white" }} />
+                </Box>
+              ) : null}
+            </Box>
           ) : (
             <>
               <ImageOutlinedIcon
@@ -223,7 +248,7 @@ function FramePlaceholder({
                 align="center"
                 sx={{ lineHeight: 1.3, fontSize: "0.7rem" }}
               >
-                Frame Collage
+                {placeholderText}
               </Typography>
             </>
           )}
@@ -246,9 +271,9 @@ export default function GeminiFrameAnalysis({
     analysisComplete && geminiPreflight?.subject
       ? `${SUBJECT_REFERENCE_URL}?t=${subjectImageKey}`
       : null;
-  const videoSummaryUrl =
-    analysisComplete && geminiPreflight?.video_summary
-      ? `${VIDEO_SUMMARY_URL}?t=${subjectImageKey}`
+  const videoThumbnailUrl =
+    analysisComplete && geminiPreflight?.video_thumbnail
+      ? `${VIDEO_THUMBNAIL_URL}?t=${subjectImageKey}`
       : null;
   const eyeBlinkExampleUrl =
     analysisComplete && geminiPreflight?.eyeblink_example
@@ -309,11 +334,13 @@ export default function GeminiFrameAnalysis({
               subjectImageUrl={subjectImageUrl}
             />
             <FramePlaceholder
-              label="Video Summary"
+              label="Video"
               variant="collage"
-              imageUrl={videoSummaryUrl}
+              imageUrl={videoThumbnailUrl}
               enableHoverPreview
               hoverPreviewMaxWidth={960}
+              showPlayOverlay
+              placeholderText="Video Thumbnail"
             />
             <FramePlaceholder
               label="Eye Blink Example"
