@@ -239,11 +239,21 @@ def _print_runtime(start_time):
 def _dfd_verdict(score):
     if score == 0 or score == 50:
         return "?"
-    if score < 48:
+    if score < 35:
         return "Likely Authentic"
-    if score <= 68:
+    if score <= 65:
         return "Uncertain"
     return "Likely deepfake"
+
+
+def _dfd_zone(score):
+    if score == 0 or score == 50:
+        return "?"
+    if score < 35:
+        return "Green"
+    if score <= 65:
+        return "Yellow"
+    return "Red"
 
 
 def _print_dfd_score(score):
