@@ -9,6 +9,11 @@ DEFAULT_RESULTS_PATH = os.path.join(BACKEND_DIR, "AllResults", "result_update.js
 DEFAULT_EYEBLINK_EXAMPLE_PATH = os.path.join(
     BACKEND_DIR, "current_upload", "temp", "gemini", "eyeblink_example.png"
 )
+DEFAULT_SUBJECT_REFERENCE_PATH = os.path.join(
+    BACKEND_DIR, "current_upload", "temp", "subject_reference.png"
+)
+DEFAULT_TARGET_VIDEO_PATH = os.path.join(BACKEND_DIR, "current_upload", "target.mp4")
+DEFAULT_EYEBLINK_CSV_PATH = os.path.join(BACKEND_DIR, "AllResults", "eyeblink_data.csv")
 
 STALE_RESULTS_WARNING_SECONDS = 300  # 5 minutes
 
@@ -70,3 +75,35 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
     placeholders["eyeblink_example_status"] = os.path.exists(eyeblink_example_path)
 
     return placeholders
+
+
+def check_gemini_inputs_exist(
+    subject_reference_path=None,
+    target_video_path=None,
+    eyeblink_csv_path=None,
+    eyeblink_example_path=None,
+):
+    subject_reference_path = subject_reference_path or DEFAULT_SUBJECT_REFERENCE_PATH
+    target_video_path = target_video_path or DEFAULT_TARGET_VIDEO_PATH
+    eyeblink_csv_path = eyeblink_csv_path or DEFAULT_EYEBLINK_CSV_PATH
+    eyeblink_example_path = eyeblink_example_path or DEFAULT_EYEBLINK_EXAMPLE_PATH
+
+    files = [
+        ("subject_reference.png", subject_reference_path, "necessary"),
+        ("target.mp4", target_video_path, "necessary"),
+        ("eyeblink_data.csv", eyeblink_csv_path, "necessary"),
+        ("eyeblink_example.png", eyeblink_example_path, "optional"),
+    ]
+
+    all_necessary_present = True
+    for name, path, requirement in files:
+        exists = os.path.exists(path)
+        print(f"{name} ({requirement}): {'exists' if exists else 'missing'}")
+        if requirement == "necessary" and not exists:
+            all_necessary_present = False
+
+    if not all_necessary_present:
+        print("Required files for AI are missing. Skipping AI API call request.")
+        return False
+
+    return True

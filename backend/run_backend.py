@@ -5,7 +5,7 @@ from datetime import datetime
 import torch
 from all_models import predict_on_video, blink_on_video, detect_age_gender, detect_shades, _format_runtime
 from helper_functions import get_model, write_result_update_json, reset_blink_live_preview_state
-from ai_model import build_ai_model_placeholders
+from ai_model import build_ai_model_placeholders, check_gemini_inputs_exist
 
 # -----------------------------------------Look here-----------------------------------------
 # Change the directories as you see fit.
@@ -16,6 +16,7 @@ video_path = cwd+pre2+"/target.mp4"
 
 results_path = "AllResults/result_update.json"
 blink_progress_path = "AllResults/blink_progress.json"
+eyeblink_csv_path = "AllResults/eyeblink_data.csv"
 blink_frames_dir = cwd + "/current_upload/temp/all_video_frames"
 
 # Frame crops from blink_on_video()
@@ -48,6 +49,8 @@ print("start time: " + datetime.now().strftime("%H:%M:%S"))
 
 # Run all models
 reset_blink_live_preview_state(blink_progress_path, blink_frames_dir)
+if os.path.exists(eyeblink_csv_path):
+    os.remove(eyeblink_csv_path)
 print("1/2 - ML MODELS")
 dfd_result = predict_on_video(video_path, 15, device, facedet)
 blink_result = blink_on_video(video_path, 15, facedet, model_for_tests)
@@ -69,7 +72,8 @@ print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
 
 print()
 print("2/2 - AI MODEL")
-print(json.dumps(build_ai_model_placeholders(), indent=2))
+if check_gemini_inputs_exist():
+    print(json.dumps(build_ai_model_placeholders(), indent=2))
 
 # TensorFlow and PyTorch cleanup routines conflict on shutdown and cause a
 # segfault. All results are written to disk before this point, so bypassing
