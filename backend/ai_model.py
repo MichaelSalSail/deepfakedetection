@@ -77,6 +77,16 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
     return placeholders
 
 
+def _format_file_size(num_bytes):
+    if num_bytes < 1024:
+        return f"{num_bytes} B"
+    kb = num_bytes / 1024
+    if kb < 1024:
+        return f"{kb:.0f} KB"
+    mb = kb / 1024
+    return f"{mb:.1f} MB"
+
+
 def check_gemini_inputs_exist(
     subject_reference_path=None,
     target_video_path=None,
@@ -98,7 +108,8 @@ def check_gemini_inputs_exist(
     all_necessary_present = True
     for name, path, requirement in files:
         exists = os.path.exists(path)
-        print(f"{name} ({requirement}): {'exists' if exists else 'missing'}")
+        size_str = f" ({_format_file_size(os.path.getsize(path))})" if exists else ""
+        print(f"{name} ({requirement}): {'exists' if exists else 'missing'}{size_str}")
         if requirement == "necessary" and not exists:
             all_necessary_present = False
 
