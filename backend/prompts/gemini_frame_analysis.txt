@@ -15,7 +15,7 @@ Image 1 — subject_reference.png
 A square-cropped face of the primary subject, taken from the video during automated blink analysis. The pipeline prefers a frame where the eyes appear open and the face is cleanly cropped. Use this for fine facial detail: apparent age range, perceived gender presentation, skin texture, eyewear, facial hair, makeup, and face-level artifacts (blur, warping, inconsistent lighting on skin).
 
 Image 2 — eyeblink_example.png {eyeblink_example_status}
-{eyeblink_example_description}
+A short left-to-right strip of frames showing the subject's single clearest detected blink cycle (eyes open, closing, and reopening), used to visually verify blink motion looks natural for this subject and lighting. When marked not available, no clear blink instance was found in this video this run — rely on eyeblink_data.csv and the blink percentages above instead.
 
 ================================================================================
 INPUT FILES
@@ -47,7 +47,7 @@ Age & gender (DeepFace on face crops):
   {age_gender_reliability_note}
 
 Eye-blink distribution (sampled frames across the video):
-  Model accuracy: ~80% for open/closed classification; missing and unknown classifications are accurate.
+  Model accuracy: 82.4% overall for open/closed classification (Open: 95.8%, Closed: 56.0%). Missing/unknown classifications haven't been formally tested — an informal estimate from reviewing test videos puts accuracy around ~90%, higher than open/closed overall but with some room for error, so treat as reliable but not certain. The model has a known bias toward false "closed" predictions — for every 5 frames incorrectly predicted closed, only 1 is incorrectly predicted open. Treat isolated "closed" frames with extra skepticism; "open" labels are much more reliable.
   Open: {blink_open}%
   Closed: {blink_closed}%
   Unknown (face detected but crop failed): {blink_unknown}%
@@ -76,7 +76,7 @@ Use ALL available inputs — the attached video (including audio), images, model
 
 When weighing authenticity, apply these heuristics (none are definitive alone):
 1. Eyewear and facial hair are often harder to fake convincingly — detailed, consistent glasses or facial hair can support authenticity, but their absence does not prove a fake.
-2. Blink-cycle physiology (from eyeblink_data.csv): a normal human blink closes the eyelid for roughly 100–150ms, with a full open→closed→open cycle typically 300–400ms; blinks are sparse events (15–20/minute at rest), not a constant signal. At 15 fps (~66.7ms per frame), a single blink typically spans 2–6 consecutive "closed" frames bounded by "open" frames — that's the expected, benign pattern. Frames that alternate open/closed/open/closed continuously over many consecutive frames would require a blink cycle of ~66–130ms sustained repeatedly, which is not physiologically achievable even for fast voluntary blinks — treat sustained alternation as suspicious.
+2. Blink-cycle physiology (from eyeblink_data.csv): a normal human blink closes the eyelid for roughly 100–150ms, with a full open→closed→open cycle typically 300–400ms; blinks are sparse events (15–20/minute at rest), not a constant signal. At 15 fps (~66.7ms per frame), a single blink typically spans 2–6 consecutive "closed" frames bounded by "open" frames — that's the expected, benign pattern. Frames that alternate open/closed/open/closed continuously over many consecutive frames would require a blink cycle of ~66–130ms sustained repeatedly, which is not physiologically achievable even for fast voluntary blinks — treat sustained alternation as suspicious. That said, weigh isolated single-frame "closed" blips lightly: given the model's weak 56% closed-eye accuracy (see above), a scattered blip is more likely to be misclassification noise than a genuine anomaly — reserve suspicion for a longer, clearly-patterned oscillation run.
 3. Missing/unknown frame patterns (from eyeblink_data.csv): these can mean the subject turned away OR that face detection struggled. Missing/unknown appearing in a group (e.g. during a head turn) is benign. Isolated single-frame instances of missing/unknown scattered between open/closed frames throughout the video are more suspicious and can indicate deepfake distortion — though genuine video edits/cuts can also produce this pattern, so weigh it alongside visual evidence.
 4. Deepfakes are often easier when the subject stays still; natural head movement, expression changes, and interaction with the environment throughout the video can support authenticity.
 5. Watch for unusual lighting, blur, warping, edge artifacts, teeth/eye irregularities, and temporal inconsistency across the video or within the blink sequence.
