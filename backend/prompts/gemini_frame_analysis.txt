@@ -44,7 +44,6 @@ Deepfake detector (predict_on_video):
 Age & gender (DeepFace on face crops):
   Estimated age range: {age_min}–{age_max}
   Gender scores: Man {gender_man_score}%, Woman {gender_woman_score}%
-  {age_gender_reliability_note}
 
 Eye-blink distribution (sampled frames across the video):
   Model accuracy: 82.4% overall for open/closed classification (Open: 95.8%, Closed: 56.0%). Missing/unknown classifications haven't been formally tested — an informal estimate from reviewing test videos puts accuracy around ~90%, higher than open/closed overall but with some room for error, so treat as reliable but not certain. The model has a known bias toward false "closed" predictions — for every 5 frames incorrectly predicted closed, only 1 is incorrectly predicted open. Treat isolated "closed" frames with extra skepticism; "open" labels are much more reliable.
