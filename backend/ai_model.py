@@ -1,8 +1,12 @@
 import json
 import os
 import time
+from datetime import datetime
 
-from all_models import _dfd_zone, _dfd_verdict
+import requests
+from dotenv import load_dotenv
+
+from all_models import _dfd_zone, _dfd_verdict, _format_runtime
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_RESULTS_PATH = os.path.join(BACKEND_DIR, "AllResults", "result_update.json")
@@ -16,6 +20,19 @@ DEFAULT_TARGET_VIDEO_PATH = os.path.join(BACKEND_DIR, "current_upload", "target.
 DEFAULT_EYEBLINK_CSV_PATH = os.path.join(BACKEND_DIR, "AllResults", "eyeblink_data.csv")
 
 STALE_RESULTS_WARNING_SECONDS = 300  # 5 minutes
+
+load_dotenv(os.path.join(BACKEND_DIR, ".env"))
+
+GEMINI_MODEL = "gemini-3-flash-preview"
+GEMINI_API_URL = (
+    f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+)
+GEMINI_TEST_PROMPT = (
+    "In one paragraph, explain your own capabilities as a multimodal AI model. "
+    "In a second paragraph, explain your understanding of deepfake detection — "
+    "what visual, audio, and behavioral signals can indicate a video has been "
+    "manipulated or AI-generated."
+)
 
 ai_model_placeholders = {
     "eyeblink_example_status": False,       # no result_update.json equivalent
@@ -35,6 +52,21 @@ ai_model_placeholders = {
 
 
 def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
+    '''
+    Populate the Gemini prompt placeholders from the most recent run_backend.py run.
+
+    Args:
+        results_path: path to result_update.json. Defaults to AllResults/result_update.json.
+        eyeblink_example_path: path to eyeblink_example.png. Defaults to the standard
+                                current_upload/temp/gemini location.
+
+    Returns:
+        Dict of all 13 prompt placeholders (see ai_model_placeholders), with the
+        result_update.json-derived fields, dfd_zone/dfd_verdict, and
+        eyeblink_example_status filled in from the current filesystem state. Falls
+        back to the default values (with a printed warning) if result_update.json
+        is missing, stale, or malformed.
+    '''
     results_path = results_path or DEFAULT_RESULTS_PATH
     eyeblink_example_path = eyeblink_example_path or DEFAULT_EYEBLINK_EXAMPLE_PATH
 
@@ -78,6 +110,15 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
 
 
 def _format_file_size(num_bytes):
+    '''
+    Format a byte count as a short human-readable string.
+
+    Args:
+        num_bytes: file size in bytes.
+
+    Returns:
+        String like "512 B", "97 KB", or "16.8 MB".
+    '''
     if num_bytes < 1024:
         return f"{num_bytes} B"
     kb = num_bytes / 1024
@@ -93,6 +134,20 @@ def check_gemini_inputs_exist(
     eyeblink_csv_path=None,
     eyeblink_example_path=None,
 ):
+    '''
+    Check and print the existence (and size) of every file Gemini's prompt can attach.
+
+    Args:
+        subject_reference_path: path to subject_reference.png (necessary).
+        target_video_path: path to target.mp4 (necessary).
+        eyeblink_csv_path: path to eyeblink_data.csv (necessary).
+        eyeblink_example_path: path to eyeblink_example.png (optional — a video where
+                                the subject never blinks won't produce this file).
+
+    Returns:
+        True if all necessary files exist, False otherwise (and prints a message
+        that the AI API call is being skipped).
+    '''
     subject_reference_path = subject_reference_path or DEFAULT_SUBJECT_REFERENCE_PATH
     target_video_path = target_video_path or DEFAULT_TARGET_VIDEO_PATH
     eyeblink_csv_path = eyeblink_csv_path or DEFAULT_EYEBLINK_CSV_PATH
@@ -118,3 +173,57 @@ def check_gemini_inputs_exist(
         return False
 
     return True
+
+
+def send_gemini_test_prompt():
+    '''
+    Send a simple text-only request to Gemini 3 Flash Preview and print the result.
+
+    Calls the Gemini REST API directly (no SDK — the official google-genai SDK
+    requires Python >=3.10, and this backend runs on Python 3.8). No tools
+    (Google Search grounding, code execution, function calling) are attached to
+    the request. Prints start time, end time, and total runtime the same way
+    run_backend.py does, followed by the response text.
+
+    Returns:
+        Nothing.
+    '''
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("send_gemini_test_prompt() error: GEMINI_API_KEY is not set in backend/.env.")
+        return
+
+    print("start time: " + datetime.now().strftime("%H:%M:%S"))
+    start_perf = time.perf_counter()
+
+    headers = {
+        "x-goog-api-key": api_key,
+        "Content-Type": "application/json",
+    }
+    # No "tools" key is sent — this means no Google Search grounding, code
+    # execution, or function calling is enabled for this request.
+    payload = {
+        "contents": [
+            {"parts": [{"text": GEMINI_TEST_PROMPT}]},
+        ],
+    }
+
+    try:
+        response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=60)
+        response.raise_for_status()
+        data = response.json()
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+    except (requests.exceptions.RequestException, KeyError, IndexError, ValueError) as exc:
+        print("end time: " + datetime.now().strftime("%H:%M:%S"))
+        print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
+        print(f"send_gemini_test_prompt() error: Gemini API request failed ({exc}).")
+        return
+
+    print("end time: " + datetime.now().strftime("%H:%M:%S"))
+    print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
+    print("Gemini response:")
+    print(text)
+
+
+if __name__ == "__main__":
+    send_gemini_test_prompt()

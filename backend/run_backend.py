@@ -5,7 +5,7 @@ from datetime import datetime
 import torch
 from all_models import predict_on_video, blink_on_video, detect_age_gender, detect_shades, _format_runtime
 from helper_functions import get_model, write_result_update_json, reset_blink_live_preview_state
-from ai_model import build_ai_model_placeholders, check_gemini_inputs_exist
+from ai_model import build_ai_model_placeholders, check_gemini_inputs_exist, send_gemini_test_prompt
 
 # -----------------------------------------Look here-----------------------------------------
 # Change the directories as you see fit.
@@ -74,6 +74,7 @@ print()
 print("2/2 - AI MODEL")
 if check_gemini_inputs_exist():
     print(json.dumps(build_ai_model_placeholders(), indent=2))
+    send_gemini_test_prompt()
 
 # TensorFlow and PyTorch cleanup routines conflict on shutdown and cause a
 # segfault. All results are written to disk before this point, so bypassing
