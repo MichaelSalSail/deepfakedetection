@@ -1,4 +1,4 @@
-import {useState, useEffect, useRef} from "react";
+import {useState, useEffect} from "react";
 // material
 import {
   Box,
@@ -33,16 +33,15 @@ import {
   AiLog,
 } from "../components/_dashboard/app/index.js";
 import { hasAnyModelError, isNoFaceScenario } from "../utils/modelTimingStatus.js";
-import { canRunGeminiAnalysis } from "../utils/geminiAnalysisStatus.js";
 import { parseEyeblinkCsv } from "../utils/parseEyeblinkCsv.js";
+import formatRuntime from "../utils/formatRuntime.js";
 import FileSaver from 'file-saver';
 
 import axios from "axios";
 
 const MAX_VIDEO_BYTES = 50000000;
 const BLINK_PROGRESS_POLL_MS = 400;
-const AI_ANALYSIS_MS = 3000;
-const AI_ANALYSIS_DURATION = "3s";
+const AI_RESULTS_POLL_MS = 1000;
 
 const BASE_MODEL_HELP =
   "Score colors: Green below 35%. Yellow from 35% to 65%. Red above 65%. " +
@@ -149,33 +148,24 @@ export default function DashboardApp() {
   const [aiAnalysisComplete, setAiAnalysisComplete] = useState(false);
   const [aiAnalysisSkipped, setAiAnalysisSkipped] = useState(false);
   const [geminiPreflight, setGeminiPreflight] = useState(null);
-  const aiAnalysisTimerRef = useRef(null);
-
-  const clearAiAnalysisTimers = () => {
-    if (aiAnalysisTimerRef.current) {
-      clearTimeout(aiAnalysisTimerRef.current);
-      aiAnalysisTimerRef.current = null;
-    }
-  };
+  const [geminiResponseText, setGeminiResponseText] = useState("");
+  const [aiAnalysisRuntime, setAiAnalysisRuntime] = useState(0);
+  const [aiAnalysisMessage, setAiAnalysisMessage] = useState("");
 
   const resetAiAnalysis = () => {
-    clearAiAnalysisTimers();
     setAiAnalysisRunning(false);
     setAiAnalysisComplete(false);
     setAiAnalysisSkipped(false);
     setGeminiPreflight(null);
+    setGeminiResponseText("");
+    setAiAnalysisRuntime(0);
+    setAiAnalysisMessage("");
   };
 
   const startAiAnalysis = () => {
-    clearAiAnalysisTimers();
     setAiAnalysisComplete(false);
+    setAiAnalysisSkipped(false);
     setAiAnalysisRunning(true);
-
-    aiAnalysisTimerRef.current = setTimeout(() => {
-      clearAiAnalysisTimers();
-      setAiAnalysisRunning(false);
-      setAiAnalysisComplete(true);
-    }, AI_ANALYSIS_MS);
   };
 
   const analysisInProgress = modelLoading || aiAnalysisRunning;
@@ -207,8 +197,6 @@ export default function DashboardApp() {
     }, ALERT_PROGRESS_MS);
     return () => clearTimeout(timer);
   }, [info, infoKey]);
-
-  useEffect(() => () => clearAiAnalysisTimers(), []);
 
   useEffect(() => {
     if (!modelLoading || blinkPreviewLocked) {
@@ -253,6 +241,47 @@ export default function DashboardApp() {
     const intervalId = setInterval(pollBlinkProgress, BLINK_PROGRESS_POLL_MS);
     return () => clearInterval(intervalId);
   }, [modelLoading, blinkPreviewLocked]);
+
+  useEffect(() => {
+    if (!aiAnalysisRunning) {
+      return undefined;
+    }
+
+    const pollAiResults = () => {
+      axios.get('http://localhost:5001/home/ai_results')
+        .then((response) => {
+          const status = response.data?.status;
+
+          if (status === "pending") {
+            return;
+          }
+
+          if (status === "complete") {
+            setGeminiResponseText(response.data?.gemini_response ?? "");
+            setAiAnalysisRuntime(response.data?.runtime ?? 0);
+            setAiAnalysisComplete(true);
+            setAiAnalysisSkipped(false);
+            setAiAnalysisRunning(false);
+            return;
+          }
+
+          if (status === "error" || status === "skipped") {
+            setAiAnalysisMessage(response.data?.error_message ?? "");
+            setAiAnalysisComplete(true);
+            setAiAnalysisSkipped(true);
+            setAiAnalysisRunning(false);
+            return;
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
+
+    pollAiResults();
+    const intervalId = setInterval(pollAiResults, AI_RESULTS_POLL_MS);
+    return () => clearInterval(intervalId);
+  }, [aiAnalysisRunning]);
 
   // increment data_switched each time a new file is uploaded or 'Generate Results' completes a GET request
   const switched = () => {
@@ -382,19 +411,13 @@ export default function DashboardApp() {
       }
       axios.get('http://localhost:5001/home/gemini_inputs')
         .then((preflightRes) => {
-          const preflight = preflightRes.data;
-          setGeminiPreflight(preflight);
-          if (canRunGeminiAnalysis(preflight)) {
-            startAiAnalysis();
-          } else {
-            setAiAnalysisSkipped(true);
-          }
+          setGeminiPreflight(preflightRes.data);
         })
         .catch((preflightError) => {
           console.log(preflightError);
           setGeminiPreflight(null);
-          setAiAnalysisSkipped(true);
         });
+      startAiAnalysis();
       axios.get('http://localhost:5001/home/eyeblink_csv', { responseType: 'text' })
         .then((csvResponse) => {
           const rows = parseEyeblinkCsv(csvResponse.data);
@@ -595,7 +618,7 @@ export default function DashboardApp() {
                     aiAnalysisSkipped
                       ? "—"
                       : aiAnalysisComplete
-                        ? AI_ANALYSIS_DURATION
+                        ? formatRuntime(aiAnalysisRuntime)
                         : "0s"
                   }
                   showStatusIcon={data_switched % 2 === 1}
@@ -936,6 +959,8 @@ export default function DashboardApp() {
               analysisComplete={data_switched % 2 === 1}
               subjectImageKey={subjectImageKey}
               geminiPreflight={geminiPreflight}
+              geminiResponseText={geminiResponseText}
+              aiAnalysisMessage={aiAnalysisMessage}
             />
           </Box>
         </Box>

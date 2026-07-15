@@ -544,6 +544,23 @@ def write_result_update_json(results, output_path):
         os.fsync(outfile.fileno())
     os.replace(temp_path, output_path)
 
+
+def write_ai_result_json(result, output_path):
+    '''
+    Write the Gemini analysis status/result to ai_result_update.json.
+
+    Args:
+        result: dict with keys status ("pending"/"complete"/"error"/"skipped"),
+                gemini_response, runtime (seconds, float), error_message.
+        output_path: path to ai_result_update.json.
+    '''
+    temp_path = output_path + ".tmp"
+    with open(temp_path, "w") as outfile:
+        json.dump(result, outfile, indent=2)
+        outfile.flush()
+        os.fsync(outfile.fileno())
+    os.replace(temp_path, output_path)
+
 def write_blink_progress_json(payload, output_path):
     '''
     Write blink inference progress for live frame preview polling.

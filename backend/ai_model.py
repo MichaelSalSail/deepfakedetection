@@ -7,6 +7,7 @@ import requests
 from dotenv import load_dotenv
 
 from all_models import _dfd_zone, _dfd_verdict, _format_runtime
+from helper_functions import write_ai_result_json
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_RESULTS_PATH = os.path.join(BACKEND_DIR, "AllResults", "result_update.json")
@@ -145,8 +146,10 @@ def check_gemini_inputs_exist(
                                 the subject never blinks won't produce this file).
 
     Returns:
-        True if all necessary files exist, False otherwise (and prints a message
-        that the AI API call is being skipped).
+        Tuple (all_necessary_present, missing_necessary_filenames): the first is
+        True only if every necessary file exists; the second lists the filenames
+        (not full paths) of any missing necessary files, for building a message.
+        Prints a summary line if any necessary file is missing.
     '''
     subject_reference_path = subject_reference_path or DEFAULT_SUBJECT_REFERENCE_PATH
     target_video_path = target_video_path or DEFAULT_TARGET_VIDEO_PATH
@@ -160,30 +163,62 @@ def check_gemini_inputs_exist(
         ("eyeblink_example.png", eyeblink_example_path, "optional"),
     ]
 
-    all_necessary_present = True
+    missing_necessary = []
     for name, path, requirement in files:
         exists = os.path.exists(path)
         size_str = f" ({_format_file_size(os.path.getsize(path))})" if exists else ""
         print(f"{name} ({requirement}): {'exists' if exists else 'missing'}{size_str}")
         if requirement == "necessary" and not exists:
-            all_necessary_present = False
+            missing_necessary.append(name)
 
-    if not all_necessary_present:
+    if missing_necessary:
         print("Required files for AI are missing. Skipping AI API call request.")
-        return False
+        return False, missing_necessary
 
-    return True
+    return True, []
+
+
+def _call_gemini(prompt, api_key):
+    '''
+    Send a single text-only request to Gemini and return the response text.
+
+    Calls the Gemini REST API directly (no SDK — the official google-genai SDK
+    requires Python >=3.10, and this backend runs on Python 3.8). No "tools" key
+    is sent, so no Google Search grounding, code execution, or function calling
+    is enabled for this request.
+
+    Args:
+        prompt: text prompt to send.
+        api_key: Gemini API key.
+
+    Returns:
+        The response text.
+
+    Raises:
+        requests.exceptions.RequestException, KeyError, IndexError, or ValueError
+        if the request fails or the response is malformed.
+    '''
+    headers = {
+        "x-goog-api-key": api_key,
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "contents": [
+            {"parts": [{"text": prompt}]},
+        ],
+    }
+    response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=60)
+    response.raise_for_status()
+    data = response.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"]
 
 
 def send_gemini_test_prompt():
     '''
-    Send a simple text-only request to Gemini 3 Flash Preview and print the result.
+    Send the Gemini test prompt and print the result to the terminal.
 
-    Calls the Gemini REST API directly (no SDK — the official google-genai SDK
-    requires Python >=3.10, and this backend runs on Python 3.8). No tools
-    (Google Search grounding, code execution, function calling) are attached to
-    the request. Prints start time, end time, and total runtime the same way
-    run_backend.py does, followed by the response text.
+    Prints start time, end time, and total runtime the same way run_backend.py
+    does, followed by the response text (or an error message on failure).
 
     Returns:
         Nothing.
@@ -196,23 +231,8 @@ def send_gemini_test_prompt():
     print("start time: " + datetime.now().strftime("%H:%M:%S"))
     start_perf = time.perf_counter()
 
-    headers = {
-        "x-goog-api-key": api_key,
-        "Content-Type": "application/json",
-    }
-    # No "tools" key is sent — this means no Google Search grounding, code
-    # execution, or function calling is enabled for this request.
-    payload = {
-        "contents": [
-            {"parts": [{"text": GEMINI_TEST_PROMPT}]},
-        ],
-    }
-
     try:
-        response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=60)
-        response.raise_for_status()
-        data = response.json()
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
     except (requests.exceptions.RequestException, KeyError, IndexError, ValueError) as exc:
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
         print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
@@ -223,6 +243,64 @@ def send_gemini_test_prompt():
     print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
     print("Gemini response:")
     print(text)
+
+
+def run_gemini_analysis(ai_results_path):
+    '''
+    Run the Gemini test prompt as part of run_backend.py and write the outcome
+    to ai_result_update.json for the frontend to poll.
+
+    Still sends the placeholder GEMINI_TEST_PROMPT rather than the full
+    deepfake-analysis prompt/attachments — that integration is future work.
+    Prints start time, end time, and total runtime the same way
+    send_gemini_test_prompt() does.
+
+    Args:
+        ai_results_path: path to write ai_result_update.json to.
+
+    Returns:
+        Nothing.
+    '''
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("run_gemini_analysis() error: GEMINI_API_KEY is not set in backend/.env.")
+        write_ai_result_json({
+            "status": "error",
+            "gemini_response": "",
+            "runtime": 0,
+            "error_message": "Gemini API request failed.",
+        }, ai_results_path)
+        return
+
+    print("start time: " + datetime.now().strftime("%H:%M:%S"))
+    start_perf = time.perf_counter()
+
+    try:
+        text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
+    except (requests.exceptions.RequestException, KeyError, IndexError, ValueError) as exc:
+        runtime = time.perf_counter() - start_perf
+        print("end time: " + datetime.now().strftime("%H:%M:%S"))
+        print("total runtime: " + _format_runtime(runtime))
+        print(f"run_gemini_analysis() error: Gemini API request failed ({exc}).")
+        write_ai_result_json({
+            "status": "error",
+            "gemini_response": "",
+            "runtime": runtime,
+            "error_message": "Gemini API request failed.",
+        }, ai_results_path)
+        return
+
+    runtime = time.perf_counter() - start_perf
+    print("end time: " + datetime.now().strftime("%H:%M:%S"))
+    print("total runtime: " + _format_runtime(runtime))
+    print("Gemini response:")
+    print(text)
+    write_ai_result_json({
+        "status": "complete",
+        "gemini_response": text,
+        "runtime": runtime,
+        "error_message": "",
+    }, ai_results_path)
 
 
 if __name__ == "__main__":

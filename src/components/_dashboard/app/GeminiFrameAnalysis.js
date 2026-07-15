@@ -4,7 +4,6 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { alpha, Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
 import {
   GEMINI_OPTIONAL_NOTE,
-  buildGeminiSkipMessage,
   shouldShowGeminiOptionalNote,
 } from "../../../utils/geminiAnalysisStatus.js";
 
@@ -266,6 +265,8 @@ export default function GeminiFrameAnalysis({
   analysisComplete = false,
   subjectImageKey = 0,
   geminiPreflight = null,
+  geminiResponseText = "",
+  aiAnalysisMessage = "",
 }) {
   const subjectImageUrl =
     analysisComplete && geminiPreflight?.subject
@@ -280,9 +281,9 @@ export default function GeminiFrameAnalysis({
       ? `${EYEBLINK_EXAMPLE_URL}?t=${subjectImageKey}`
       : null;
 
-  const skipMessage = aiAnalysisSkipped ? buildGeminiSkipMessage(geminiPreflight) : null;
+  const skipMessage = aiAnalysisSkipped ? aiAnalysisMessage : null;
   const showOptionalNote =
-    aiAnalysisComplete && shouldShowGeminiOptionalNote(geminiPreflight);
+    aiAnalysisComplete && !aiAnalysisSkipped && shouldShowGeminiOptionalNote(geminiPreflight);
 
   let outputText = "Gemini will review the full scene frame and the cropped subject frame to describe what it sees — setting, eyewear reflections, facial details, and signs of manipulation or AI generation. Results will appear here after analysis.";
   let outputItalic = true;
@@ -293,7 +294,7 @@ export default function GeminiFrameAnalysis({
     outputItalic = false;
     outputOpacity = 1;
   } else if (aiAnalysisComplete) {
-    outputText = "Gemini finished running! Analysis would go here.";
+    outputText = geminiResponseText;
     outputItalic = false;
     outputOpacity = 1;
   }

@@ -106,6 +106,18 @@ def get_blink_progress():
         }
     return _load_results_json(file_dir)
 
+@app.route('/home/ai_results', methods=['GET', 'OPTIONS'])
+def get_ai_results():
+    file_dir = os.path.join(APP_PATH, 'backend/AllResults/ai_result_update.json')
+    if not os.path.exists(file_dir):
+        return {
+            "status": "pending",
+            "gemini_response": "",
+            "runtime": 0,
+            "error_message": "",
+        }
+    return _load_results_json(file_dir)
+
 @app.route('/home/blink_frame/<int:frame_num>', methods=['GET', 'OPTIONS'])
 def get_blink_frame(frame_num):
     if frame_num < 1:
