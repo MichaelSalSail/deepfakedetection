@@ -14,3 +14,4 @@ opencv-python==4.8.1.78
 pandas==1.5.3
 Pillow==9.5.0
 matplotlib==3.7.2
+python-dotenv==1.0.1
