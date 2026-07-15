@@ -195,8 +195,10 @@ def _call_gemini(prompt, api_key):
         The response text.
 
     Raises:
-        requests.exceptions.RequestException, KeyError, IndexError, or ValueError
-        if the request fails or the response is malformed.
+        requests.exceptions.RequestException (network/timeout failures),
+        RuntimeError (Gemini returned an HTTP error, e.g. bad API key or rate
+        limit — message is Gemini's own error text when available), or
+        KeyError/IndexError/ValueError if a successful response is malformed.
     '''
     headers = {
         "x-goog-api-key": api_key,
@@ -208,7 +210,13 @@ def _call_gemini(prompt, api_key):
         ],
     }
     response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=60)
-    response.raise_for_status()
+    if not response.ok:
+        message = f"{response.status_code} {response.reason}"
+        try:
+            message = response.json()["error"]["message"]
+        except (ValueError, KeyError):
+            pass
+        raise RuntimeError(message)
     data = response.json()
     return data["candidates"][0]["content"]["parts"][0]["text"]
 
@@ -233,10 +241,10 @@ def send_gemini_test_prompt():
 
     try:
         text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
-    except (requests.exceptions.RequestException, KeyError, IndexError, ValueError) as exc:
+    except (requests.exceptions.RequestException, RuntimeError, KeyError, IndexError, ValueError) as exc:
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
         print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
-        print(f"send_gemini_test_prompt() error: Gemini API request failed ({exc}).")
+        print(f"send_gemini_test_prompt() error: Gemini API request failed: {exc}")
         return
 
     print("end time: " + datetime.now().strftime("%H:%M:%S"))
@@ -263,12 +271,13 @@ def run_gemini_analysis(ai_results_path):
     '''
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print("run_gemini_analysis() error: GEMINI_API_KEY is not set in backend/.env.")
+        message = "GEMINI_API_KEY is not set in backend/.env."
+        print(f"run_gemini_analysis() error: {message}")
         write_ai_result_json({
             "status": "error",
             "gemini_response": "",
             "runtime": 0,
-            "error_message": "Gemini API request failed.",
+            "error_message": message,
         }, ai_results_path)
         return
 
@@ -277,16 +286,17 @@ def run_gemini_analysis(ai_results_path):
 
     try:
         text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
-    except (requests.exceptions.RequestException, KeyError, IndexError, ValueError) as exc:
+    except (requests.exceptions.RequestException, RuntimeError, KeyError, IndexError, ValueError) as exc:
         runtime = time.perf_counter() - start_perf
+        message = f"Gemini API request failed: {exc}"
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
         print("total runtime: " + _format_runtime(runtime))
-        print(f"run_gemini_analysis() error: Gemini API request failed ({exc}).")
+        print(f"run_gemini_analysis() error: {message}")
         write_ai_result_json({
             "status": "error",
             "gemini_response": "",
             "runtime": runtime,
-            "error_message": "Gemini API request failed.",
+            "error_message": message,
         }, ai_results_path)
         return
 
