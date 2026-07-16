@@ -595,6 +595,7 @@ export default function DashboardApp() {
                   disabled={analysisInProgress || uploading}
                   component="span"
                   variant="contained"
+                  color="info"
                   sx={{ whiteSpace: "nowrap" }}
                 >
                   Upload Video
@@ -606,6 +607,7 @@ export default function DashboardApp() {
                   loading={analysisInProgress}
                   disabled={analysisInProgress || uploading || !videoSaved}
                   variant="contained"
+                  color="info"
                   sx={{ whiteSpace: "nowrap" }}
                   onClick={() => {
                     setUploadSuccess(false);

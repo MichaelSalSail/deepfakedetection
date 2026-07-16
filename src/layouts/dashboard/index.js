@@ -1,10 +1,14 @@
 import { Outlet } from "react-router-dom";
 // material
 import { styled } from "@mui/material/styles";
+import { Box } from "@mui/material";
+// components
+import DecorativeBackground from "../../components/DecorativeBackground.js";
 
 // ----------------------------------------------------------------------
 
 const MainStyle = styled("div")(({ theme }) => ({
+  position: "relative",
   flexGrow: 1,
   overflow: "auto",
   minHeight: "100%",
@@ -19,7 +23,10 @@ const MainStyle = styled("div")(({ theme }) => ({
 export default function DashboardLayout() {
   return (
     <MainStyle>
-      <Outlet />
+      <DecorativeBackground />
+      <Box sx={{ position: "relative", zIndex: 1 }}>
+        <Outlet />
+      </Box>
     </MainStyle>
   );
 }
