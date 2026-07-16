@@ -388,6 +388,7 @@ export default function GeminiFrameAnalysis({
                 fontStyle: outputItalic ? "italic" : "normal",
                 lineHeight: 1.65,
                 opacity: outputOpacity,
+                whiteSpace: "pre-line",
               }}
             >
               {outputText}
