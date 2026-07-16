@@ -441,7 +441,7 @@ export default function DashboardApp() {
   
 
   return (
-    <Page title="Application">
+    <Page title="Deepfake Detection">
       <Container maxWidth="xl">
         <Collapse in={uploadError}>
           <Alert severity="error"
@@ -521,10 +521,30 @@ export default function DashboardApp() {
             {analysisErrorMessage}
           </Alert>
         </Collapse>
-        <Box sx={{ pb: 0.5 }}>
-          <Typography variant="h4" align="center" sx={{ lineHeight: 1.2 }}>
-            Deepfake Video Analysis
-          </Typography>
+        <Box sx={{ pb: 0.5, textAlign: "center" }}>
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
+            <Box
+              component="img"
+              src="/static/deepfake_detection_logo.png"
+              alt=""
+              sx={{
+                position: "absolute",
+                right: "100%",
+                mr: 1.5,
+                height: "4em",
+                width: "4em",
+              }}
+            />
+            <Typography variant="h3" sx={{ lineHeight: 1.2 }}>
+              Deepfake Detection
+            </Typography>
+          </Box>
         </Box>
 
         <Box
