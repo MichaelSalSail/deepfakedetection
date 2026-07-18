@@ -14,11 +14,24 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import torchvision.models as models
 from torchvision.transforms import Normalize
-from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.applications.vgg16 import preprocess_input
-from tensorflow.keras.applications.vgg16 import decode_predictions
-from tensorflow.keras.applications.vgg16 import VGG16
+
+# glasses-detector==0.1.1 downloads pretrained weights via
+# torch.hub.load_state_dict_from_url(url, map_location=device) where device
+# defaults to None with no constructor kwarg to override it. The published
+# checkpoints were saved from CUDA tensors, so map_location=None crashes on a
+# CPU-only machine. Force CPU deserialization globally before instantiating
+# any classifier below.
+_original_load_state_dict_from_url = torch.hub.load_state_dict_from_url
+
+
+def _load_state_dict_from_url_cpu(url, *args, **kwargs):
+    kwargs["map_location"] = torch.device("cpu")
+    return _original_load_state_dict_from_url(url, *args, **kwargs)
+
+
+torch.hub.load_state_dict_from_url = _load_state_dict_from_url_cpu
+
+from glasses_detector import SunglassesClassifier
 from helper_functions import isotropically_resize_image, make_square_image, more_tests, save_crop,\
                              eyeblink_csv, BLINK_LABEL_TO_CLASSIFICATION, write_blink_progress_json,\
                              clear_blink_frame_pngs, _blink_frame_timestamp, _blink_sample_frame_indices,\
@@ -45,10 +58,7 @@ BLINK_TEMP_FILES = (
 GENDER_CONFIDENCE_MARGIN = 20
 DEEPFACE_INPUT_SIZE = (152, 152)
 
-PREDICT_TEMPLATE = "????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)\n????? (0.0%)"
-_TOP5_LABEL_RE = re.compile(r"^([a-zA-Z0-9_]+) \([\d.]+%\)", re.MULTILINE)
-# ImageNet has only these eyewear classes in VGG16 decode_predictions output.
-EYEWEAR_IMAGENET_LABELS = frozenset({"sunglasses", "sunglass"})
+SHADES_SCORE_THRESHOLD = 65.0
 DEFAULT_AGE_GENDER_RESULT = {
     "age_min": 0,
     "age_max": 0,
@@ -58,11 +68,11 @@ DEFAULT_AGE_GENDER_RESULT = {
 }
 DEFAULT_SHADES_RESULT = {
     "raw_output": (
-        "SUBJECT_REFERENCE\nTop 5 Object Detection Predictions\n"
-        + PREDICT_TEMPLATE + "\n\nFACE_TIGHT_CROP\nTop 5 Object Detection Predictions\n"
-        + PREDICT_TEMPLATE
+        "SUBJECT_REFERENCE\n   Sunglasses score: ??\n\n"
+        "FACE_TIGHT_CROP\n   Sunglasses score: ??\n"
     ),
     "shades": False,
+    "shades_score": 0.0,
 }
 
 
@@ -484,44 +494,28 @@ def _blink_ram_limit_error_result(start_time, total_frames, native_fps, sample_f
     return result
 
 
-def _top5_prediction_lines(image_path):
-    image = load_img(image_path, target_size=(224, 224))
-    image = img_to_array(image)
-    image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
-    image = preprocess_input(image)
-    model = VGG16()
-    yhat = model.predict(image, verbose=0)
-    label = decode_predictions(yhat)
-    lines = []
-    for i in range(5):
-        lines.append('%s (%.2f%%)\n' % (label[0][i][1], label[0][i][2] * 100))
-    return lines
+def _load_sunglasses_classifier():
+    classifier = SunglassesClassifier(base_model="small", pretrained=True)
+    classifier.eval()
+    return classifier
 
 
-def _top5_lines_have_eyewear(lines):
-    for line in lines:
-        match = _TOP5_LABEL_RE.match(line.strip())
-        if match and match.group(1) in EYEWEAR_IMAGENET_LABELS:
-            return True
-    return False
+def _sunglasses_score(classifier, image_path):
+    probability = classifier.predict(image_path, label_type="proba")
+    return round(float(probability) * 100, 2)
 
 
-def _eyewear_verdict(subject_lines, crop_lines):
-    subject_ok = _top5_lines_have_eyewear(subject_lines)
-    crop_ok = _top5_lines_have_eyewear(crop_lines)
-    shades = subject_ok and crop_ok
-    if shades:
-        note = "Eyewear label in both top-5 lists (subject_reference and face_tight_crop)"
-    elif subject_ok or crop_ok:
-        note = "Eyewear label in one top-5 list only (requires both)"
-    else:
-        note = "No eyewear label in either top-5 list"
+def _eyewear_verdict(subject_score, crop_score):
+    scores = [s for s in (subject_score, crop_score) if s is not None]
+    best_score = max(scores) if scores else 0.0
+    shades = best_score >= SHADES_SCORE_THRESHOLD
     section = (
         "VERDICT\n"
-        + "   Eyewear: " + ("detected" if shades else "not detected") + "\n"
-        + "   " + note + "\n"
+        + "   Eyewear: " + ("detected" if shades else "not detected")
+        + " (%.2f%%)\n" % best_score
+        + "   Threshold: %.1f%%\n" % SHADES_SCORE_THRESHOLD
     )
-    return shades, section
+    return shades, best_score, section
 
 
 def predict_on_video(video_path, fps, device, facedet):
@@ -889,42 +883,41 @@ def detect_age_gender(subject_reference_path, face_tight_crop_path, face_detecte
 
 def detect_shades(image_dir1, image_dir2=""):
     '''
-    Detect eyewear from subject_reference and face_tight_crop images.
+    Detect eyewear (sunglasses) from subject_reference and face_tight_crop
+    images using glasses-detector's SunglassesClassifier (small). Eyewear is
+    flagged when the higher of the two image scores is >= SHADES_SCORE_THRESHOLD.
 
     Returns:
-        {"shades", "raw_output"} dict.
+        {"shades", "shades_score", "raw_output"} dict.
     '''
 
     print('\ndetect_shades()')
     start_time = time.perf_counter()
 
     result = list()
-    subject_lines = []
-    crop_lines = []
+    subject_score = None
+    crop_score = None
 
     try:
+        classifier = _load_sunglasses_classifier()
+
         if os.path.exists(image_dir1):
-            result.append('SUBJECT_REFERENCE\nTop 5 Object Detection Predictions\n')
-            subject_lines = _top5_prediction_lines(image_dir1)
-            result.extend(subject_lines)
+            subject_score = _sunglasses_score(classifier, image_dir1)
+            result.append('SUBJECT_REFERENCE\n   Sunglasses score: %.2f%%\n' % subject_score)
         else:
-            result.append('SUBJECT_REFERENCE (file not found)\nTop 5 Object Detection Predictions\n')
-            result.append(PREDICT_TEMPLATE + '\n')
+            result.append('SUBJECT_REFERENCE (file not found)\n   Sunglasses score: ??\n')
 
         if image_dir2 != "":
             if os.path.exists(image_dir2):
-                result.append('\nFACE_TIGHT_CROP\nTop 5 Object Detection Predictions\n')
-                crop_lines = _top5_prediction_lines(image_dir2)
-                result.extend(crop_lines)
+                crop_score = _sunglasses_score(classifier, image_dir2)
+                result.append('\nFACE_TIGHT_CROP\n   Sunglasses score: %.2f%%\n' % crop_score)
             else:
-                result.append("\nFACE_TIGHT_CROP (file not found)\nTop 5 Object Detection Predictions\n")
-                result.append(PREDICT_TEMPLATE)
+                result.append('\nFACE_TIGHT_CROP (file not found)\n   Sunglasses score: ??\n')
         else:
-            result.append("\nFACE_TIGHT_CROP (file argument missing)\nTop 5 Object Detection Predictions\n")
-            result.append(PREDICT_TEMPLATE)
+            result.append('\nFACE_TIGHT_CROP (file argument missing)\n   Sunglasses score: ??\n')
     except Exception as e:
         print("Error:" + str(e) + "\n")
-        _, verdict_section = _eyewear_verdict([], [])
+        _, _, verdict_section = _eyewear_verdict(None, None)
         shades_result = dict(DEFAULT_SHADES_RESULT)
         shades_result["raw_output"] = shades_result["raw_output"] + verdict_section
         shades_result["runtime"] = _elapsed_seconds(start_time)
@@ -933,11 +926,12 @@ def detect_shades(image_dir1, image_dir2=""):
         return shades_result
 
     raw_output = ''.join(result)
-    shades, verdict_section = _eyewear_verdict(subject_lines, crop_lines)
+    shades, best_score, verdict_section = _eyewear_verdict(subject_score, crop_score)
     raw_output += verdict_section
     shades_result = {
         "raw_output": raw_output,
         "shades": shades,
+        "shades_score": best_score,
         "runtime": _elapsed_seconds(start_time),
     }
     print(raw_output)

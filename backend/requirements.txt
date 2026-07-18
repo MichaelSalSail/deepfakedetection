@@ -1,4 +1,4 @@
-# Requires Python 3.8
+# Requires Python 3.10
 tensorflow-macos==2.13.0; sys_platform == 'darwin'
 tensorflow==2.13.0; sys_platform != 'darwin'
 torch==2.0.1

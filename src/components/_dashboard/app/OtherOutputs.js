@@ -28,6 +28,13 @@ function formatGenderScore(score, isPlaceholder) {
   return `${Number(score).toFixed(1)}%`;
 }
 
+function formatShadesScore(score) {
+  if (score == null) {
+    return "?";
+  }
+  return `${Number(score).toFixed(1)}%`;
+}
+
 function genderScoreColor(score) {
   if (score >= 60) return "green";
   if (score <= 40) return "red";
@@ -157,6 +164,7 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
   const manScore = person.gender_man_score;
   const womanScore = person.gender_woman_score;
   const showEyewear = !isPlaceholder && shades["shades"];
+  const shadesScore = shades["shades_score"];
 
   const imageUrl = analysisComplete && !noFace && !imageLoadFailed
     ? `${FACE_CROP_URL}?t=${subjectImageKey}`
@@ -268,7 +276,7 @@ export default function OtherOutputs({ results, analysisComplete, subjectImageKe
               centered={!showEyewear}
             />
             {showEyewear && (
-              <FactRow label="Eyewear" value="Detected" />
+              <FactRow label="Eyewear" value={formatShadesScore(shadesScore)} />
             )}
           </Box>
         </Box>
