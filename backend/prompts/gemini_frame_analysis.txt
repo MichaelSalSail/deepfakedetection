@@ -53,8 +53,9 @@ Eye-blink distribution (sampled frames across the video):
   Missing (no face detected): {blink_missing}%
   Note: Unknown or missing frames can mean the subject turned away OR that face detection struggled — scattered unknown/missing throughout the video is more suspicious than a single block at the start or end.
 
-Eyewear detector (VGG16 object labels):
-  Sunglasses detected: {shades_detected}
+Eyewear detector (glasses-detector, SunglassesClassifier):
+  Model accuracy: ~80% in testing (sunglasses recall at the production 65% score threshold).
+  Eyewear detected: {eyewear_detected}
 
 ================================================================================
 YOUR TASK — answer these three questions
