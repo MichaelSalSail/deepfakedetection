@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import os
 import json
 import subprocess
+import threading
 import time
 from helper_functions import reset_blink_live_preview_state
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -10,7 +11,7 @@ BACKEND_DIR = os.path.join(APP_PATH, 'backend')
 TEMPLATE_PATH = os.path.join(APP_PATH, 'src/pages/')
 app = Flask(__name__, template_folder=TEMPLATE_PATH)
 
-_gen_results_process = None
+_gen_results_thread = None
 
 @app.after_request
 def add_cors_headers(response):
@@ -34,11 +35,27 @@ def _load_results_json(file_dir, max_attempts=20, retry_delay=0.05):
             time.sleep(retry_delay)
     raise last_error
 
+def _run_gen_results_and_buffer_output():
+    print("----- EXECUTING ./gen_results.sh -----", flush=True)
+    result = subprocess.run(
+        ["bash", "gen_results.sh"],
+        cwd=BACKEND_DIR,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        env={**os.environ, "PYTHONUNBUFFERED": "1"},
+    )
+    print("----- ./gen_results.sh FINISHED -----", flush=True)
+    print(result.stdout, end="", flush=True)
+
 def _start_gen_results_if_needed():
-    global _gen_results_process
-    if _gen_results_process is not None and _gen_results_process.poll() is None:
+    global _gen_results_thread
+    if _gen_results_thread is not None and _gen_results_thread.is_alive():
         return  # already running from a previous request
-    _gen_results_process = subprocess.Popen(["bash", "gen_results.sh"], cwd=BACKEND_DIR)
+    _gen_results_thread = threading.Thread(
+        target=_run_gen_results_and_buffer_output, daemon=True
+    )
+    _gen_results_thread.start()
 
 @app.route('/home/results', methods = ['GET', 'OPTIONS'])
 def success():
