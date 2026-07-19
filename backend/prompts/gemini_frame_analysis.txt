@@ -55,7 +55,7 @@ Eye-blink distribution (sampled frames across the video):
 
 Eyewear detector (glasses-detector, SunglassesClassifier):
   Model accuracy: ~80% in testing (sunglasses recall at the production 65% score threshold).
-  Eyewear detected: {eyewear_detected}
+  Eyewear (sunglasses) score: {shades_score}% (threshold: 65%)
 
 ================================================================================
 YOUR TASK — answer these three questions

@@ -46,7 +46,7 @@ ai_model_placeholders = {
     "closed": 0,                            # matches result_update.json[1]["closed"]
     "unknown": 0,                           # matches result_update.json[1]["unknown"]
     "missing": 0,                           # matches result_update.json[1]["missing"]
-    "shades": False,                        # matches result_update.json[3]["shades"]
+    "shades_score": 0.0,                    # matches result_update.json[3]["shades_score"]
 }
 
 
@@ -98,7 +98,7 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
         placeholders["unknown"] = blink["unknown"]
         placeholders["missing"] = blink["missing"]
 
-        placeholders["shades"] = bool(shades["shades"])
+        placeholders["shades_score"] = shades["shades_score"]
     except (OSError, ValueError, KeyError, IndexError) as exc:
         print(f"build_ai_model_placeholders() warning: could not read {results_path} ({exc}). "
               "Leaving result_update.json-derived fields at their defaults.")
