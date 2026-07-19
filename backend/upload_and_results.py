@@ -2,11 +2,15 @@ from flask import Flask, render_template, redirect, url_for, request, send_file
 from flask_restful import Api, Resource, reqparse
 import os
 import json
+import subprocess
 import time
 from helper_functions import reset_blink_live_preview_state
 APP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.join(APP_PATH, 'backend')
 TEMPLATE_PATH = os.path.join(APP_PATH, 'src/pages/')
 app = Flask(__name__, template_folder=TEMPLATE_PATH)
+
+_gen_results_process = None
 
 @app.after_request
 def add_cors_headers(response):
@@ -30,8 +34,15 @@ def _load_results_json(file_dir, max_attempts=20, retry_delay=0.05):
             time.sleep(retry_delay)
     raise last_error
 
+def _start_gen_results_if_needed():
+    global _gen_results_process
+    if _gen_results_process is not None and _gen_results_process.poll() is None:
+        return  # already running from a previous request
+    _gen_results_process = subprocess.Popen(["bash", "gen_results.sh"], cwd=BACKEND_DIR)
+
 @app.route('/home/results', methods = ['GET', 'OPTIONS'])
 def success():
+    _start_gen_results_if_needed()
     # Since we are looking for a file modification in the last 2 seconds,
     # delaying for 2 seconds ensures that we won't return results from a
     # previous 'Generate Results' run.
