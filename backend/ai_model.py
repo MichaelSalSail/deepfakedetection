@@ -21,6 +21,15 @@ DEFAULT_SUBJECT_REFERENCE_PATH = os.path.join(
 DEFAULT_TARGET_VIDEO_PATH = os.path.join(BACKEND_DIR, "current_upload", "target.mp4")
 DEFAULT_EYEBLINK_CSV_PATH = os.path.join(BACKEND_DIR, "AllResults", "eyeblink_data.csv")
 
+# (display filename, default path, mime type, "necessary" or "optional")
+GEMINI_ATTACHMENTS = (
+    ("subject_reference.png", DEFAULT_SUBJECT_REFERENCE_PATH, "image/png", "necessary"),
+    ("target.mp4", DEFAULT_TARGET_VIDEO_PATH, "video/mp4", "necessary"),
+    ("eyeblink_data.csv", DEFAULT_EYEBLINK_CSV_PATH, "text/csv", "necessary"),
+    ("eyeblink_example.png", DEFAULT_EYEBLINK_EXAMPLE_PATH, "image/png", "optional"),
+)
+GEMINI_FILE_PROCESSING_TIMEOUT_SECONDS = 60
+
 STALE_RESULTS_WARNING_SECONDS = 300  # 5 minutes
 
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
@@ -201,13 +210,86 @@ def check_gemini_inputs_exist(
     return True, []
 
 
+def _upload_gemini_attachments(client):
+    '''
+    Upload this run's attachments to the Gemini Files API and wait for each to
+    finish processing.
+
+    Assumes the necessary attachments (subject_reference.png, target.mp4,
+    eyeblink_data.csv) already exist — callers must check via
+    check_gemini_inputs_exist() first. eyeblink_example.png is uploaded only if
+    present.
+
+    Args:
+        client: an initialized genai.Client.
+
+    Returns:
+        List of uploaded types.File objects, in GEMINI_ATTACHMENTS order
+        (skipping eyeblink_example.png if it doesn't exist).
+
+    Raises:
+        google.genai.errors.APIError: an upload or status-poll call failed.
+        RuntimeError: a file ended in a non-ACTIVE state, or didn't finish
+        processing within GEMINI_FILE_PROCESSING_TIMEOUT_SECONDS.
+    '''
+    uploaded = []
+    for name, path, mime_type, requirement in GEMINI_ATTACHMENTS:
+        if requirement == "optional" and not os.path.exists(path):
+            continue
+        file = client.files.upload(file=path, config={"mime_type": mime_type, "display_name": name})
+        wait_start = time.monotonic()
+        while file.state == "PROCESSING":
+            if time.monotonic() - wait_start > GEMINI_FILE_PROCESSING_TIMEOUT_SECONDS:
+                raise RuntimeError(
+                    f"{name} did not finish processing on Gemini's servers within "
+                    f"{GEMINI_FILE_PROCESSING_TIMEOUT_SECONDS}s."
+                )
+            time.sleep(1)
+            file = client.files.get(name=file.name)
+        if file.state != "ACTIVE":
+            raise RuntimeError(f"{name} failed to process on Gemini's servers (state: {file.state}).")
+        uploaded.append(file)
+    return uploaded
+
+
+def _print_gemini_token_usage(usage_metadata):
+    '''
+    Print a summary of text vs. attachment token usage for a Gemini request.
+
+    Sums prompt_tokens_details by modality: TEXT is the prompt text itself;
+    everything else (IMAGE, VIDEO, AUDIO, DOCUMENT) is attachment content (the
+    two images, the video, and eyeblink_data.csv).
+
+    Args:
+        usage_metadata: response.usage_metadata from a generate_content call.
+
+    Returns:
+        Nothing.
+    '''
+    text_tokens = 0
+    attachment_tokens = 0
+    for detail in usage_metadata.prompt_tokens_details or []:
+        if detail.modality == "TEXT":
+            text_tokens += detail.token_count
+        else:
+            attachment_tokens += detail.token_count
+    print(
+        f"Gemini tokens — text: {text_tokens}, attachments: {attachment_tokens}, "
+        f"prompt total: {usage_metadata.prompt_token_count}, "
+        f"response: {usage_metadata.candidates_token_count}, "
+        f"grand total: {usage_metadata.total_token_count}"
+    )
+
+
 def _call_gemini(prompt, api_key):
     '''
-    Send a single text-only request to Gemini and return the response text.
+    Upload this run's file attachments, send the prompt plus attachments to
+    Gemini, print a token-usage summary, and return the response text.
 
-    Uses the official google-genai SDK. No "tools" are configured, so no Google
-    Search grounding, code execution, or function calling is enabled for this
-    request.
+    Callers must have already verified the necessary attachments exist (see
+    check_gemini_inputs_exist()) — this function does not re-check. Uses the
+    official google-genai SDK. No "tools" are configured, so no Google Search
+    grounding, code execution, or function calling is enabled for this request.
 
     Args:
         prompt: text prompt to send.
@@ -217,25 +299,28 @@ def _call_gemini(prompt, api_key):
         The response text.
 
     Raises:
-        google.genai.errors.APIError: Gemini returned an HTTP error (e.g. bad
-        API key, rate limit) — carries `.code` and `.message`.
+        google.genai.errors.APIError: an upload or generate_content call
+        failed (e.g. bad API key, rate limit) — carries `.code` and `.message`.
+        RuntimeError: a file failed to finish processing on Gemini's servers.
         ValueError: response had no usable text (e.g. blocked/empty content).
     '''
     client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
+    attachments = _upload_gemini_attachments(client)
+    response = client.models.generate_content(model=GEMINI_MODEL, contents=[prompt] + attachments)
+    _print_gemini_token_usage(response.usage_metadata)
     return response.text
 
 
 def send_gemini_frame_analysis_prompt():
     '''
     Build the gemini_frame_analysis.txt prompt from the latest run_backend.py
-    results and print the result to the terminal.
+    results, attach the pipeline's files (video, images, eyeblink_data.csv),
+    and print the result to the terminal.
 
-    No files are attached yet (video, images, eyeblink_data.csv) — text-only
-    request, so responses won't be as accurate as the full multimodal prompt is
-    designed for; that's future work. Prints start time, end time, and total
-    runtime the same way run_backend.py does, followed by the response text (or
-    an error message on failure).
+    Skips the request entirely (no upload, no generate_content call) if a
+    necessary attachment is missing — see check_gemini_inputs_exist(). Prints
+    start time, end time, and total runtime the same way run_backend.py does,
+    followed by the response text (or an error message on failure).
 
     Returns:
         Nothing.
@@ -245,6 +330,14 @@ def send_gemini_frame_analysis_prompt():
         print("send_gemini_frame_analysis_prompt() error: GEMINI_API_KEY is not set in backend/.env.")
         return
 
+    inputs_ok, missing_files = check_gemini_inputs_exist()
+    if not inputs_ok:
+        print(
+            "send_gemini_frame_analysis_prompt() error: Missing required input(s): "
+            + ", ".join(missing_files) + "."
+        )
+        return
+
     prompt = build_gemini_prompt(build_ai_model_placeholders())
 
     print("start time: " + datetime.now().strftime("%H:%M:%S"))
@@ -252,7 +345,7 @@ def send_gemini_frame_analysis_prompt():
 
     try:
         text = _call_gemini(prompt, api_key)
-    except (errors.APIError, ValueError) as exc:
+    except (errors.APIError, RuntimeError, ValueError) as exc:
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
         print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
         print(f"send_gemini_frame_analysis_prompt() error: Gemini API request failed: {exc}")
@@ -267,14 +360,15 @@ def send_gemini_frame_analysis_prompt():
 def run_gemini_analysis(ai_results_path):
     '''
     Build the gemini_frame_analysis.txt prompt from the latest run_backend.py
-    results, send it to Gemini as part of run_backend.py, and write the outcome
-    to ai_result_update.json for the frontend to poll.
+    results, attach the pipeline's files (video, images, eyeblink_data.csv),
+    send it to Gemini as part of run_backend.py, and write the outcome to
+    ai_result_update.json for the frontend to poll.
 
-    No files are attached yet (video, images, eyeblink_data.csv) — text-only
-    request built from the numeric/derived placeholders alone, so responses
-    won't be as accurate as the full multimodal prompt is designed for;
-    attaching files is future work. Prints start time, end time, and total
-    runtime the same way send_gemini_frame_analysis_prompt() does.
+    Assumes the caller has already verified necessary attachments exist (see
+    check_gemini_inputs_exist()) — run_backend.py does this before calling
+    run_gemini_analysis(), writing a "skipped" status itself if inputs are
+    missing, so this function does not re-check. Prints start time, end time,
+    and total runtime the same way send_gemini_frame_analysis_prompt() does.
 
     Args:
         ai_results_path: path to write ai_result_update.json to.
@@ -301,7 +395,7 @@ def run_gemini_analysis(ai_results_path):
 
     try:
         text = _call_gemini(prompt, api_key)
-    except (errors.APIError, ValueError) as exc:
+    except (errors.APIError, RuntimeError, ValueError) as exc:
         runtime = time.perf_counter() - start_perf
         message = f"Gemini API request failed: {exc}"
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
