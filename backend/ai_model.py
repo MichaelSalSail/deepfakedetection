@@ -3,8 +3,9 @@ import os
 import time
 from datetime import datetime
 
-import requests
 from dotenv import load_dotenv
+from google import genai
+from google.genai import errors
 
 from all_models import _dfd_zone, _dfd_verdict, _format_runtime
 from helper_functions import write_ai_result_json
@@ -25,9 +26,6 @@ STALE_RESULTS_WARNING_SECONDS = 300  # 5 minutes
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
 GEMINI_MODEL = "gemini-3-flash-preview"
-GEMINI_API_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
-)
 GEMINI_TEST_PROMPT = (
     "In one paragraph, explain your own capabilities as a multimodal AI model. "
     "In a second paragraph, explain your understanding of deepfake detection — "
@@ -182,10 +180,9 @@ def _call_gemini(prompt, api_key):
     '''
     Send a single text-only request to Gemini and return the response text.
 
-    Calls the Gemini REST API directly (no SDK — the official google-genai SDK
-    requires Python >=3.10, and this backend runs on Python 3.8). No "tools" key
-    is sent, so no Google Search grounding, code execution, or function calling
-    is enabled for this request.
+    Uses the official google-genai SDK. No "tools" are configured, so no Google
+    Search grounding, code execution, or function calling is enabled for this
+    request.
 
     Args:
         prompt: text prompt to send.
@@ -195,30 +192,13 @@ def _call_gemini(prompt, api_key):
         The response text.
 
     Raises:
-        requests.exceptions.RequestException (network/timeout failures),
-        RuntimeError (Gemini returned an HTTP error, e.g. bad API key or rate
-        limit — message is Gemini's own error text when available), or
-        KeyError/IndexError/ValueError if a successful response is malformed.
+        google.genai.errors.APIError: Gemini returned an HTTP error (e.g. bad
+        API key, rate limit) — carries `.code` and `.message`.
+        ValueError: response had no usable text (e.g. blocked/empty content).
     '''
-    headers = {
-        "x-goog-api-key": api_key,
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "contents": [
-            {"parts": [{"text": prompt}]},
-        ],
-    }
-    response = requests.post(GEMINI_API_URL, headers=headers, json=payload, timeout=60)
-    if not response.ok:
-        message = f"{response.status_code} {response.reason}"
-        try:
-            message = response.json()["error"]["message"]
-        except (ValueError, KeyError):
-            pass
-        raise RuntimeError(message)
-    data = response.json()
-    return data["candidates"][0]["content"]["parts"][0]["text"]
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
+    return response.text
 
 
 def send_gemini_test_prompt():
@@ -241,7 +221,7 @@ def send_gemini_test_prompt():
 
     try:
         text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
-    except (requests.exceptions.RequestException, RuntimeError, KeyError, IndexError, ValueError) as exc:
+    except (errors.APIError, ValueError) as exc:
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
         print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
         print(f"send_gemini_test_prompt() error: Gemini API request failed: {exc}")
@@ -286,7 +266,7 @@ def run_gemini_analysis(ai_results_path):
 
     try:
         text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
-    except (requests.exceptions.RequestException, RuntimeError, KeyError, IndexError, ValueError) as exc:
+    except (errors.APIError, ValueError) as exc:
         runtime = time.perf_counter() - start_perf
         message = f"Gemini API request failed: {exc}"
         print("end time: " + datetime.now().strftime("%H:%M:%S"))

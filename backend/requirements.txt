@@ -17,3 +17,4 @@ matplotlib==3.7.2
 python-dotenv==1.0.1
 requests==2.32.4
 glasses-detector==0.1.1
+google-genai==2.12.1
