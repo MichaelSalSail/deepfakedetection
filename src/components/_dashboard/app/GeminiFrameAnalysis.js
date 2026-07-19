@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import ReactMarkdown from "react-markdown";
 import { alpha, Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
 import {
   GEMINI_OPTIONAL_NOTE,
@@ -315,7 +316,7 @@ export default function GeminiFrameAnalysis({
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             gap: { xs: 2, md: 2.5 },
-            alignItems: "stretch",
+            alignItems: "flex-start",
             minHeight: { md: 300 },
           }}
         >
@@ -355,6 +356,7 @@ export default function GeminiFrameAnalysis({
             sx={{
               flex: 1,
               minWidth: 0,
+              minHeight: { md: 300 },
               borderRadius: 1.5,
               bgcolor: "common.white",
               border: "1px solid",
@@ -381,18 +383,43 @@ export default function GeminiFrameAnalysis({
                 {GEMINI_OPTIONAL_NOTE}
               </Typography>
             ) : null}
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                fontStyle: outputItalic ? "italic" : "normal",
-                lineHeight: 1.65,
-                opacity: outputOpacity,
-                whiteSpace: "pre-line",
-              }}
-            >
-              {outputText}
-            </Typography>
+            {aiAnalysisComplete && !skipMessage ? (
+              <Box
+                sx={{
+                  color: "text.secondary",
+                  fontSize: "0.875rem",
+                  lineHeight: 1.65,
+                  "& > :first-of-type": { mt: 0 },
+                  "& > :last-child": { mb: 0 },
+                  "& h1, & h2, & h3": {
+                    fontSize: "0.95rem",
+                    fontWeight: 600,
+                    color: "text.primary",
+                    mt: 2,
+                    mb: 0.75,
+                  },
+                  "& p": { m: 0, mb: 1.25 },
+                  "& ul, & ol": { mt: 0, mb: 1.25, pl: 3 },
+                  "& li": { mb: 0.5 },
+                  "& strong": { fontWeight: 600, color: "text.primary" },
+                }}
+              >
+                <ReactMarkdown>{outputText}</ReactMarkdown>
+              </Box>
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  fontStyle: outputItalic ? "italic" : "normal",
+                  lineHeight: 1.65,
+                  opacity: outputOpacity,
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {outputText}
+              </Typography>
+            )}
           </Box>
         </Box>
       </CardContent>
