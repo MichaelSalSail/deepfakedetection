@@ -10,7 +10,7 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.optimizers.legacy import RMSprop
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Flatten
