@@ -355,6 +355,7 @@ export default function GeminiFrameAnalysis({
           <Box
             sx={{
               flex: 1,
+              alignSelf: "stretch",
               minWidth: 0,
               minHeight: { md: 300 },
               borderRadius: 1.5,
