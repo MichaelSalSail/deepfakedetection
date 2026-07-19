@@ -26,26 +26,21 @@ STALE_RESULTS_WARNING_SECONDS = 300  # 5 minutes
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
 GEMINI_MODEL = "gemini-3-flash-preview"
-GEMINI_TEST_PROMPT = (
-    "In one paragraph, explain your own capabilities as a multimodal AI model. "
-    "In a second paragraph, explain your understanding of deepfake detection — "
-    "what visual, audio, and behavioral signals can indicate a video has been "
-    "manipulated or AI-generated."
-)
+GEMINI_PROMPT_TEMPLATE_PATH = os.path.join(BACKEND_DIR, "prompts", "gemini_frame_analysis.txt")
 
 ai_model_placeholders = {
     "eyeblink_example_status": False,       # no result_update.json equivalent
-    "DFD": 0,                               # matches result_update.json[0]["DFD"]
+    "dfd_score": 0,                         # matches result_update.json[0]["DFD"]
     "dfd_zone": "",                         # no result_update.json equivalent (derived)
     "dfd_verdict": "",                      # no result_update.json equivalent (derived)
     "age_min": 0,                           # matches result_update.json[2]["age_min"]
     "age_max": 0,                           # matches result_update.json[2]["age_max"]
     "gender_man_score": 0,                  # matches result_update.json[2]["gender_man_score"]
     "gender_woman_score": 0,                # matches result_update.json[2]["gender_woman_score"]
-    "open": 0,                              # matches result_update.json[1]["open"]
-    "closed": 0,                            # matches result_update.json[1]["closed"]
-    "unknown": 0,                           # matches result_update.json[1]["unknown"]
-    "missing": 0,                           # matches result_update.json[1]["missing"]
+    "blink_open": 0,                        # matches result_update.json[1]["open"]
+    "blink_closed": 0,                      # matches result_update.json[1]["closed"]
+    "blink_unknown": 0,                     # matches result_update.json[1]["unknown"]
+    "blink_missing": 0,                     # matches result_update.json[1]["missing"]
     "shades_score": 0.0,                    # matches result_update.json[3]["shades_score"]
 }
 
@@ -84,7 +79,7 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
             data = json.load(f)
         dfd, blink, age_gender, shades = data[0], data[1], data[2], data[3]
 
-        placeholders["DFD"] = dfd["DFD"]
+        placeholders["dfd_score"] = dfd["DFD"]
         placeholders["dfd_zone"] = _dfd_zone(dfd["DFD"])
         placeholders["dfd_verdict"] = _dfd_verdict(dfd["DFD"])
 
@@ -93,10 +88,10 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
         placeholders["gender_man_score"] = age_gender["gender_man_score"]
         placeholders["gender_woman_score"] = age_gender["gender_woman_score"]
 
-        placeholders["open"] = blink["open"]
-        placeholders["closed"] = blink["closed"]
-        placeholders["unknown"] = blink["unknown"]
-        placeholders["missing"] = blink["missing"]
+        placeholders["blink_open"] = blink["open"]
+        placeholders["blink_closed"] = blink["closed"]
+        placeholders["blink_unknown"] = blink["unknown"]
+        placeholders["blink_missing"] = blink["missing"]
 
         placeholders["shades_score"] = shades["shades_score"]
     except (OSError, ValueError, KeyError, IndexError) as exc:
@@ -106,6 +101,36 @@ def build_ai_model_placeholders(results_path=None, eyeblink_example_path=None):
     placeholders["eyeblink_example_status"] = os.path.exists(eyeblink_example_path)
 
     return placeholders
+
+
+def build_gemini_prompt(placeholders, template_path=None):
+    '''
+    Fill gemini_frame_analysis.txt with placeholder values.
+
+    Converts eyeblink_example_status (a bool) into the inline marker the
+    template expects: blank when the file exists, "(not available)" when it
+    doesn't. Doesn't attach any files (video, images, eyeblink_data.csv) — the
+    prompt still describes them as available inputs even though this is a
+    text-only request; attaching them is future work.
+
+    Args:
+        placeholders: dict from build_ai_model_placeholders() — must contain
+                      every {...} token in the template.
+        template_path: path to the prompt template. Defaults to
+                       backend/prompts/gemini_frame_analysis.txt.
+
+    Returns:
+        The formatted prompt text.
+    '''
+    template_path = template_path or GEMINI_PROMPT_TEMPLATE_PATH
+    with open(template_path) as f:
+        template = f.read()
+
+    format_values = dict(placeholders)
+    format_values["eyeblink_example_status"] = (
+        "" if placeholders["eyeblink_example_status"] else "(not available)"
+    )
+    return template.format(**format_values)
 
 
 def _format_file_size(num_bytes):
@@ -201,30 +226,36 @@ def _call_gemini(prompt, api_key):
     return response.text
 
 
-def send_gemini_test_prompt():
+def send_gemini_frame_analysis_prompt():
     '''
-    Send the Gemini test prompt and print the result to the terminal.
+    Build the gemini_frame_analysis.txt prompt from the latest run_backend.py
+    results and print the result to the terminal.
 
-    Prints start time, end time, and total runtime the same way run_backend.py
-    does, followed by the response text (or an error message on failure).
+    No files are attached yet (video, images, eyeblink_data.csv) — text-only
+    request, so responses won't be as accurate as the full multimodal prompt is
+    designed for; that's future work. Prints start time, end time, and total
+    runtime the same way run_backend.py does, followed by the response text (or
+    an error message on failure).
 
     Returns:
         Nothing.
     '''
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print("send_gemini_test_prompt() error: GEMINI_API_KEY is not set in backend/.env.")
+        print("send_gemini_frame_analysis_prompt() error: GEMINI_API_KEY is not set in backend/.env.")
         return
+
+    prompt = build_gemini_prompt(build_ai_model_placeholders())
 
     print("start time: " + datetime.now().strftime("%H:%M:%S"))
     start_perf = time.perf_counter()
 
     try:
-        text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
+        text = _call_gemini(prompt, api_key)
     except (errors.APIError, ValueError) as exc:
         print("end time: " + datetime.now().strftime("%H:%M:%S"))
         print("total runtime: " + _format_runtime(time.perf_counter() - start_perf))
-        print(f"send_gemini_test_prompt() error: Gemini API request failed: {exc}")
+        print(f"send_gemini_frame_analysis_prompt() error: Gemini API request failed: {exc}")
         return
 
     print("end time: " + datetime.now().strftime("%H:%M:%S"))
@@ -235,13 +266,15 @@ def send_gemini_test_prompt():
 
 def run_gemini_analysis(ai_results_path):
     '''
-    Run the Gemini test prompt as part of run_backend.py and write the outcome
+    Build the gemini_frame_analysis.txt prompt from the latest run_backend.py
+    results, send it to Gemini as part of run_backend.py, and write the outcome
     to ai_result_update.json for the frontend to poll.
 
-    Still sends the placeholder GEMINI_TEST_PROMPT rather than the full
-    deepfake-analysis prompt/attachments — that integration is future work.
-    Prints start time, end time, and total runtime the same way
-    send_gemini_test_prompt() does.
+    No files are attached yet (video, images, eyeblink_data.csv) — text-only
+    request built from the numeric/derived placeholders alone, so responses
+    won't be as accurate as the full multimodal prompt is designed for;
+    attaching files is future work. Prints start time, end time, and total
+    runtime the same way send_gemini_frame_analysis_prompt() does.
 
     Args:
         ai_results_path: path to write ai_result_update.json to.
@@ -261,11 +294,13 @@ def run_gemini_analysis(ai_results_path):
         }, ai_results_path)
         return
 
+    prompt = build_gemini_prompt(build_ai_model_placeholders())
+
     print("start time: " + datetime.now().strftime("%H:%M:%S"))
     start_perf = time.perf_counter()
 
     try:
-        text = _call_gemini(GEMINI_TEST_PROMPT, api_key)
+        text = _call_gemini(prompt, api_key)
     except (errors.APIError, ValueError) as exc:
         runtime = time.perf_counter() - start_perf
         message = f"Gemini API request failed: {exc}"
@@ -294,4 +329,4 @@ def run_gemini_analysis(ai_results_path):
 
 
 if __name__ == "__main__":
-    send_gemini_test_prompt()
+    send_gemini_frame_analysis_prompt()
