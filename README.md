@@ -15,8 +15,8 @@ Deepfakes have been around since 2017, when early examples were prone to obvious
 The backend runs 1 base model and 3 user trust models, then sends their combined outputs to a cloud AI for a final written summary.
 
 4 Machine Learning Models:
-1. *DFD* - base model that takes video as input and returns a continuous score on the likelihood of a deepfake. <50% means not a deepfake and >50% means a deepfake. This model was trained using the dataset provided by [Meta's Deepfake Detection Competition](https://www.kaggle.com/c/deepfake-detection-challenge).
-2. *blink* - classifies individual video frames as open eyes or closed eyes. When only one eye is visible, such as when only part of the face is shown, the model classifies it as unknown. If a face is missing entirely, the model classifies it as missing.
+1. *DFD* - base model that takes video as input and returns a continuous score on the likelihood of a deepfake. <50% means not a deepfake and >50% means a deepfake. This transfer learned ResNeXT model was trained using the dataset provided by [Meta's Deepfake Detection Competition](https://www.kaggle.com/c/deepfake-detection-challenge).
+2. *blink* - classifies individual video frames as open eyes or closed eyes. When only one eye is visible, such as when only part of the face is shown, the model classifies it as unknown. If a face is missing entirely, the model classifies it as missing. This VGG16 transfer learned model was trained using publicly available data.
 3. *age/gender* - estimates the subject's age and gender from face crops captured during the blink pass.
 4. *shades* - detects if the subject has eyewear such as sunglasses.
 
@@ -51,4 +51,8 @@ Our frontend code is all inside the src folder, with routes.js defining the app'
 3. **pages** - the pages of the application. Right now there's one main dashboard page that handles the core experience, plus a 404 page for unmatched routes
 4. **theme** - the theme of the application. This includes basic styling and coloring schemes that is maintained throughout all components or pages
 5. **utils** - shared functions (and a couple of small config/data files) utilized across the application  
+
+# Credits
+
+The face-detection step used by the DFD model is [BlazeFace](https://github.com/hollance/BlazeFace-PyTorch), a PyTorch port of Google's BlazeFace model by Matthijs Hollemans, licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
