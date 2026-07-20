@@ -1,24 +1,29 @@
 # Introduction
 
-Welcome to Deepfake Detection. For our CS Senior Project, we decided to create an application that uses multiple ML models to help lawyers in the courtroom identify deepfake videos. Since deepfakes can be used to falsely accuse clients of crimes they didn't commit, it's important for lawyers to have access to available technologies that can help them discern whether a video is genuine or not. By using our application, lawyers can interpret ML model outputs to make their own judgments on the legitimacy of a video.  
+Welcome to Deepfake Detection. This application uses multiple ML models to help users identify deepfake videos. Thanks to the proliferation of ai-generated deepfakes, it's now more important than ever for people to have access to available technologies that can help them discern whether a video is genuine or not. By using this application, users can interpret ML model outputs to make their own judgments on the legitimacy of a video.  
 
-<p align="center"><img src="public/static/mock-images/avatars/courtroom.jpg" width="509" height="287"/></p>
+<p align="center"><img src="public/static/mock-images/avatars/deepfake_title_logo.jpeg" width="200" height="30"/></p>
+
+# Background
+
+Deepfakes have been around for a while. Back in the day, it was prone to obvious blurring and visual artifacts, making them obvious to spot. However in 2020, Tom Cruise deepfake was going viral for its very impressive quality. However this was only made possible from a combination of factors: using an AI model trained from pictures of Tom Cruise, careful VFX editing, and overlaying the deepfake on a person with similar qualities (a Tom Cruise lookalike). Although impressive, it proved impractical for most people to replicate. However, in 2022 the genAI boom started with the release of ChatGPT. Chatbot AI's soon expanded with the feature to create a video from a prompt or an image. With little work, the average person can make a deepfake of anyone. Although the models have guardrails to prevent generative works of famous people, these can be bypassed by curating the prompt.  
+
+![](public/static/mock-images/avatars/deepfake_examples_collage.gif)
 
 # How it Works  
 
-The backend uses 1 base model and 3 user trust models. The application alerts the user on suspicious video elements detected from the 3 user trust models.
+The backend uses 1 base model and 2 user trust models.
 
-4 Machine Learning Models:
+3 Machine Learning Models:
 1. *DFD* - base model that takes in videos as input and returns a continuous score on the likelihood of a deepfake. <50% means not a deepfake and >50% means a deepfake.
-2. *blink* - classifies individual video frames as open eyes or closed eyes. When only one eye is visible, such as when only part of the face is shown, the model classifies it as unknown.
-3. *beard* - detects the age and gender of the subject. An adult male is likely to have a beard.
-4. *shades* - detects if the subject has eyewear such as glasses or sunglasses.  
+2. *blink* - classifies individual video frames as open eyes or closed eyes. When only one eye is visible, such as when only part of the face is shown, the model classifies it as unknown. If a face is missing entirely, the model classifies it as missing.
+3. *shades* - detects if the subject has eyewear such as glasses or sunglasses.  
 
 # Application Demo
 
-The following is a brief demonstration of our application.  
+The following is a brief demonstration of the application. First, the user clicks 'Upload Video' and selects a local video file. If the video was uploaded successfully, the user can then click 'Generate Results' to run analysis. First local ML models run then the Cloud AI runs.   
 
-![](public/static/mock-images/avatars/app_demo.gif)  
+![](public/static/mock-images/avatars/running_deepfake_app.gif)  
 
 To successfully run the application, follow all instructions located in backend - README.md.  
 
@@ -45,6 +50,3 @@ Our frontend code is all inside src folder. It is sectioned into:
 4. **theme** - the theme of the application. This includes basic styling and coloring schemes that is maintained throughout all components or pages
 5. **utils** - the utils folder simply has functions that we utilize throughout the application  
 
-# Credits  
-
-Chukwudi Udoka, Denny Liang, Michael Salamon, and Ravid Rahman
