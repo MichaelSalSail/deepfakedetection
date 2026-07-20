@@ -34,8 +34,7 @@ To successfully run the application, follow all instructions located in backend 
 
 Most of the project was written in Python and React (Javascript). Jupyter Notebooks are used throughout the testing folder for model training and evaluation, and a few Shell scripts help set up and run the backend.  
 
-<img src="public/static/mock-images/avatars/python.png" width=140 height=140/>
-<img src="public/static/mock-images/avatars/react.png" width=140 height=140/>
+<img src="public/static/mock-images/avatars/python.png" width=140 height=140/> <img src="public/static/mock-images/avatars/react.png" width=140 height=140/>
 
 # Project Directories  
 
