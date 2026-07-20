@@ -15,7 +15,7 @@ Deepfakes have been around since 2017, when early examples were prone to obvious
 The backend runs 1 base model and 3 user trust models, then sends their combined outputs to a cloud AI for a final written summary.
 
 4 Machine Learning Models:
-1. *DFD* - base model that takes video as input and returns a continuous score on the likelihood of a deepfake. <50% means not a deepfake and >50% means a deepfake.
+1. *DFD* - base model that takes video as input and returns a continuous score on the likelihood of a deepfake. <50% means not a deepfake and >50% means a deepfake. This model was trained using the dataset provided by [Meta's Deepfake Detection Competition](https://www.kaggle.com/c/deepfake-detection-challenge).
 2. *blink* - classifies individual video frames as open eyes or closed eyes. When only one eye is visible, such as when only part of the face is shown, the model classifies it as unknown. If a face is missing entirely, the model classifies it as missing.
 3. *age/gender* - estimates the subject's age and gender from face crops captured during the blink pass.
 4. *shades* - detects if the subject has eyewear such as sunglasses.
