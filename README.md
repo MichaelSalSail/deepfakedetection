@@ -15,16 +15,16 @@ Deepfakes have been around since 2017, when early examples were prone to obvious
 The backend runs 1 base model and 3 user trust models, then sends their combined outputs to a cloud AI for a final written summary.
 
 4 Machine Learning Models:
-1. *DFD* - base model that takes video as input and returns a continuous score on the likelihood of a deepfake. <50% means not a deepfake and >50% means a deepfake. This transfer learned ResNeXT model was trained using the dataset provided by [Meta's Deepfake Detection Competition](https://www.kaggle.com/c/deepfake-detection-challenge).
+1. *DFD* - base model that samples frames from the video, crops the detected face in each one, and averages a per-frame deepfake score into a single continuous result. <50% means not a deepfake and >50% means a deepfake. This transfer learned ResNeXT model was trained using the dataset provided by [Meta's Deepfake Detection Competition](https://www.kaggle.com/c/deepfake-detection-challenge).
 2. *blink* - classifies individual video frames as open eyes or closed eyes. When only one eye is visible, such as when only part of the face is shown, the model classifies it as unknown. If a face is missing entirely, the model classifies it as missing. This VGG16 transfer learned model was trained using publicly available data.
-3. *age/gender* - estimates the subject's age and gender from face crops captured during the blink pass.
-4. *shades* - detects if the subject has eyewear such as sunglasses.
+3. *age/gender* - estimates the subject's age and gender from face crops captured during the blink pass, using Meta's pre-trained DeepFace library.
+4. *shades* - detects if the subject has eyewear such as sunglasses, using the pre-trained glasses-detector library.
 
 Once these 4 models finish, their outputs (along with the video and some sampled frames) are sent to Gemini, which writes a holistic, natural-language summary of the findings.  
 
 # Application Demo
 
-The following is a quick demonstration of the application in action. First, the user clicks 'Upload Video' and selects a local video file. Once the video uploads successfully, clicking 'Generate Results' runs analysis: the local ML models run first, followed by the cloud AI step, while a progress bar keeps the user informed since the process can take a few moments.   
+The following is a quick demonstration of the application in action. First, the user clicks 'Upload Video' and selects a local video file. Once the video uploads successfully, clicking 'Generate Results' runs analysis: the local ML models run first, followed by the cloud AI step, while a progress bar updates the user.
 
 ![](public/static/mock-images/avatars/running_deepfake_app.gif)  
 
