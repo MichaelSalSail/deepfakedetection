@@ -52,6 +52,12 @@ Our frontend code is all inside the src folder, with routes.js defining the app'
 4. **theme** - the theme of the application. This includes basic styling and coloring schemes that is maintained throughout all components or pages
 5. **utils** - shared functions (and a couple of small config/data files) utilized across the application  
 
+# Limitations
+
+1. All 4 ML models run locally on the machine hosting the backend (only the final Gemini summary step needs internet access). The blink model buffers sampled frames in memory with a ~2GB RAM cap, which supports roughly 1-2 minutes of video before hitting that limit.
+2. The DFD model has a tested accuracy of ~86.75%, but it was trained exclusively on Meta's DFDC dataset - pre-genAI deepfakes (2019-2020 era face-swap/GAN techniques) - so it may not generalize as well to more modern, diffusion-based deepfakes.
+3. The blink model has a tested accuracy of ~82.4%, but was trained on a relatively small dataset (2,100 manually-labeled frames expanded with data augmentation/manipulation techniques). A larger training dataset could likely improve accuracy and reduce misclassifications, such as when a subject is squinting rather than fully closing their eyes.
+
 # Credits
 
 The face-detection step used by the DFD model is [BlazeFace](https://github.com/hollance/BlazeFace-PyTorch), a PyTorch port of Google's BlazeFace model by Matthijs Hollemans, licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
