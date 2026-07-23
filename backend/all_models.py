@@ -539,6 +539,25 @@ def predict_on_video(video_path, fps, device, facedet):
     total_seconds = round(
         (video_data.get(cv2.CAP_PROP_FRAME_COUNT)) / (video_data.get(cv2.CAP_PROP_FPS)), 2)
     total_frames = math.floor(fps * total_seconds)
+    frame_width = int(video_data.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(video_data.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    video_data.release()
+
+    estimated_frame_ram = _estimate_blink_frame_ram_bytes(total_frames, frame_width, frame_height)
+    estimated_gib = estimated_frame_ram / (1024 ** 3)
+    print(
+        "predict_on_video() estimated frame RAM: "
+        f"{estimated_gib:.2f} GiB ({total_frames} sampled frames at "
+        f"{frame_width}x{frame_height}, limit 2.00 GiB)"
+    )
+    if estimated_frame_ram > MAX_BLINK_FRAME_RAM_BYTES:
+        print(
+            "predict_on_video() error: estimated frame RAM exceeds limit of 2.00 GiB. "
+            "Try a shorter video or lower resolution."
+        )
+        _print_dfd_score(50.0)
+        _print_runtime(start_time)
+        return {"DFD": 50.0, "runtime": _elapsed_seconds(start_time)}
 
     try:
         video_reader = VideoReader()
