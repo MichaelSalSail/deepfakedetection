@@ -30,6 +30,10 @@ The following is a quick demonstration of the application in action. First, the 
 
 To successfully run the application, follow all instructions located in backend - README.md.  
 
+# App Flow
+
+![](public/static/mock-images/avatars/app_flow.png)
+
 # Languages  
 
 Most of the project was written in Python and React (Javascript). Jupyter Notebooks are used throughout the testing folder for model training and evaluation, and a few Shell scripts help set up and run the backend.  
